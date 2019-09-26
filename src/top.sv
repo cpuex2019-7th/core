@@ -22,100 +22,55 @@ module core
    reg [31:0] pc;
 
    /////////////////////
-   // pipeline registers
-   /////////////////////   
-   // fetch-decode
-   reg [31:0] instr_raw;   
-
-   // decode-exec
-   instructions instr;
-   reg [4:0]  rd;
-   reg [31:0] rs1_v;
-   reg [31:0] rs2_v;   
-   reg [31:0] imm;
-
-   reg [31:0] pc_instr;
-   
-   // exec-write
-   reg        mem_write_enable;
-   reg [6:0]  mem_write_dest;
-   reg        reg_write_enable;
-   reg [6:0]  reg_write_dest;
-   reg [31:0] data;
-   
-   reg        is_jump_enabled;
-   reg [31:0] jump_dest;      
-   
-   /////////////////////
    // components
    /////////////////////
-   wire [4:0] rs1_o;
-   wire [4:0] rs2_o;
-   wire [31:0] rs1_vo;
-   wire [31:0] rs2_vo;
-
-   regf _registers(clk, rstn,
-                   rs1_o, rs2_o, rs1_vo, rs2_vo, 
-                   reg_write_enable, reg_write_dest, data);
-   
-   instructions instr_o;   
+   wire [31:0] instr_raw;   
    fetch _fetch(clk, rstn, 
-                pc, instr_o);
+                pc, instr_raw);
 
-   wire [4:0]  rd_o;
-   wire [31:0] imm_o;   
+   wire [4:0]  rd_a;
+   wire [4:0] rs1_a;
+   wire [4:0] rs2_a;
+   wire [31:0] imm;   
+   instructions instr;   
    decoder _decoder(clk, rstn, 
                     instr_raw,
-                    instr_o,
-                    rd_o, rs1_o, rs2_o, imm_o);
+                    instr,
+                    rd_a, rs1_a, rs2_a, imm);
 
-   wire [31:0] data_o;   
-   wire        mem_write_enable_o;
-   wire [31:0] mem_write_dest_o;
-   wire        reg_write_enable_o;
-   wire [4:0]  reg_write_dest_o;
-   wire        is_jump_enabled_o;
-   wire [31:0] jump_dest_o;   
+   wire [31:0] rs1_v;
+   wire [31:0] rs2_v;
+   wire        reg_write_enabled;
+   wire [4:0]  reg_write_dest;
+   wire [31:0] data;   
+   regf _registers(clk, rstn,
+                   rs1_a, rs2_a, rs1_v, rs2_v, 
+                   reg_write_enabled, reg_write_dest, data);
+
+   reg [31:0]  pc_instr;   
+   wire        mem_write_enabled;
+   wire [31:0] mem_write_dest;
+   wire        is_jump_enabled;
+   wire [31:0] jump_dest;   
    execute _execute(clk, rstn, 
-                    pc_instr, instr, rd, rs1_v, rs2_v, imm, 
-                    data_o, 
-                    mem_write_enable_o, mem_write_dest_o, 
-                    reg_write_enable_o, reg_write_dest_o, 
-                    is_jump_enabled_o, jump_dest_o);
+                    pc_instr, instr, rd_a, rs1_v, rs2_v, imm, 
+                    data, 
+                    mem_write_enabled, mem_write_dest, 
+                    reg_write_enabled, reg_write_dest, 
+                    is_jump_enabled, jump_dest);
    
    /////////////////////
    // main
    /////////////////////
    always @(posedge clk) begin
       if (state == FETCH) begin
-         instr_raw <= instr_o;
-         
          state <= DECODE;
       end else if (state == DECODE) begin
-         rd <= rd_o;
-         rs1_v <= rs1_vo;
-         rs2_v <= rs2_vo;
-         imm <= imm_o;
-         instr <= instr_o;
-
          pc_instr <= pc;         
-         
          state <= EXEC;
       end else if (state == EXEC) begin
-         mem_write_enable <= mem_write_enable_o;
-         mem_write_enable <= mem_write_enable_o;
-         reg_write_enable <= reg_write_enable_o;
-         reg_write_enable <= reg_write_enable_o;
-         data <= data_o;
-
-         is_jump_enabled <= is_jump_enabled_o;
-         jump_dest <= jump_dest_o;         
-         
          state <= WRITE;         
-      end else if (state == WRITE) begin
-         mem_write_enable <= 0;
-         reg_write_enable <= 0;
-
+      end else if (state == WRITE) begin         
          // TODO :thinking_face:
          pc <= is_jump_enabled ? jump_dest : pc + 4;                       
          state <= FETCH;
