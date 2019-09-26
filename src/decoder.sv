@@ -38,12 +38,12 @@ module decoder
    wire               u_type = (opcode == 7'b0110111 | opcode == 7'b0010111);   
    wire               j_type = (opcode == 7'b1101111); 
    
-   assign instr.beq = (opcode == 7'b1100011) && (funct3 = 3'b000);
+   assign instr.beq = (opcode == 7'b1100011) && (funct3 == 3'b000);
    assign instr.jal = (opcode == 7'b1101111);
    assign instr.addi = (opcode == 7'b0010011);
    assign instr.add = (opcode == 7'b011011) && (funct3 == 3'b000) && (funct7 == 3'b0000000);
 
-   assign rd = (r_type || i_type || u+type || j_type) ? rd : 5'b00000;
+   assign rd = (r_type || i_type || u_type || j_type) ? rd : 5'b00000;
    assign rs1 = (r_type || i_type || s_type || b_type) ? rs1 : 5'b00000;
    assign rs2 = (r_type || s_type || b_type) ? rs2 : 5'b00000;
 

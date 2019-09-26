@@ -6,8 +6,8 @@ module regf
    input wire [4:0]  rs1,
    input wire [4:0]  rs2,
 
-   output wire [4:0] rd1,
-   output wire [4:0] rd2,
+   output reg [4:0] rd1,
+   output reg [4:0] rd2,
 
    input wire        w_enable,
    input wire [4:0]  w_addr,
@@ -15,15 +15,15 @@ module regf
 
    reg [31:0]        regs[32];
    
-   always @(psedge clk) begin
+   always @(posedge clk) begin
       if (!rstn) begin
       end else begin
-         rs1 <= regs[rs1];
-         rs2 <= regs[rs2];         
+         rd1 <= regs[rs1];
+         rd2 <= regs[rs2];         
       end
 
-      if(write_enable) begin
-         regs[wa] <= wd;         
+      if(w_enable) begin
+         regs[w_addr] <= w_data;         
       end
    end
 endmodule
