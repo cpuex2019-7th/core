@@ -28,7 +28,7 @@ module core
    reg [31:0] instr_raw;   
 
    // decode-exec
-   input instructions instr;
+   reg        instructions instr;
    reg [4:0]  rd;
    reg [31:0] rs1_v;
    reg [31:0] rs2_v;   
@@ -49,20 +49,40 @@ module core
    /////////////////////
    // components
    /////////////////////
+   wire [4:0] rs1_o;
+   wire [4:0] rs2_o;
+   wire [31:0] rs1_vo;
+   wire [31:0] rs2_vo;
+   wire        reg_write_enable;
+   wire [4:0]  reg_write_dest;
+   wire [31:0] data;   
    regf _registers(clk, rstn,
                    rs1_o, rs2_o, rs1_vo, rs2_vo, 
-                   reg_write_enable, reg_write_dest, data);   
+                   reg_write_enable, reg_write_dest, data);
    
+   wire        instructions instr_o;   
    fetch _fetch(clk, rstn, 
                 pc, instr_o);
-   
+
+   wire [4:0]  rd_o;
+   wire [31:0] imm_o;   
    decoder _decoder(clk, rstn, 
-                    instr_raw, 
-                    rd_o, rs1_o, rs2_o, imm_o, instr_o);
-   
+                    instr_raw,
+                    instr_o,
+                    rd_o, rs1_o, rs2_o, imm_o);
+
+   wire [31:0] data_o;   
+   wire        mem_write_enable_o;
+   wire [31:0] mem_write_dest_o;
+   wire        reg_write_enable_o;
+   wire [4:0]  reg_write_dest_o;
+   wire        is_jump_enabled_o;
+   wire [31:0] jump_dest_o;   
    execute _execute(clk, rstn, 
                     pc_instr, instr, rd, rs1, rs2, imm, 
-                    data_o, mem_write_enable_o, mem_write_dest_o, reg_write_enable_o, reg_write_dest_o, 
+                    data_o, 
+                    mem_write_enable_o, mem_write_dest_o, 
+                    reg_write_enable_o, reg_write_dest_o, 
                     is_jump_enabled_o, jump_dest_o);
    
    /////////////////////

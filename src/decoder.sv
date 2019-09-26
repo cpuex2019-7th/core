@@ -12,12 +12,12 @@ module decoder
    input wire         rstn,
    input wire [31:0]  instr_raw,
   
+   output             instructions instr
+
    output wire [4:0]  rd,
    output wire [4:0]  rs1,
    output wire [4:0]  rs2,
-   output wire [31:0] imm,
-   
-   input              instructions instr
+   output wire [31:0] imm,   
    );
 
    // basic component
