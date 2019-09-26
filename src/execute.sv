@@ -22,8 +22,8 @@ module execute
    output reg [31:0]  jump_dest);   
 
    always @(posedge clk) begin
-      is_jump_enabled <= 0;      
-      mem_write_enabled <= 0;     
+      is_jump_enabled <= 0;
+      mem_write_enabled <= 0;
       if(instr.addi) begin
          reg_write_enabled <= 1;
          reg_write_dest <= rd;

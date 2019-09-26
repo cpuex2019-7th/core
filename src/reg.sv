@@ -11,8 +11,7 @@ module regf
 
    input wire        w_enable,
    input wire [4:0]  w_addr,
-   input wire [31:0] w_data,  
-   );
+   input wire [31:0] w_data);
 
    reg [31:0]        regs[32];
    

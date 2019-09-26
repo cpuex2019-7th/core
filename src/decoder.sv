@@ -1,10 +1,10 @@
 `default_nettype none
 
 typedef struct packed {
-   wire addi;   
-   wire add;
-   wire beq;
-   wire jal;
+   logic addi;   
+   logic add;
+   logic beq;
+   logic jal;
 } instructions;
 
 module decoder
@@ -30,12 +30,13 @@ module decoder
    wire [6:0]         opcode = instr_raw[6:0];
    
    // r, i, s, b, u, j
-   wire               r_type = 1'b1; // TODO
-   wire               i_type = 1'b1; // TODO
-   wire               s_type = 1'b1; // TODO
-   wire               b_type = 1'b1; // TODO
-   wire               u_type = 1'b1; // TODO
-   wire               j_type = 1'b1; // TODO
+   // TODO: check here when you add new instructions
+   wire               r_type = (opcode == 7'b0110011); 
+   wire               i_type = (opcode == 7'b1100111 | opcode == 7'b0000011 | opcode == 7'b0010011); 
+   wire               s_type = (opcode == 7'b0100011); 
+   wire               b_type = (opcode == 7'b1100011); 
+   wire               u_type = (opcode == 7'b0110111 | opcode == 7'b0010111);   
+   wire               j_type = (opcode == 7'b1101111); 
    
    assign instr.beq = (opcode == 7'b1100011) && (funct3 = 3'b000);
    assign instr.jal = (opcode == 7'b1101111);
