@@ -12,7 +12,7 @@ module execute
    input wire [31:0]  rs2_v,
    input wire [31:0]  imm,
 
-   output wire [31:0] data,
+   output reg [31:0] data,
    output reg         mem_write_enabled,
    output reg [31:0]  mem_write_dest,
    output reg         reg_write_enabled,

@@ -5,7 +5,7 @@ module fetch
    input wire         rstn,
    input wire [31:0]  pc,
 
-   output wire [31:0] data);
+   output reg [31:0] data);
 
    reg [7:0]          prog [0:31];
    
