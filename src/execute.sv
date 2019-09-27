@@ -1,7 +1,7 @@
 module execute
   (input wire clk,
    input wire        rstn,
-   input wire [2:0]  state,
+   input wire [2:0] state,
 
    input wire [31:0] pc,
    input             instructions instr,

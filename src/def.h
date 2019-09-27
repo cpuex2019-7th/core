@@ -1,11 +1,7 @@
-`define FETCH 0
-`define DECODE 1
-`define EXEC 2
-`define WRITE 3
-
-typedef struct packed {
-   reg addi;   
-   reg add;
-   reg beq;
-   reg jal;
-} instructions;
+`ifndef _parameters_state_
+`define _parameters_state_
+parameter FETCH = 0;
+parameter DECODE = 1;
+parameter EXEC = 2;
+parameter WRITE = 3;
+`endif

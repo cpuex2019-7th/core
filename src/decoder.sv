@@ -1,5 +1,12 @@
 `include "def.h"
 
+typedef struct packed {
+   reg addi;   
+   reg add;
+   reg beq;
+   reg jal;
+} instructions;
+
 module decoder
   (input wire         clk,
    input wire        rstn,
@@ -10,7 +17,7 @@ module decoder
 
    output reg [4:0]  rd,
    output reg [4:0]  rs1,
-   output            reeg [4:0] rs2,
+   output reg [4:0]   rs2,
    output reg [31:0] imm   
    );
 
