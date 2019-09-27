@@ -12,10 +12,10 @@ module alu
 
    );
 
-   always @(posedge CLK) begin
+   always @(posedge clk) begin
       result <= instr.addi? rs1_v + imm:
                 instr.add? rs1_v + rs2_v:      
-                (instr.beq | instr.jal)? rs1_v + imm;      
+                (instr.beq | instr.jal)? rs1_v + imm:
+                31'b0;      
    end
-end
 endmodule

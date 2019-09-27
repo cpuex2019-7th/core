@@ -1,3 +1,10 @@
+typedef struct packed {
+   logic addi;   
+   logic add;
+   logic beq;
+   logic jal;
+} instructions;
+
 module decoder
   (input wire         clk,
    input wire         rstn,
@@ -34,9 +41,9 @@ module decoder
    assign instr.addi = (opcode == 7'b0010011);
    assign instr.add = (opcode == 7'b011011) && (funct3 == 3'b000) && (funct7 == 3'b0000000);
 
-   assign rd = (r_type || i_type || u_type || j_type) ? rd : 5'b00000;
-   assign rs1 = (r_type || i_type || s_type || b_type) ? rs1 : 5'b00000;
-   assign rs2 = (r_type || s_type || b_type) ? rs2 : 5'b00000;
+   assign rd = (r_type || i_type || u_type || j_type) ? _rd : 5'b00000;
+   assign rs1 = (r_type || i_type || s_type || b_type) ? _rs1 : 5'b00000;
+   assign rs2 = (r_type || s_type || b_type) ? _rs2 : 5'b00000;
 
    // NOTE: this sign extention may have bugs; oops...
    assign imm = i_type ? (instr_raw[31] ? {~20'b0, instr_raw[31:20]}:

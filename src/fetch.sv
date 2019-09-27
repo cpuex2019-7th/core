@@ -50,6 +50,6 @@ module fetch
    end      
    
    always @(posedge clk) begin
-      data <= prog[pc];      
+      data <= {prog[pc+3], prog[pc+2], prog[pc+1], prog[pc]};
    end  
 endmodule // fetch

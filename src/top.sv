@@ -57,18 +57,19 @@ module core
                     .pc(pc_instr), .instr(instr), 
                     .rd(rd_a),
                     .rs1(rs1_a), .rs1_v(rs1_v), 
-                    .rs2(rs2_a), .rs2(rs2_v), 
+                    .rs2(rs2_a), .rs2_v(rs2_v), 
                     .imm(imm), 
                     .result(data), 
                     .mem_write_enabled(mem_write_enabled), .mem_write_dest(mem_write_dest), 
                     .reg_write_enabled(reg_write_enabled), .reg_write_dest(reg_write_dest), 
-                    .is_jump_enabled(is_jump_enabled), .is_jump_dest(jump_dest));
+                    .is_jump_enabled(is_jump_enabled), .jump_dest(jump_dest));
    
    /////////////////////
    // main
    /////////////////////
    initial begin
       pc <= 0;
+      state <= FETCH;
    end 
    
    always @(posedge clk) begin

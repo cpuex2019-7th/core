@@ -13,6 +13,13 @@ module regf
 
    reg [31:0]        regs[32];
    
+   integer i;
+   initial begin
+      for (i=0; i<32; i++) begin
+          regs[i] <= 31'b0;
+      end
+   end
+   
    always @(posedge clk) begin
       if (!rstn) begin
       end else begin
