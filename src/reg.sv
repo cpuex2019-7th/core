@@ -1,11 +1,12 @@
 module regf
   (input wire         clk,
    input wire        rstn,
+   
    input wire [4:0]  rs1,
    input wire [4:0]  rs2,
 
-   output reg [4:0] rd1,
-   output reg [4:0] rd2,
+   output reg [4:0]  rd1,
+   output reg [4:0]  rd2,
 
    input wire        w_enable,
    input wire [4:0]  w_addr,

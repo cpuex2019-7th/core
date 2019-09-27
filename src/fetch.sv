@@ -1,8 +1,11 @@
+`include "def.h"
+
 module fetch
   (input wire clk,
-   input wire         rstn,
-   input wire [31:0]  pc,
+   input wire        rstn,
+   input wire [31:0] pc,
 
+   input wire [2:0]  state,
    output reg [31:0] data);
 
    reg [7:0]          prog [0:31];
@@ -50,6 +53,8 @@ module fetch
    end      
    
    always @(posedge clk) begin
-      data <= {prog[pc+3], prog[pc+2], prog[pc+1], prog[pc]};
+      if (state == FETCH) begin
+         data <= {prog[pc+3], prog[pc+2], prog[pc+1], prog[pc]};
+      end
    end  
 endmodule // fetch

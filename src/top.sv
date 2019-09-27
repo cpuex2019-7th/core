@@ -1,31 +1,25 @@
+`include "def.h"
+
 module core
   (input wire clk, 
    input wire  rstn,
    output wire test);
-
-   /////////////////////
-   // constants 
-   /////////////////////
-   // states
-   localparam [2:0] FETCH = 3'b000;
-   localparam [2:0] DECODE = 3'b001;
-   localparam [2:0] EXEC = 3'b010;
-   localparam [2:0] WRITE = 3'b011;
-
-   reg [2:0]   state;
    
    /////////////////////
    // cpu internals
    /////////////////////
    // TODO: use interface (including csr)
    reg [31:0]  pc;
+   reg [2:0]   state;
 
    /////////////////////
    // components
    /////////////////////
    wire [31:0] instr_raw;   
-   fetch _fetch(clk, rstn, 
-                pc, instr_raw);
+   fetch _fetch(.clk(clk), 
+                .rstn(rstn), 
+                .pc(pc), 
+                .data(instr_raw));
 
    wire [4:0]  rd_a;
    wire [4:0]  rs1_a;
@@ -33,7 +27,8 @@ module core
    wire [31:0] imm;   
    instructions instr;   
    decoder _decoder(.clk(clk), 
-                    .rstn(rstn), 
+                    .rstn(rstn),
+                    .state(state),
                     .instr_raw(instr_raw),
                     .instr(instr),
                     .rd(rd_a), .rs1(rs1_a), .rs2(rs2_a), .imm(imm));
@@ -54,6 +49,7 @@ module core
    wire        is_jump_enabled;
    wire [31:0] jump_dest;   
    execute _execute(.clk(clk), .rstn(rstn), 
+                    .state(state),
                     .pc(pc_instr), .instr(instr), 
                     .rd(rd_a),
                     .rs1(rs1_a), .rs1_v(rs1_v), 
