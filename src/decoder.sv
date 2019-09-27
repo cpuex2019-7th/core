@@ -1,10 +1,3 @@
-typedef struct packed {
-   logic addi;   
-   logic add;
-   logic beq;
-   logic jal;
-} instructions;
-
 module decoder
   (input wire         clk,
    input wire         rstn,
@@ -46,19 +39,15 @@ module decoder
    assign rs2 = (r_type || s_type || b_type) ? rs2 : 5'b00000;
 
    // NOTE: this sign extention may have bugs; oops...
-   assign imm = i_type ? (instr_raw[31] 
-                          ? {~20'b0, instr_raw[31:20]}
-                          : {20'b0, instr_raw[31:20]})
-     : s_type ? (instr_raw[31] 
-                 ? {~20'b0, instr_raw[31:25], instr_raw[11:7]}
-                 : {20'b0, instr_raw[31:25], instr_raw[11:7]})
-       : b_type ? (instr_raw[31] 
-                   ? {~19'b0, instr_raw[31], instr_raw[7], instr_raw[30:25], instr_raw[11:8]}
-                   : {19'b0, instr_raw[31], instr_raw[7], instr_raw[30:25], instr_raw[11:8]})
-         : u_type ? {instr_raw[31:12], 11'b0}
-                : j_type ? (instr_raw[31]
-                            ? {~11'b0, instr_raw[31], instr_raw[19:12], instr_raw[20], instr_raw[30:21]}
-                            : {~11'b0, instr_raw[31], instr_raw[19:12], instr_raw[20], instr_raw[30:21]})
-                  : 31'b0;     
+   assign imm = i_type ? (instr_raw[31] ? {~20'b0, instr_raw[31:20]}:
+                          {20'b0, instr_raw[31:20]}):
+                s_type ? (instr_raw[31] ? {~20'b0, instr_raw[31:25], instr_raw[11:7]}:
+                          {20'b0, instr_raw[31:25], instr_raw[11:7]}):
+                b_type ? (instr_raw[31] ? {~19'b0, instr_raw[31], instr_raw[7], instr_raw[30:25], instr_raw[11:8]}:
+                          {19'b0, instr_raw[31], instr_raw[7], instr_raw[30:25], instr_raw[11:8]}):
+                u_type ? {instr_raw[31:12], 11'b0} : 
+                j_type ? (instr_raw[31] ? {~11'b0, instr_raw[31], instr_raw[19:12], instr_raw[20], instr_raw[30:21]}:
+                          {~11'b0, instr_raw[31], instr_raw[19:12], instr_raw[20], instr_raw[30:21]}):
+                31'b0;     
 endmodule
 
