@@ -2,30 +2,57 @@
 
 module core
   (input wire clk, 
-   input wire  rstn,
-   output wire test);
+   input wire        rstn,
+
+   // Bus for MMU
+   // address read channel
+   output reg [31:0] axi_araddr,
+   input wire        axi_arready,
+   output reg        axi_arvalid,
+
+   // response channel
+   output reg        axi_bready,
+   input wire [1:0]  axi_bresp,
+   input wire        axi_bvalid,
+
+   // read data channel
+   input wire [31:0] axi_rdata,
+   output reg        axi_rready,
+   input wire [1:0]  axi_rresp,
+   input wire        axi_rvalid,
+
+   // address write channel
+   output reg [31:0] axi_awaddr,
+   input wire        axi_awready,
+   output reg        axi_awvalid,
+
+   // data write channel
+   output reg [31:0] axi_wdata,
+   input wire        axi_wready,
+   output reg [3:0]  axi_wstrb,
+   output reg        axi_wvalid);
    
    /////////////////////
-   // cpu internals
+  // cpu internals
    /////////////////////
    // TODO: use interface (including csr)
-   reg [31:0]  pc;
-   reg [2:0]   state;
+   reg [31:0]        pc;
+   reg [2:0]         state;
 
    /////////////////////
    // components
    /////////////////////
-   wire [31:0] instr_raw;   
+   wire [31:0]       instr_raw;   
    fetch _fetch(.clk(clk), 
                 .rstn(rstn), 
                 .pc(pc), 
                 .state(state),
                 .data(instr_raw));
 
-   wire [4:0]  rd_a;
-   wire [4:0]  rs1_a;
-   wire [4:0]  rs2_a;
-   wire [31:0] imm;   
+   wire [4:0]        rd_a;
+   wire [4:0]        rs1_a;
+   wire [4:0]        rs2_a;
+   wire [31:0]       imm;   
    instructions instr;   
    decoder _decoder(.clk(clk), 
                     .rstn(rstn),
@@ -34,23 +61,27 @@ module core
                     .instr(instr),
                     .rd(rd_a), .rs1(rs1_a), .rs2(rs2_a), .imm(imm));
    
-   wire [31:0] rs1_v;
-   wire [31:0] rs2_v;
-   wire        reg_write_enabled;
-   wire [4:0]  reg_write_dest;
-   wire [31:0] data;   
+   wire [31:0]       rs1_v;
+   wire [31:0]       rs2_v;
+   wire              reg_write_enabled_delayed;
+   wire [4:0]        reg_write_dest_delayed;
+   wire [31:0]       reg_write_data_delayed;   
    regf _registers(.clk(clk), 
                    .rstn(rstn),
                    .rs1(rs1_a), .rs2(rs2_a), .rd1(rs1_v), .rd2(rs2_v), 
-                   .w_enable(reg_write_enabled), .w_addr(reg_write_dest), .w_data(data));
-
-   reg [31:0]  pc_instr;   
-   wire        mem_write_enabled;
-   wire        mem_read_enabled;
-   wire [31:0] mem_target;
+                   .w_enable(reg_write_enabled_delayed),
+                   .w_addr(reg_write_dest_delayed),
+                   .w_data(reg_write_data_delayed));
    
-   wire        is_jump_enabled;
-   wire [31:0] jump_dest;   
+   reg [31:0]        pc_instr;
+   wire [31:0]       exec_result;
+   
+   wire              mem_write_enabled;
+   wire              mem_read_enabled;
+   wire [31:0]       mem_target;
+   
+   wire              is_jump_enabled;
+   wire [31:0]       jump_dest;   
    execute _execute(.clk(clk), .rstn(rstn), 
                     .state(state),
                     .pc(pc_instr), .instr(instr), 
@@ -58,7 +89,7 @@ module core
                     .rs1(rs1_a), .rs1_v(rs1_v), 
                     .rs2(rs2_a), .rs2_v(rs2_v), 
                     .imm(imm), 
-                    .result(data), 
+                    .result(exec_result), 
                     .mem_write_enabled(mem_write_enabled), .mem_read_enabled(mem_read_enabled), .mem_target(mem_target), 
                     .reg_write_enabled(reg_write_enabled), .reg_write_dest(reg_write_dest), 
                     .is_jump_enabled(is_jump_enabled), .jump_dest(jump_dest));
@@ -69,7 +100,15 @@ module core
    initial begin
       pc <= 0;
       state <= FETCH;
-   end 
+   end
+
+   always @(posedge clk) begin
+      reg_write_enabled_delayed <= reg_write_enabled;
+      reg_write_dest_delayed <= reg_write_dest;
+      
+      // TODO: select from mem read or mem write
+      reg_write_data_delayed <= mem_read_enabled?  mem_input : exec_result;      
+   end
    
    always @(posedge clk) begin
       if (state == FETCH) begin
@@ -79,7 +118,9 @@ module core
          state <= EXEC;
       end else if (state == EXEC) begin
          state <= MEM;
-      end else if (state == MEM) begin; 
+      end else if (state == MEM) begin;
+         // TODO: memory control
+         
          if (is_jump_enabled) begin
             pc <= jump_dest;
             state <= FETCH;

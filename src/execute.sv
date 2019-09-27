@@ -28,7 +28,6 @@ module execute
    output reg [31:0] jump_dest);   
 
    wire [31:0]       alu_result;
-   reg reg_write_enabled_delayed;
    
    alu _alu(.clk(clk),
             .rstn(rstn),
@@ -49,7 +48,7 @@ module execute
          mem_target <= alu_result;   
 
          // reg
-         reg_write_enabled_delayed <= !(instr.beq);
+         reg_write_enabled <= !(instr.beq);
          reg_write_dest <= rd;
          
          // control
@@ -72,10 +71,8 @@ module execute
                    alu_result;         
       end else begin
          mem_write_enabled <= 0;
-         reg_write_enabled_delayed <= 0;
+         reg_write_enabled <= 0;
          is_jump_enabled <= 0;         
       end
-      
-      reg_write_enabled <= reg_write_enabled_delayed;
    end  
 endmodule // execute
