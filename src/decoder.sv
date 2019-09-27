@@ -25,6 +25,7 @@ module decoder
    
    // r, i, s, b, u, j
    // TODO: check here when you add new instructions
+   // TODO!!!!!!!!!!!!!!!!!!!
    wire              r_type = (opcode == 7'b0110011); 
    wire              i_type = (opcode == 7'b1100111 | opcode == 7'b0000011 | opcode == 7'b0010011); 
    wire              s_type = (opcode == 7'b0100011); 
@@ -37,10 +38,51 @@ module decoder
    
    always @(posedge clk) begin
       if (state ==  DECODE) begin
-         instr.beq <= (opcode == 7'b1100011) && (funct3 == 3'b000);
-         instr.jal <= (opcode == 7'b1101111);
-         instr.addi <= (opcode == 7'b0010011);
-         instr.add <= (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 3'b0000000);   
+         // lui, auipc
+         instr.lui <= (opcode == 7'b0110111);
+         instr.auipc <= (opcode == 7'b0010111);         
+         // jumps
+         instr.jal <= (opcode == 7'b1101111);         
+         instr.jar <= (opcode == 7'b1100111);         
+         // conditional breaks
+         instr.beq <= (opcode == 7'b1100011) && (funct3 == 3'b000);         
+         instr.bne <= (opcode == 7'b1100011) && (funct3 == 3'b001);         
+         instr.blt <= (opcode == 7'b1100011) && (funct3 == 3'b100);         
+         instr.bge <= (opcode == 7'b1100011) && (funct3 == 3'b101);         
+         instr.bltu <= (opcode == 7'b1100011) && (funct3 == 3'b110);         
+         instr.bgeu <= (opcode == 7'b1100011) && (funct3 == 3'b111);         
+         // memory control
+         instr.lb = (opcode == 7'b0000011) && (funct3 == 3'b000);         
+         instr.lh = (opcode == 7'b0000011) && (funct3 == 3'b001);         
+         instr.lw = (opcode == 7'b0000011) && (funct3 == 3'b010);         
+         instr.lbu = (opcode == 7'b0000011) && (funct3 == 3'b100);         
+         instr.lhu = (opcode == 7'b0000011) && (funct3 == 3'b101);         
+         instr.sb = (opcode == 7'b0100011) && (funct3 == 3'b000);         
+         instr.sh = (opcode == 7'b0100011) && (funct3 == 3'b001);         
+         instr.sw = (opcode == 7'b0100011) && (funct3 == 3'b010);         
+
+         // arith imm
+         instr.addi <= (opcode == 7'b0010011) && (funct3 == 3'b000);
+         instr.slti <= (opcode == 7'b0010011) && (funct3 == 3'b010);
+         instr.sltiu <= (opcode == 7'b0010011) && (funct3 == 3'b011);
+         instr.xori <= (opcode == 7'b0010011) && (funct3 == 3'b100);
+         instr.ori <= (opcode == 7'b0010011) && (funct3 == 3'b110);
+         instr.andi <= (opcode == 7'b0010011) && (funct3 == 3'b111);
+         instr.slli <= (opcode == 7'b0010011) && (funct3 == 3'b001);
+         instr.srli <= (opcode == 7'b0010011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
+         instr.srai <= (opcode == 7'b0010011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
+
+         // arith others
+         instr.add <= (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
+         instr.sub <= (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 7'b0100000);
+         instr.sll <= (opcode == 7'b0110011) && (funct3 == 3'b001) && (funct7 == 7'b0000000);
+         instr.slt <= (opcode == 7'b0110011) && (funct3 == 3'b010) && (funct7 == 7'b0000000);
+         instr.sltu <= (opcode == 7'b0110011) && (funct3 == 3'b011) && (funct7 == 7'b0000000);
+         instr.i_xor <= (opcode == 7'b0110011) && (funct3 == 3'b100) && (funct7 == 7'b0000000);
+         instr.srl <= (opcode == 7'b0110011) && (funct3 == 3'b101) && (funct7 == 7'b0000000);
+         instr.sra <= (opcode == 7'b0110011) && (funct3 == 3'b101) && (funct7 == 7'b0100000);
+         instr.i_or <= (opcode == 7'b0110011) && (funct3 == 3'b110) && (funct7 == 7'b0000000);
+         instr.i_and <= (opcode == 7'b0110011) && (funct3 == 3'b111) && (funct7 == 7'b0000000);
 
          rd <= (r_type || i_type || u_type || j_type) ? _rd : 5'b00000;
 

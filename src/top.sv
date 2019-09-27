@@ -46,7 +46,9 @@ module core
 
    reg [31:0]  pc_instr;   
    wire        mem_write_enabled;
-   wire [31:0] mem_write_dest;
+   wire        mem_read_enabled;
+   wire [31:0] mem_target;
+   
    wire        is_jump_enabled;
    wire [31:0] jump_dest;   
    execute _execute(.clk(clk), .rstn(rstn), 
@@ -57,7 +59,7 @@ module core
                     .rs2(rs2_a), .rs2_v(rs2_v), 
                     .imm(imm), 
                     .result(data), 
-                    .mem_write_enabled(mem_write_enabled), .mem_write_dest(mem_write_dest), 
+                    .mem_write_enabled(mem_write_enabled), .mem_read_enabled(mem_read_enabled), .mem_target(mem_target), 
                     .reg_write_enabled(reg_write_enabled), .reg_write_dest(reg_write_dest), 
                     .is_jump_enabled(is_jump_enabled), .jump_dest(jump_dest));
    
@@ -76,6 +78,9 @@ module core
          pc_instr <= pc;         
          state <= EXEC;
       end else if (state == EXEC) begin
+         state <= MEM;
+         
+      end else if (state == MEM) begin
          state <= WRITE;         
       end else if (state == WRITE) begin         
          // TODO :thinking_face:

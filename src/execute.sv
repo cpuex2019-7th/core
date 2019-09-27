@@ -16,10 +16,11 @@ module execute
    input wire [31:0] imm,
 
    output reg [31:0] result,
-   
+  
    output reg        mem_write_enabled,
-   output reg [31:0] mem_write_dest,
-   
+   output reg        mem_read_enabled,
+   output reg [31:0] mem_target,
+  
    output reg        reg_write_enabled,
    output reg [4:0]  reg_write_dest,
 
@@ -34,20 +35,35 @@ module execute
             .rs1_v(rs1_v), .rs2_v(rs2_v),
             .imm(imm),
             .result(alu_result));   
-     
+   
    always @(posedge clk) begin
       if (state == EXEC) begin
          // memory        
-         mem_write_enabled <= 0; // TODO  (theres no memory instruction)
-         mem_write_dest <= 0; // TODO          
+         mem_write_enabled <= (instr.lb
+                               || instr.lh
+                               || instr.lw);
+         mem_read_enabled <= (instr.sb
+                              || instr.sh
+                              || instr.sw);         
+         mem_target <= alu_result;   
 
          // reg
          reg_write_enabled <= !(instr.beq);
-         reg_write_dest <= rd;         
+         reg_write_dest <= rd;
          
          // control
-         is_jump_enabled <= ((instr.jal) || ((instr.beq) &&  (alu_result == 32'd1)));
-         jump_dest <= pc + imm;
+         is_jump_enabled <= (instr.jal 
+                             || instr.jalr 
+                             || ((instr.beq 
+                                  || instr.bne 
+                                  ||  instr.blt
+                                  || instr.bge
+                                  || instr.bltu
+                                  || instr.bgeu) 
+                                 &&  (alu_result == 32'd1)));
+         
+         jump_dest <= (instr.jalr)? alu_result:
+                      pc + imm;
 
          // what to write
          result <= (instr.jal)? pc + 4:
