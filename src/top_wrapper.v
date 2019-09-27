@@ -1,8 +1,7 @@
-`default_nettype none
-
 module core_wrapper
   (input wire clk, 
-   input wire rstn);
+   input wire rstn,
+   output wire test);
    
-   core _core(clk, rstn);   
+   core _core(clk, rstn, test);   
 endmodule

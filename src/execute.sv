@@ -1,5 +1,3 @@
-`default_nettype none
-
 module execute
   (input wire clk,
    input wire         rstn,

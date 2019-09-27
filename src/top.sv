@@ -1,8 +1,7 @@
-`default_nettype none
-
 module core
   (input wire clk, 
-   input wire rstn);
+   input wire rstn,
+   output wire test);
 
    /////////////////////
    // constants 
@@ -62,6 +61,10 @@ module core
    /////////////////////
    // main
    /////////////////////
+   initial begin
+    pc <= 0;
+   end 
+   
    always @(posedge clk) begin
       if (state == FETCH) begin
          state <= DECODE;

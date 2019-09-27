@@ -1,5 +1,3 @@
-`default_nettype none
-
 typedef struct packed {
    logic addi;   
    logic add;
