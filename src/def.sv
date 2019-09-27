@@ -3,7 +3,8 @@
 parameter FETCH = 0;
 parameter DECODE = 1;
 parameter EXEC = 2;
-parameter WRITE = 3;
+parameter MEM = 3;
+parameter WRITE = 4;
 
 typedef struct {
    // lui, auipc

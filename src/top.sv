@@ -79,12 +79,16 @@ module core
          state <= EXEC;
       end else if (state == EXEC) begin
          state <= MEM;
-         
-      end else if (state == MEM) begin
-         state <= WRITE;         
+      end else if (state == MEM) begin; 
+         if (is_jump_enabled) begin
+            pc <= jump_dest;
+            state <= FETCH;
+         end else begin
+            state <= WRITE;
+         end          
       end else if (state == WRITE) begin         
          // TODO :thinking_face:
-         pc <= is_jump_enabled ? jump_dest : pc + 4;                       
+         pc <= pc + 4;                       
          state <= FETCH;
       end
    end

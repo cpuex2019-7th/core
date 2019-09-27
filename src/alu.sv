@@ -16,7 +16,7 @@ module alu
    
    assign result = // lui, auipc
                    instr.lui? imm:
-                   instr.auipc? imm + pc: // TODO: sign
+                   instr.auipc? 31'b0: // TODO: sign
                    // jumps
                    instr.jal? 31'b0:
                    instr.jalr? $signed(rs1_v) + $signed(imm):

@@ -43,7 +43,7 @@ module decoder
          instr.auipc <= (opcode == 7'b0010111);         
          // jumps
          instr.jal <= (opcode == 7'b1101111);         
-         instr.jar <= (opcode == 7'b1100111);         
+         instr.jalr <= (opcode == 7'b1100111);         
          // conditional breaks
          instr.beq <= (opcode == 7'b1100011) && (funct3 == 3'b000);         
          instr.bne <= (opcode == 7'b1100011) && (funct3 == 3'b001);         
