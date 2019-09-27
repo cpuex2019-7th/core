@@ -5,8 +5,8 @@ module regf
    input wire [4:0]  rs1,
    input wire [4:0]  rs2,
 
-   output reg [4:0]  rd1,
-   output reg [4:0]  rd2,
+   output reg [31:0]  rd1,
+   output reg [31:0]  rd2,
 
    input wire        w_enable,
    input wire [4:0]  w_addr,
@@ -17,7 +17,7 @@ module regf
    integer i;
    initial begin
       for (i=0; i<32; i++) begin
-          regs[i] <= 31'b0;
+          regs[i] <= 0;
       end
    end
    
@@ -29,7 +29,9 @@ module regf
       end
 
       if(w_enable) begin
-         regs[w_addr] <= w_data;         
+         if(w_addr != 0) begin
+             regs[w_addr] <= w_data;  
+         end       
       end
    end
 endmodule

@@ -19,6 +19,7 @@ module core
    fetch _fetch(.clk(clk), 
                 .rstn(rstn), 
                 .pc(pc), 
+                .state(state),
                 .data(instr_raw));
 
    wire [4:0]  rd_a;

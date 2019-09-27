@@ -7,7 +7,6 @@ module execute
    input             instructions instr,
   
    input wire [4:0]  rd,
-  
    input wire [4:0]  rs1, // for future use (required in forwarding)
    input wire [31:0] rs1_v,
    input wire [4:0]  rs2, // for future use (required in forwarding)
@@ -30,21 +29,22 @@ module execute
             mem_write_enabled <= 0;
             reg_write_enabled <= 1;
             reg_write_dest <= rd;
-            result <= rs1_v + imm;
+            result <= $signed(rs1_v) + $signed(imm);
          end else if(instr.add) begin
             is_jump_enabled <= 0;      
             mem_write_enabled <= 0;
             reg_write_enabled <= 1;
             reg_write_dest <= rd;
-            result <= rs1_v + rs2_v;
+            result <= $signed(rs1_v) + $signed(rs2_v);
          end else if(instr.beq) begin
             mem_write_enabled <= 0;
             reg_write_enabled <= 0;
             if (rs1_v == rs2_v) begin
-               is_jump_enabled <= 1;            
+               is_jump_enabled <= 1; 
+               jump_dest <= pc + imm;          
             end else begin
                is_jump_enabled <= 0;            
-            end         
+            end
          end else if(instr.jal) begin
             mem_write_enabled <= 0;
             reg_write_enabled <= 1;

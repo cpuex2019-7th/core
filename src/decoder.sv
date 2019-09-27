@@ -16,8 +16,8 @@ module decoder
    output            instructions instr,
 
    output reg [4:0]  rd,
-   output reg [4:0]  rs1,
-   output reg [4:0]   rs2,
+   output wire [4:0]  rs1,
+   output wire [4:0]  rs2,
    output reg [31:0] imm   
    );
 
@@ -39,28 +39,29 @@ module decoder
    wire              u_type = (opcode == 7'b0110111 | opcode == 7'b0010111);   
    wire              j_type = (opcode == 7'b1101111); 
 
+   assign rs1 = (r_type || i_type || s_type || b_type) ? _rs1 : 5'b00000;
+   assign rs2 = (r_type || s_type || b_type) ? _rs2 : 5'b00000;
+   
    always @(posedge clk) begin
       if (state ==  DECODE) begin
          instr.beq <= (opcode == 7'b1100011) && (funct3 == 3'b000);
          instr.jal <= (opcode == 7'b1101111);
          instr.addi <= (opcode == 7'b0010011);
-         instr.add <= (opcode == 7'b011011) && (funct3 == 3'b000) && (funct7 == 3'b0000000);   
+         instr.add <= (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 3'b0000000);   
 
          rd <= (r_type || i_type || u_type || j_type) ? _rd : 5'b00000;
-         rs1 <= (r_type || i_type || s_type || b_type) ? _rs1 : 5'b00000;
-         rs2 <= (r_type || s_type || b_type) ? _rs2 : 5'b00000;
 
          // NOTE: this sign extention may have bugs; oops...
          imm <= i_type ? (instr_raw[31] ? {~20'b0, instr_raw[31:20]}:
                           {20'b0, instr_raw[31:20]}):
                 s_type ? (instr_raw[31] ? {~20'b0, instr_raw[31:25], instr_raw[11:7]}:
                           {20'b0, instr_raw[31:25], instr_raw[11:7]}):
-                b_type ? (instr_raw[31] ? {~19'b0, instr_raw[31], instr_raw[7], instr_raw[30:25], instr_raw[11:8]}:
-                          {19'b0, instr_raw[31], instr_raw[7], instr_raw[30:25], instr_raw[11:8]}):
+                b_type ? (instr_raw[31] ? {~19'b0, instr_raw[31], instr_raw[7], instr_raw[30:25], instr_raw[11:8], 1'b0}:
+                          {19'b0, instr_raw[31], instr_raw[7], instr_raw[30:25], instr_raw[11:8], 1'b0}):
                 u_type ? {instr_raw[31:12], 11'b0} : 
-                j_type ? (instr_raw[31] ? {~11'b0, instr_raw[31], instr_raw[19:12], instr_raw[20], instr_raw[30:21]}:
-                          {~11'b0, instr_raw[31], instr_raw[19:12], instr_raw[20], instr_raw[30:21]}):
-                31'b0;
+                j_type ? (instr_raw[31] ? {~11'b0, instr_raw[31], instr_raw[19:12], instr_raw[20], instr_raw[30:21], 1'b0}:
+                          {11'b0, instr_raw[31], instr_raw[19:12], instr_raw[20], instr_raw[30:21], 1'b0}):
+                32'b0;
       end
    end
 endmodule
