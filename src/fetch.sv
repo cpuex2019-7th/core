@@ -1,4 +1,4 @@
-`include "def.h"
+`include "def.sv"
 
 module fetch
   (input wire clk,

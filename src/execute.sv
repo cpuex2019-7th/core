@@ -1,3 +1,5 @@
+`include "def.sv"
+
 module execute
   (input wire clk,
    input wire        rstn,

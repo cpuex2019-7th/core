@@ -1,11 +1,4 @@
-`include "def.h"
-
-typedef struct packed {
-   reg addi;   
-   reg add;
-   reg beq;
-   reg jal;
-} instructions;
+`include "def.sv"
 
 module decoder
   (input wire         clk,

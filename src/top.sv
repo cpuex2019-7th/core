@@ -1,4 +1,4 @@
-`include "def.h"
+`include "def.sv"
 
 module core
   (input wire clk, 
