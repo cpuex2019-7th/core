@@ -5,6 +5,7 @@ parameter DECODE = 1;
 parameter EXEC = 2;
 parameter MEM = 3;
 parameter WRITE = 4;
+parameter INVALID = 5;
 
 typedef struct {
    // lui, auipc
