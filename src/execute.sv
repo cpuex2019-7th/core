@@ -1,7 +1,7 @@
 module execute
   (input wire clk,
    input wire        rstn,
-   input wire [2:0] state,
+   input wire [2:0]  state,
 
    input wire [31:0] pc,
    input             instructions instr,
@@ -14,54 +14,46 @@ module execute
    input wire [31:0] imm,
 
    output reg [31:0] result,
+   
    output reg        mem_write_enabled,
    output reg [31:0] mem_write_dest,
+   
    output reg        reg_write_enabled,
    output reg [4:0]  reg_write_dest,
 
    output reg        is_jump_enabled,
    output reg [31:0] jump_dest);   
 
+   wire [31:0]       alu_result;
+   
+   alu _alu(.clk(clk),
+            .rstn(rstn),
+            .instr(instr),
+            .rs1_v(rs1_v), .rs2_v(rs2_v),
+            .imm(imm),
+            .result(alu_result));   
+     
    always @(posedge clk) begin
       if (state == EXEC) begin
-         if(instr.addi) begin
-            is_jump_enabled <= 0;
-            mem_write_enabled <= 0;
-            reg_write_enabled <= 1;
-            reg_write_dest <= rd;
-            result <= $signed(rs1_v) + $signed(imm);
-         end else if(instr.add) begin
-            is_jump_enabled <= 0;      
-            mem_write_enabled <= 0;
-            reg_write_enabled <= 1;
-            reg_write_dest <= rd;
-            result <= $signed(rs1_v) + $signed(rs2_v);
-         end else if(instr.beq) begin
-            mem_write_enabled <= 0;
-            reg_write_enabled <= 0;
-            if (rs1_v == rs2_v) begin
-               is_jump_enabled <= 1; 
-               jump_dest <= pc + imm;          
-            end else begin
-               is_jump_enabled <= 0;            
-            end
-         end else if(instr.jal) begin
-            mem_write_enabled <= 0;
-            reg_write_enabled <= 1;
-            reg_write_dest <= rd;         
-            result <= pc + 4;
+         // memory        
+         mem_write_enabled <= 0; // TODO  (theres no memory instruction)
+         mem_write_dest <= 0; // TODO          
 
-            is_jump_enabled <= 1;
-            jump_dest <= pc + imm;         
-         end else begin
-            mem_write_enabled <= 0;
-            reg_write_enabled <= 0;
-            result <= 0;
-         end 
+         // reg
+         reg_write_enabled <= !(instr.beq);
+         reg_write_dest <= rd;         
+         
+         // control
+         is_jump_enabled <= ((instr.jal) || ((instr.beq) &&  (alu_result == 32'd1)));
+         jump_dest <= pc + imm;
+
+         // what to write
+         result <= (instr.jal)? pc + 4:
+                   alu_result;         
       end else begin
          mem_write_enabled <= 0;
          reg_write_enabled <= 0;
-         result <= 0;         
+         is_jump_enabled <= 0;         
       end
    end  
 endmodule // execute

@@ -1,8 +1,8 @@
 module alu 
   (input wire        clk,
    input wire        rstn,
-                     
-                     instructions instr,
+     
+   input             instructions instr,
 
    input wire [31:0] rs1_v,
    input wire [31:0] rs2_v,
@@ -13,9 +13,9 @@ module alu
    );
 
    always @(posedge clk) begin
-      result <= instr.addi? rs1_v + imm:
-                instr.add? rs1_v + rs2_v:      
-                (instr.beq | instr.jal)? rs1_v + imm:
+      result <= instr.addi? $signed(rs1_v) + $signed(imm):
+                instr.add? $signed(rs1_v) + $signed(rs2_v):      
+                instr.beq? (rs1_v == rs2_v):
                 31'b0;      
    end
 endmodule
