@@ -225,7 +225,7 @@ module core
                end
                axi_wvalid <= 1;
                mem_state <= mem_w_waiting_ready;
-            end else if (mem_state == mem_w_waiting_ready) begin // if (mem_state ==  mem_w_init)
+            end else if (mem_state == mem_w_waiting_ready) begin
 			   if(axi_awready) begin
 			      axi_awvalid <= 0;
 			   end
