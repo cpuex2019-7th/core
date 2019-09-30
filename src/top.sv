@@ -232,7 +232,7 @@ module core
 			   if(axi_wready) begin
 				  axi_wvalid <= 0;
 			   end
-			   if((!axi_awvalid | axi_awready) && (!axi_wvalid | axi_wready)) begin
+			   if(!axi_awvalid && !axi_wvalid) begin
 				  axi_bready <= 1;
 				  mem_state <= mem_w_waiting_data;                  
 			   end               
