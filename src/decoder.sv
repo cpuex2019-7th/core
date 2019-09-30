@@ -38,6 +38,9 @@ module decoder
    
    always @(posedge clk) begin
       if (state ==  DECODE) begin
+         /////////   
+         // rv32i
+         /////////   
          // lui, auipc
          instr.lui <= (opcode == 7'b0110111);
          instr.auipc <= (opcode == 7'b0010111);         
@@ -83,6 +86,28 @@ module decoder
          instr.sra <= (opcode == 7'b0110011) && (funct3 == 3'b101) && (funct7 == 7'b0100000);
          instr.i_or <= (opcode == 7'b0110011) && (funct3 == 3'b110) && (funct7 == 7'b0000000);
          instr.i_and <= (opcode == 7'b0110011) && (funct3 == 3'b111) && (funct7 == 7'b0000000);
+
+         /////////   
+         // rv32m
+         /////////
+         instr.mul <= (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 7'b0000001);
+         instr.mulh <= (opcode == 7'b0110011) && (funct3 == 3'b001) && (funct7 == 7'b0000001);
+         instr.mulhsu <= (opcode == 7'b0110011) && (funct3 == 3'b010) && (funct7 == 7'b0000001);
+         instr.mulhu <= (opcode == 7'b0110011) && (funct3 == 3'b011) && (funct7 == 7'b0000001);
+         instr.div <= (opcode == 7'b0110011) && (funct3 == 3'b100) && (funct7 == 7'b0000001);
+         instr.divu <= (opcode == 7'b0110011) && (funct3 == 3'b101) && (funct7 == 7'b0000001);
+         instr.rem <= (opcode == 7'b0110011) && (funct3 == 3'b110) && (funct7 == 7'b0000001);
+         instr.remu <= (opcode == 7'b0110011) && (funct3 == 3'b111) && (funct7 == 7'b0000001);
+
+         /////////   
+         // rv32a
+         /////////
+         // TODO
+
+         /////////   
+         // rv32c
+         /////////
+         // TODO
 
          rd <= (r_type || i_type || u_type || j_type) ? _rd : 5'b00000;
 
