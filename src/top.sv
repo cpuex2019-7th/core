@@ -39,13 +39,13 @@ module core
    reg [31:0]        pc;
    reg [2:0]         state;
 
-   localparam mem_r_init;   
-   localparam mem_r_waiting_ready;
-   localparam mem_r_waiting_data;
+   localparam mem_r_init = 0;   
+   localparam mem_r_waiting_ready = 1;
+   localparam mem_r_waiting_data = 2;
 
-   localparam mem_w_init;
-   localparam mem_w_v_waiting_ready;
-   localparam mem_w_v_waiting_data;   
+   localparam mem_w_init = 3;
+   localparam mem_w_waiting_ready = 4;
+   localparam mem_w_waiting_data = 5;   
    reg [2:0]         mem_state;
    
    
@@ -73,9 +73,9 @@ module core
    
    wire [31:0]       rs1_v;
    wire [31:0]       rs2_v;
-   wire              reg_write_enabled_delayed;
-   wire [4:0]        reg_write_dest_delayed;
-   wire [31:0]       reg_write_data_delayed;   
+   reg              reg_write_enabled_delayed;
+   reg [4:0]        reg_write_dest_delayed;
+   reg [31:0]       reg_write_data_delayed;   
    regf _registers(.clk(clk), 
                    .rstn(rstn),
                    .rs1(rs1_a), .rs2(rs2_a), .rd1(rs1_v), .rd2(rs2_v), 
@@ -112,9 +112,6 @@ module core
       state <= FETCH;
    end
 
-   always @(posedge clk) begin
-   end
-   
    always @(posedge clk) begin
       if (state == FETCH) begin
          state <= DECODE;
@@ -180,7 +177,6 @@ module core
             // if instr is for write to memory
             if (mem_state ==  mem_w_init) begin // assert mem_w_init == mem_r_init
                axi_awaddr <= {exec_result[31:2], 2'b0}; // rs1 + imm
-               axi_awprot <= 3'b000;
                axi_awvalid <= 1;
 
                if(inst.sb) begin 
@@ -206,7 +202,7 @@ module core
 					end
 				  endcase	
 			   end else if (inst.sh) begin
-                  case(addr[1:0])
+                  case(exec_result[1:0])
 					2'b10 : begin
 					   axi_wstrb <= 4'b1100;
 					   axi_wdata <= {rs2_v[15:0], 16'b0};

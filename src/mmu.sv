@@ -233,14 +233,14 @@ module mmu(
    reg [2:0]                 writing_state;
    
    initial begin
-      selector <= 1;
+      write_selector <= 1;
       writing_state <= w_waiting_valid;      
       core_axi_awready <= 1;
       core_axi_wready <= 1;      
    end
    
    always @(posedge clk) begin
-      if (waiting_state == w_waiting_valid) begin       
+      if (writing_state == w_waiting_valid) begin       
          if(core_axi_awvalid) begin
             core_axi_awready <= 0;
             if (core_axi_awaddr[31:24] == 8'hFF) begin               
@@ -267,7 +267,7 @@ module mmu(
             
             writing_state <= w_waiting_ready;            
          end
-      end if (waiting_state == w_waiting_ready) begin
+      end if (writing_state == w_waiting_ready) begin
          if (forwrt_axi_awready) begin
             forwrt_axi_awvalid <= 0;
          end
@@ -279,7 +279,7 @@ module mmu(
             forwrt_axi_bready <= 1;            
             writing_state <= w_waiting_bresp;            
          end
-      end if (waiting_state == w_waiting_bready) begin
+      end if (writing_state == w_waiting_bready) begin
          if (forwrt_axi_bvalid) begin
             forwrt_axi_bready <= 0;
             
@@ -287,7 +287,7 @@ module mmu(
             core_axi_bvalid <= 1;
             writing_state <= w_writing_bresp;            
          end
-      end if (waiting_state == w_writing_bresp) begin
+      end if (writing_state == w_writing_bresp) begin
          if(core_axi_bready) begin
             forwrt_axi_bvalid <= 0;
             

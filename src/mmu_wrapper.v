@@ -88,6 +88,4 @@ module mmu_wrapper(
    mmu _mmu(mem_axi_araddr, mem_axi_arready, mem_axi_arvalid, mem_axi_bready, mem_axi_bresp, mem_axi_bvalid, mem_axi_rdata, mem_axi_rready, mem_axi_rresp, mem_axi_rvalid, mem_axi_awaddr, mem_axi_awready, mem_axi_awvalid, mem_axi_wdata, mem_axi_wready, mem_axi_wstrb, mem_axi_wvalid,
             core_axi_araddr, core_axi_arready, core_axi_arvalid, core_axi_bready, core_axi_bresp, core_axi_bvalid, core_axi_rdata, core_axi_rready, core_axi_rresp, core_axi_rvalid, core_axi_awaddr, core_axi_awready, core_axi_awvalid, core_axi_wdata, core_axi_wready, core_axi_wstrb, core_axi_wvalid,
             uart_axi_araddr, uart_axi_arready, uart_axi_arvalid, uart_axi_bready, uart_axi_bresp, uart_axi_bvalid, uart_axi_rdata, uart_axi_rready, uart_axi_rresp, uart_axi_rvalid, uart_axi_awaddr, uart_axi_awready, uart_axi_awvalid, uart_axi_wdata, uart_axi_wready, uart_axi_wstrb, uart_axi_wvalid);
-   
-end
 endmodule
