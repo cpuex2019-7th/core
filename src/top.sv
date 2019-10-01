@@ -119,7 +119,7 @@ module core
       if (state == FETCH) begin
          state <= DECODE;
       end else if (state == DECODE) begin
-         pc_instr <= pc;         
+         pc_instr <= pc;      
          state <= EXEC;
       end else if (state == EXEC) begin
          state <= MEM;
