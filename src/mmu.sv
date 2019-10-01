@@ -86,55 +86,33 @@ module mmu(
 	       output reg        uart_axi_wvalid);
 
    /*
-   // bypass all the signals.
-   // NOTE: those assignments will be deleted in the future XD
-   assign mem_axi_araddr = core_axi_araddr;
-   assign mem_axi_arready = core_axi_arready;
-   assign mem_axi_arvalid = core_axi_arvalid;
-   
-   assign mem_axi_bready = core_axi_bready;
-   assign mem_axi_bresp = core_axi_bresp;
-   assign mem_axi_bvalid = core_axi_bvalid;
-   
-   assign mem_axi_rdata = core_axi_rdata;
-   assign mem_axi_rready = core_axi_rready;
-   assign mem_axi_rresp = core_axi_rresp;
-   assign mem_axi_rvalid = core_axi_rvalid;
-   
-   assign mem_axi_awaddr = core_axi_awaddr;
-   assign mem_axi_awready = core_axi_awready;
-   assign mem_axi_awvalid = core_axi_awvalid;
-   
-   assign mem_axi_wdata = core_axi_wdata;
-   assign mem_axi_wready =  core_axi_wready;
-   assign mem_axi_wstrb = core_axi_wstrb;
-   assign mem_axi_wvalid = core_axi_wvalid ;   
+    // bypass all the signals.
+    // NOTE: those assignments will be deleted in the future XD
+    assign mem_axi_araddr = core_axi_araddr;
+    assign mem_axi_arready = core_axi_arready;
+    assign mem_axi_arvalid = core_axi_arvalid;
+    
+    assign mem_axi_bready = core_axi_bready;
+    assign mem_axi_bresp = core_axi_bresp;
+    assign mem_axi_bvalid = core_axi_bvalid;
+    
+    assign mem_axi_rdata = core_axi_rdata;
+    assign mem_axi_rready = core_axi_rready;
+    assign mem_axi_rresp = core_axi_rresp;
+    assign mem_axi_rvalid = core_axi_rvalid;
+    
+    assign mem_axi_awaddr = core_axi_awaddr;
+    assign mem_axi_awready = core_axi_awready;
+    assign mem_axi_awvalid = core_axi_awvalid;
+    
+    assign mem_axi_wdata = core_axi_wdata;
+    assign mem_axi_wready =  core_axi_wready;
+    assign mem_axi_wstrb = core_axi_wstrb;
+    assign mem_axi_wvalid = core_axi_wvalid ;   
     */
    
    // 1 for mem, 0 for UART
    reg                       read_selector;
-   wire                      forread_axi_araddr = read_selector? mem_axi_araddr : core_axi_araddr;
-   wire                      forread_axi_arready = read_selector? mem_axi_arready : core_axi_arready;
-   wire                      forread_axi_arvalid = read_selector? mem_axi_arvalid : core_axi_arvalid;
-
-   wire                      forread_axi_bready = read_selector? mem_axi_bready : core_axi_bready;
-   wire                      forread_axi_bresp = read_selector? mem_axi_bresp : core_axi_bresp;
-   wire                      forread_axi_bvalid = read_selector? mem_axi_bvalid : core_axi_bvalid;
-
-   wire                      forread_axi_rdata = read_selector? mem_axi_rdata : core_axi_rdata;
-   wire                      forread_axi_rready = read_selector? mem_axi_rready : core_axi_rready;
-   wire                      forread_axi_rresp = read_selector? mem_axi_rresp : core_axi_rresp;
-   wire                      forread_axi_rvalid = read_selector? mem_axi_rvalid : core_axi_rvalid;
-
-   wire                      forread_axi_awaddr = read_selector? mem_axi_awaddr : core_axi_awaddr;
-   wire                      forread_axi_awready = read_selector? mem_axi_awready : core_axi_awready;
-   wire                      forread_axi_awvalid = read_selector? mem_axi_awvalid : core_axi_awvalid;
-
-   wire                      forread_axi_wdata = read_selector? mem_axi_wdata : core_axi_wdata;
-   wire                      forread_axi_wready = read_selector? mem_axi_wready : core_axi_wready;
-   wire                      forread_axi_wstrb = read_selector? mem_axi_wstrb : core_axi_wstrb;
-   wire                      forread_axi_wvalid = read_selector? mem_axi_wvalid : core_axi_wvalid;
-   
 
    // Read
    localparam r_waiting_ready = 0;   
@@ -171,30 +149,42 @@ module mmu(
             state <= r_writing_ready;
          end
       end else if (reading_state == r_writing_ready) begin
-         if(forread_axi_arready) begin
-            forread_axi_arvalid <= 0;
-            
-            forread_axi_rready <= 1;
-            
-            reading_state <= r_waiting_data;
+         if (read_selector) begin
+            if(uart_axi_arready) begin
+               uart_axi_arvalid <= 0;            
+               uart_axi_rready <= 1;            
+               reading_state <= r_waiting_data;
+            end
+         end else begin         
+            if(mem_axi_arready) begin
+               mem_axi_arvalid <= 0;            
+               mem_axi_rready <= 1;            
+               reading_state <= r_waiting_data;
+            end
          end
       end if (reading_state == r_waiting_data) begin
-         if (forread_axi_rvalid) begin
-            forread_axi_rready <= 0;
-
-            core_axi_rvalid <= 1;
-            core_axi_rdata <= forread_axi_rdata;
-            core_axi_rresp <= 2'b0; // TODO
-            
-            reading_state <= r_writing_data;            
+         if (read_selector) begin
+            if (uart_axi_rvalid) begin
+               uart_axi_rready <= 0;
+               core_axi_rvalid <= 1;
+               core_axi_rdata <= uart_axi_rdata;
+               core_axi_rresp <= 2'b0; // TODO               
+               reading_state <= r_writing_data;            
+            end
+         end else begin
+            if (mem_axi_rvalid) begin
+               mem_axi_rready <= 0;
+               core_axi_rvalid <= 1;
+               core_axi_rdata <= mem_axi_rdata;
+               core_axi_rresp <= 2'b0; // TODO               
+               reading_state <= r_writing_data;            
+            end
          end
       end if (reading_state == r_writing_data) begin
          if(core_axi_rready) begin
             core_axi_rvalid <= 0;
-
             // for next loop
             core_axi_arready <= 1;
-
             reading_state <= r_waiting_ready;
          end
       end
@@ -203,27 +193,6 @@ module mmu(
 
    // Write
    reg                       write_selector;
-   wire                      forwrt_axi_araddr = write_selector? mem_axi_araddr : core_axi_araddr;
-   wire                      forwrt_axi_arready = write_selector? mem_axi_arready : core_axi_arready;
-   wire                      forwrt_axi_arvalid = write_selector? mem_axi_arvalid : core_axi_arvalid;
-
-   wire                      forwrt_axi_bready = write_selector? mem_axi_bready : core_axi_bready;
-   wire                      forwrt_axi_bresp = write_selector? mem_axi_bresp : core_axi_bresp;
-   wire                      forwrt_axi_bvalid = write_selector? mem_axi_bvalid : core_axi_bvalid;
-
-   wire                      forwrt_axi_rdata = write_selector? mem_axi_rdata : core_axi_rdata;
-   wire                      forwrt_axi_rready = write_selector? mem_axi_rready : core_axi_rready;
-   wire                      forwrt_axi_rresp = write_selector? mem_axi_rresp : core_axi_rresp;
-   wire                      forwrt_axi_rvalid = write_selector? mem_axi_rvalid : core_axi_rvalid;
-
-   wire                      forwrt_axi_awaddr = write_selector? mem_axi_awaddr : core_axi_awaddr;
-   wire                      forwrt_axi_awready = write_selector? mem_axi_awready : core_axi_awready;
-   wire                      forwrt_axi_awvalid = write_selector? mem_axi_awvalid : core_axi_awvalid;
-
-   wire                      forwrt_axi_wdata = write_selector? mem_axi_wdata : core_axi_wdata;
-   wire                      forwrt_axi_wready = write_selector? mem_axi_wready : core_axi_wready;
-   wire                      forwrt_axi_wstrb = write_selector? mem_axi_wstrb : core_axi_wstrb;
-   wire                      forwrt_axi_wvalid = write_selector? mem_axi_wvalid : core_axi_wvalid;
 
    localparam w_waiting_valid = 0;   
    localparam w_waiting_ready = 1;   
@@ -261,35 +230,68 @@ module mmu(
          end
 
          // here write_selector should be already set!
-         if (!core_axi_awready && !core_axi_wready) begin            
-            forwrt_axi_awvalid <= 1;
-            forwrt_axi_wvalid <= 1;
+         if (!core_axi_awready && !core_axi_wready) begin
+            if (write_selector) begin               
+               uart_axi_awvalid <= 1;
+               uart_axi_wvalid <= 1;
+            end else begin
+               mem_axi_awvalid <= 1;
+               mem_axi_wvalid <= 1;
+            end
             
             writing_state <= w_waiting_ready;            
          end
       end if (writing_state == w_waiting_ready) begin
-         if (forwrt_axi_awready) begin
-            forwrt_axi_awvalid <= 0;
-         end
-         if (forwrt_axi_wready) begin
-            forwrt_axi_wvalid <= 0;
-         end
+         if (write_selector) begin               
+            if (uart_axi_awready) begin
+               uart_axi_awvalid <= 0;
+            end
+            if (uart_axi_wready) begin
+               uart_axi_wvalid <= 0;
+            end
 
-         if (!forwrt_axi_awvalid && !forwrt_axi_wvalid) begin
-            forwrt_axi_bready <= 1;            
-            writing_state <= w_waiting_bresp;            
+            if (!uart_axi_awvalid && !uart_axi_wvalid) begin
+               uart_axi_bready <= 1;            
+               writing_state <= w_waiting_bresp;            
+            end
+         end else begin
+            if (mem_axi_awready) begin
+               mem_axi_awvalid <= 0;
+            end
+            if (mem_axi_wready) begin
+               mem_axi_wvalid <= 0;
+            end
+
+            if (!mem_axi_awvalid && !mem_axi_wvalid) begin
+               mem_axi_bready <= 1;            
+               writing_state <= w_waiting_bresp;            
+            end
          end
       end if (writing_state == w_waiting_bready) begin
-         if (forwrt_axi_bvalid) begin
-            forwrt_axi_bready <= 0;
-            
-            core_axi_bresp <= forwrt_axi_bresp;
-            core_axi_bvalid <= 1;
-            writing_state <= w_writing_bresp;            
+         if (write_selector) begin            
+            if (uart_axi_bvalid) begin
+               uart_axi_bready <= 0;
+               
+               core_axi_bresp <= uart_axi_bresp;
+               core_axi_bvalid <= 1;
+               writing_state <= w_writing_bresp;            
+            end
+         end else begin
+            if (mem_axi_bvalid) begin
+               mem_axi_bready <= 0;
+               
+               core_axi_bresp <= mem_axi_bresp;
+               core_axi_bvalid <= 1;
+               writing_state <= w_writing_bresp;            
+            end
          end
       end if (writing_state == w_writing_bresp) begin
          if(core_axi_bready) begin
-            forwrt_axi_bvalid <= 0;
+            if (write_selector) begin
+               uart_axi_bvalid <= 0;
+            end else begin
+               mem_axi_bvalid <= 0;
+            end
             
             core_axi_awready <= 1;
             core_axi_wready <= 1;
