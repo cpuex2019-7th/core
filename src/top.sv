@@ -3,7 +3,9 @@
 module core
   (input wire clk, 
    input wire        rstn,
-
+   output reg [31:0] pc,
+   input wire [31:0] instr_raw_from_mem,
+   
    // Bus for MMU
    // address read channel
    output reg [31:0] axi_araddr,
@@ -36,7 +38,6 @@ module core
   // cpu internals
    /////////////////////
    // TODO: use interface (including csr)
-   reg [31:0]        pc;
    reg [2:0]         state;
 
    localparam mem_r_init = 0;   
@@ -52,12 +53,7 @@ module core
    /////////////////////
    // components
    /////////////////////
-   wire [31:0]       instr_raw;   
-   fetch _fetch(.clk(clk), 
-                .rstn(rstn), 
-                .pc(pc), 
-                .state(state),
-                .data(instr_raw));
+   reg [31:0]       instr_raw;   
 
    wire [4:0]        rd_a;
    wire [4:0]        rs1_a;
@@ -117,6 +113,7 @@ module core
 
    always @(posedge clk) begin
       if (state == FETCH) begin
+         instr_raw <= instr_raw_from_mem;
          state <= DECODE;
       end else if (state == DECODE) begin
          pc_instr <= pc;      

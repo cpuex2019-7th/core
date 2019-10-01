@@ -2,6 +2,9 @@ module core_wrapper
   (input wire clk, 
    input wire rstn,
    
+   output wire [31:0] pc,
+   input wire [31:0] instr_raw_from_mem,   
+   
    // Bus for MMU
    // address read channel
    output wire [31:0] axi_araddr,
@@ -30,6 +33,6 @@ module core_wrapper
    output wire [3:0]  axi_wstrb,
    output wire        axi_wvalid);
    
-   core _core(clk, rstn,
+   core _core(clk, rstn, pc, instr_raw_from_mem,
               axi_araddr, axi_arready, axi_arvalid, axi_bready, axi_bresp, axi_bvalid, axi_rdata, axi_rready, axi_rresp, axi_rvalid, axi_awaddr, axi_awready, axi_awvalid, axi_wdata, axi_wready, axi_wstrb, axi_wvalid);   
 endmodule
