@@ -13,7 +13,9 @@ module alu
    output wire [31:0] result
 
    );
-   
+   wire [63:0] mul_temp = $signed({{32{rs1_v[31]}}, rs1_v}) * $signed({{32{rs2_v[31]}}, rs2_v});
+   wire [63:0] mul_temp_hsu = $signed({{32{rs1_v[31]}}, rs1_v}) * $signed({32'b0, rs2_v});
+   wire [63:0] mul_temp_hu = $signed({32'b0, rs1_v}) * $signed({32'b0, rs2_v});
    assign result =  ///// rv32i /////
                     // lui, auipc
                     instr.lui? imm:
@@ -60,10 +62,10 @@ module alu
                     instr.i_and? rs1_v & rs2_v:
                     ///// rv32m /////
                     // seems to be buggy; not fully tested yet.
-                    instr.mul? {$signed({{32{rs1_v[31]}}, rs1_v}) * $signed({{32{rs2_v[31]}}, rs2_v})}[31:0]:
-                    instr.mulh? {$signed({{32{rs1_v[31]}}, rs1_v}) * $signed({{32{rs2_v[31]}}, rs2_v})}[63:32]:
-                    instr.mulhsu? {$signed({{32{rs1_v[31]}}, rs1_v}) * $signed({32'b0, rs2_v})}[63:32]:
-                    instr.mulhu? {$signed({32'b0, rs1_v}) * $signed({32'b0, rs2_v})}[63:32]:
+                    instr.mul? mul_temp[31:0]:
+                    instr.mulh? mul_temp[63:32]:
+                    instr.mulhsu? mul_temp_hsu[63:32]:
+                    instr.mulhu? mul_temp_hu[63:32]:
                     instr.div? $signed(rs1_v) / $signed(rs2_v):
                     instr.divu? rs1_v / rs2_v:
                     instr.rem? $signed(rs1_v) % $signed(rs2_v):

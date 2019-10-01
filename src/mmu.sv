@@ -146,7 +146,7 @@ module mmu(
                read_selector <= 0;
             end
 
-            state <= r_writing_ready;
+            reading_state <= r_writing_ready;
          end
       end else if (reading_state == r_writing_ready) begin
          if (read_selector) begin
@@ -287,11 +287,7 @@ module mmu(
          end
       end if (writing_state == w_writing_bresp) begin
          if(core_axi_bready) begin
-            if (write_selector) begin
-               uart_axi_bvalid <= 0;
-            end else begin
-               mem_axi_bvalid <= 0;
-            end
+            core_axi_bvalid <= 0;
             
             core_axi_awready <= 1;
             core_axi_wready <= 1;

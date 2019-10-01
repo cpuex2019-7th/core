@@ -86,6 +86,9 @@ module core
    reg [31:0]        pc_instr;
    wire [31:0]       exec_result;
    
+   wire              reg_write_enabled;
+   wire [4:0]        reg_write_dest;
+   
    wire              mem_write_enabled;
    wire              mem_read_enabled;
    wire [31:0]       mem_target;
@@ -179,7 +182,7 @@ module core
                axi_awaddr <= {exec_result[31:2], 2'b0}; // rs1 + imm
                axi_awvalid <= 1;
 
-               if(inst.sb) begin 
+               if(instr.sb) begin 
 				  case(exec_result[1:0])
 					2'b11 : begin 
 					   axi_wstrb <= 4'b1000;
@@ -201,7 +204,7 @@ module core
                        state <= INVALID;                               
 					end
 				  endcase	
-			   end else if (inst.sh) begin
+			   end else if (instr.sh) begin
                   case(exec_result[1:0])
 					2'b10 : begin
 					   axi_wstrb <= 4'b1100;
@@ -215,7 +218,7 @@ module core
 					   state <= INVALID;                       
 					end
 				  endcase
-               end  else if (inst.sw) begin
+               end  else if (instr.sw) begin
                   axi_wstrb <= 4'b1111;
 				  axi_wdata <= rs2_v;                  
                end
