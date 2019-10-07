@@ -7,9 +7,10 @@ module mmu(
 	       // Bus for RAM
            ////////////
            // address read channel
-	       output reg [31:0] mem_axi_araddr,
+	       output reg [11:0] mem_axi_araddr,
 	       input wire        mem_axi_arready,
 	       output reg        mem_axi_arvalid,
+	       output reg [2:0]  mem_axi_arprot,	       
 
            // response channel
 	       output reg        mem_axi_bready,
@@ -23,9 +24,10 @@ module mmu(
 	       input wire        mem_axi_rvalid,
 
            // address write channel
-	       output reg [31:0] mem_axi_awaddr,
+	       output reg [11:0] mem_axi_awaddr,
 	       input wire        mem_axi_awready,
 	       output reg        mem_axi_awvalid,
+	       output reg [2:0]  mem_axi_awprot,
 
            // data write channel
 	       output reg [31:0] mem_axi_wdata,
@@ -59,7 +61,7 @@ module mmu(
 
            // Bus for UART
            ////////////
-	       output reg [31:0] uart_axi_araddr,
+	       output reg [3:0] uart_axi_araddr,
 	       input wire        uart_axi_arready,
 	       output reg        uart_axi_arvalid,
 
@@ -75,7 +77,7 @@ module mmu(
 	       input wire        uart_axi_rvalid,
 
            // address write channel
-	       output reg [31:0] uart_axi_awaddr,
+	       output reg [3:0] uart_axi_awaddr,
 	       input wire        uart_axi_awready,
 	       output reg        uart_axi_awvalid,
 
@@ -142,7 +144,7 @@ module mmu(
             end else begin
                // Mem
                mem_axi_arvalid <= 1;
-               mem_axi_araddr <= core_axi_araddr;               
+               mem_axi_araddr <= core_axi_araddr[11:0];               
                read_selector <= 0;
             end
 
@@ -205,28 +207,33 @@ module mmu(
       write_selector <= 1;
       writing_state <= w_waiting_valid;      
       core_axi_awready <= 1;
-      core_axi_wready <= 1;      
+      core_axi_wready <= 1;   
+
+      mem_axi_arprot <= 3'b000;         
+      mem_axi_awprot <= 3'b000;
    end
    
    always @(posedge clk) begin
       if (writing_state == w_waiting_valid) begin       
          if(core_axi_awvalid) begin
             core_axi_awready <= 0;
-            if (core_axi_awaddr[31:24] == 8'hFF) begin               
+            if (core_axi_awaddr[31:24] == 8'h7F) begin               
                // UART
                write_selector <= 0;
                uart_axi_awaddr <= 4;
             end else begin       
                // Mem        
                write_selector <= 1;
-               mem_axi_awaddr <= core_axi_awaddr;               
+               mem_axi_awaddr <= core_axi_awaddr[11:0];               
             end
          end
          
          if(core_axi_wvalid) begin
             core_axi_wready <= 0;
             mem_axi_wdata <= core_axi_wdata;
-            uart_axi_wdata <= core_axi_wdata;            
+            mem_axi_wstrb <= core_axi_wstrb;
+            uart_axi_wdata <= core_axi_wdata;
+            uart_axi_wstrb <= core_axi_wstrb;          
          end
 
          // here write_selector should be already set!
