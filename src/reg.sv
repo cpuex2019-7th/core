@@ -22,13 +22,15 @@ module regf
    end
    
    always @(posedge clk) begin
-         rd1 <= regs[rs1];
-         rd2 <= regs[rs2];         
-
-      if(w_enable) begin
-         if(w_addr != 0) begin
-             regs[w_addr] <= w_data;  
-         end       
+      if(rstn) begin
+          rd1 <= regs[rs1];
+          rd2 <= regs[rs2];         
+    
+          if(w_enable) begin
+             if(w_addr != 0) begin
+                 regs[w_addr] <= w_data;  
+             end       
+          end
       end
    end
 endmodule

@@ -37,19 +37,21 @@ module execute
             .result(alu_result));   
    
    always @(posedge clk) begin
-      if (state == EXEC) begin
+      if (rstn && state == EXEC) begin
          // memory        
-         mem_write_enabled <= (instr.lb
+         mem_read_enabled <= (instr.lb
                                || instr.lh
-                               || instr.lw);
-         mem_read_enabled <= (instr.sb
+                               || instr.lw
+                               || instr.lbu
+                               || instr.lhu);
+         mem_write_enabled <= (instr.sb
                               || instr.sh
                               || instr.sw);         
          mem_target <= alu_result;   
 
          // reg
          reg_write_enabled <= !(instr.beq);
-         reg_write_dest <= rd;
+         reg_write_dest <= (instr.sb || instr.sh || instr.sw) ? rs2 : rd;
          
          // control
          is_jump_enabled <= (instr.jal 

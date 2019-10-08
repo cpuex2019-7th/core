@@ -37,7 +37,7 @@ module decoder
    assign rs2 = (r_type || s_type || b_type) ? _rs2 : 5'b00000;
    
    always @(posedge clk) begin
-      if (state ==  DECODE) begin
+      if (rstn && state ==  DECODE) begin
          /////////   
          // rv32i
          /////////   
@@ -118,7 +118,7 @@ module decoder
                           {20'b0, instr_raw[31:25], instr_raw[11:7]}):
                 b_type ? (instr_raw[31] ? {~19'b0, instr_raw[31], instr_raw[7], instr_raw[30:25], instr_raw[11:8], 1'b0}:
                           {19'b0, instr_raw[31], instr_raw[7], instr_raw[30:25], instr_raw[11:8], 1'b0}):
-                u_type ? {instr_raw[31:12], 11'b0} : 
+                u_type ? {instr_raw[31:12], 12'b0} : 
                 j_type ? (instr_raw[31] ? {~11'b0, instr_raw[31], instr_raw[19:12], instr_raw[20], instr_raw[30:21], 1'b0}:
                           {11'b0, instr_raw[31], instr_raw[19:12], instr_raw[20], instr_raw[30:21], 1'b0}):
                 32'b0;
