@@ -3,5 +3,5 @@
 
 loop:   
     sw t0, sp, 0x4
-    lw t1, sp, 0xc
+    lw t1, sp, 0x8
     j loop
