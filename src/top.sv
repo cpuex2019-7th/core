@@ -11,6 +11,7 @@ module core
    output reg [31:0] axi_araddr,
    input wire        axi_arready,
    output reg        axi_arvalid,
+   output reg [2:0]  axi_arprot, 
 
    // response channel
    output reg        axi_bready,
@@ -27,18 +28,24 @@ module core
    output reg [31:0] axi_awaddr,
    input wire        axi_awready,
    output reg        axi_awvalid,
+   output reg [2:0]  axi_awprot, 
 
    // data write channel
    output reg [31:0] axi_wdata,
    input wire        axi_wready,
    output reg [3:0]  axi_wstrb,
-   output reg        axi_wvalid);
+   output reg        axi_wvalid,
+  
+   // for debug
+   output wire [2:0] debug_state,
+   output wire [2:0] debug_mem_state);
    
    /////////////////////
-  // cpu internals
+   // cpu internals
    /////////////////////
    // TODO: use interface (including csr)
-   reg [2:0]         state;
+   (* mark_debug = "true" *) reg [2:0]         state;
+   assign debug_state = state;   
 
    localparam mem_r_init = 0;   
    localparam mem_r_waiting_ready = 1;
@@ -47,13 +54,13 @@ module core
    localparam mem_w_init = 0;
    localparam mem_w_waiting_ready = 1;
    localparam mem_w_waiting_data = 2;   
-   reg [2:0]         mem_state;
-   
+   (* mark_debug = "true" *) reg [2:0]         mem_state;
+   assign debug_mem_state = mem_state;      
    
    /////////////////////
    // components
    /////////////////////
-   reg [31:0]        instr_raw;   
+   (* mark_debug = "true" *) reg [31:0]        instr_raw;   
 
    wire [4:0]        rd_a;
    wire [4:0]        rs1_a;
@@ -89,7 +96,8 @@ module core
    wire              mem_read_enabled;
    
    wire              is_jump_enabled;
-   wire [31:0]       jump_dest;   
+   wire [31:0]       jump_dest;
+   
    execute _execute(.clk(clk), .rstn(rstn), 
                     .state(state),
                     .pc(pc_instr), .instr(instr), 
@@ -126,6 +134,7 @@ module core
                // if instr is for read from mem
                if (mem_state == mem_r_init) begin               
                   axi_araddr <= {exec_result[31:2], 2'b0}; // rs1+imm, 2'b0 is for alignment
+                  axi_arprot <= 3'b000;                  
                   axi_arvalid <= 1;
                   mem_state <= mem_r_waiting_ready;               
                end else if (mem_state == mem_r_waiting_ready) begin
@@ -137,7 +146,7 @@ module core
                end else if (mem_state == mem_r_waiting_data) begin
                   if (axi_rvalid) begin
                      axi_rready <= 0;
-                     if (instr.lb || instr.lbu) begin
+                     if (instr.lb) begin
                         case(exec_result[1:0])
                           2'b11: reg_write_data_delayed <= {{24{axi_rdata[31]}}, axi_rdata[31:24]};
                           2'b10: reg_write_data_delayed <= {{24{axi_rdata[23]}}, axi_rdata[23:16]};
@@ -177,6 +186,7 @@ module core
                // if instr is for write to memory
                if (mem_state ==  mem_w_init) begin // assert mem_w_init == mem_r_init
                   axi_awaddr <= {exec_result[31:2], 2'b0}; // rs1 + imm
+                  axi_awprot <= 3'b000;                  
                   axi_awvalid <= 1;
                   
                   if(instr.sb) begin 
@@ -234,7 +244,6 @@ module core
                   end               
                end else if (mem_state == mem_w_waiting_data) begin
                   if (axi_bvalid) begin
-                     // TODO: check bresp
                      axi_bready <= 0;                  
                      state <= WRITE;
                      reg_write_enabled_delayed <= 0;

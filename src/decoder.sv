@@ -11,8 +11,7 @@ module decoder
    output reg [4:0]  rd,
    output wire [4:0] rs1,
    output wire [4:0] rs2,
-   output reg [31:0] imm   
-   );
+   output reg [31:0] imm);
 
    // basic component
    // the location of immediate value may change

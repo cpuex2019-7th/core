@@ -48,7 +48,7 @@ module execute
    // set flags
    //////////////////////
    always @(posedge clk) begin
-      if (rstn && state == EXEC) bppegin
+      if (rstn && state == EXEC) begin
          // memory read/write
          mem_read_enabled <= (instr.lb
                                || instr.lh
