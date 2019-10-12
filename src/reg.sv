@@ -1,3 +1,5 @@
+`default_nettype none
+
 module regf
   (input wire         clk,
    input wire        rstn,
@@ -38,3 +40,5 @@ module regf
       end
    end
 endmodule
+
+`default_nettype wire

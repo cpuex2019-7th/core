@@ -1,3 +1,4 @@
+`default_nettype none
 `include "def.sv"
 
 module alu 
@@ -72,3 +73,4 @@ module alu
                     instr.remu? rs1_v % rs2_v:   
                     31'b0;      
 endmodule
+`default_nettype wire

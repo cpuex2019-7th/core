@@ -1,3 +1,4 @@
+`default_nettype none
 `include "def.sv"
 
 module execute
@@ -96,3 +97,4 @@ module execute
       end
    end  
 endmodule // execute
+`default_nettype none

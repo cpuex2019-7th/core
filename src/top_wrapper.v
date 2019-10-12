@@ -1,3 +1,5 @@
+`default_nettype none
+
 module core_wrapper
   (input wire clk, 
    input wire         rstn,
@@ -71,3 +73,5 @@ module core_wrapper
               .debug_state(.debug_state),
               .debug_mem_state(.debug_mem_state));   
 endmodule
+
+`default_nettype wire

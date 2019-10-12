@@ -1,4 +1,4 @@
-// mmu modoki
+`default_nettype none
 
 module mmu(
 	       input wire        clk,
@@ -296,3 +296,4 @@ module mmu(
       end        
    end
 endmodule
+`default_nettype wire

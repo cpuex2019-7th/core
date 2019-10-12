@@ -1,3 +1,4 @@
+`default_nettype none
 `include "def.sv"
 
 module core
@@ -268,3 +269,4 @@ module core
       end
    end
 endmodule
+`default_nettype wire

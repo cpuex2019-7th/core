@@ -1,3 +1,4 @@
+`default_nettype none
 `include "def.sv"
 
 module decoder
@@ -124,3 +125,4 @@ module decoder
       end
    end
 endmodule
+`default_nettype wire

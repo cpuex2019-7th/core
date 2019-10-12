@@ -1,4 +1,4 @@
-// mmu modoki
+`default_nettype none
 
 module mmu_wrapper(
 	               input wire        clk,
@@ -172,3 +172,4 @@ module mmu_wrapper(
             .uart_axi_wstrb(uart_axi_wstrb), 
             .uart_axi_wvalid(uart_axi_wvalid));      
 endmodule
+`default_nettype wire
