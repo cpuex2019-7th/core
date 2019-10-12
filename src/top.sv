@@ -5,7 +5,7 @@ module core
    input wire        rstn,
    output reg [31:0] pc,
    input wire [31:0] instr_raw_from_mem,
-   
+  
    // Bus for MMU
    // address read channel
    output reg [31:0] axi_araddr,
@@ -53,7 +53,7 @@ module core
    /////////////////////
    // components
    /////////////////////
-   reg [31:0]       instr_raw;   
+   reg [31:0]        instr_raw;   
 
    wire [4:0]        rd_a;
    wire [4:0]        rs1_a;
@@ -69,9 +69,9 @@ module core
    
    wire [31:0]       rs1_v;
    wire [31:0]       rs2_v;
-   reg              reg_write_enabled_delayed;
-   reg [4:0]        reg_write_dest_delayed;
-   reg [31:0]       reg_write_data_delayed;   
+   reg               reg_write_enabled_delayed;
+   reg [4:0]         reg_write_dest_delayed;
+   reg [31:0]        reg_write_data_delayed;   
    regf _registers(.clk(clk), 
                    .rstn(rstn),
                    .rs1(rs1_a), .rs2(rs2_a), .rd1(rs1_v), .rd2(rs2_v), 
@@ -87,7 +87,6 @@ module core
    
    wire              mem_write_enabled;
    wire              mem_read_enabled;
-   wire [31:0]       mem_target;
    
    wire              is_jump_enabled;
    wire [31:0]       jump_dest;   
@@ -99,7 +98,7 @@ module core
                     .rs2(rs2_a), .rs2_v(rs2_v), 
                     .imm(imm), 
                     .result(exec_result), 
-                    .mem_write_enabled(mem_write_enabled), .mem_read_enabled(mem_read_enabled), .mem_target(mem_target), 
+                    .mem_write_enabled(mem_write_enabled), .mem_read_enabled(mem_read_enabled),
                     .reg_write_enabled(reg_write_enabled), .reg_write_dest(reg_write_dest), 
                     .is_jump_enabled(is_jump_enabled), .jump_dest(jump_dest));
    
@@ -113,150 +112,150 @@ module core
 
    always @(posedge clk) begin
       if(rstn) begin
-          if (state == FETCH) begin
-             instr_raw <= instr_raw_from_mem;
-             state <= DECODE;
-          end else if (state == DECODE) begin
-             pc_instr <= pc;      
-             state <= EXEC;
-          end else if (state == EXEC) begin
-             state <= MEM;
-             mem_state <= mem_r_init;
-          end else if (state == MEM) begin;
-             if (instr.lb || instr.lh || instr.lw  || instr.lbu || instr.lhu) begin
-                // if instr is for read from mem
-                if (mem_state == mem_r_init) begin               
-                   axi_araddr <= {exec_result[31:2], 2'b0}; // rs1+imm, 2'b0 is for alignment
-                   axi_arvalid <= 1;
-                   mem_state <= mem_r_waiting_ready;               
-                end else if (mem_state == mem_r_waiting_ready) begin
-                   if (axi_arready) begin
-                      axi_arvalid <= 0;
-                      axi_rready <= 1;                  
-                      mem_state <= mem_r_waiting_data;                  
-                   end
-                end else if (mem_state == mem_r_waiting_data) begin
-                   if (axi_rvalid) begin
-                      axi_rready <= 0;
-                      if (instr.lb || instr.lbu) begin
-                         case(exec_result[1:0])
-                           2'b11: reg_write_data_delayed <= {{24{axi_rdata[31]}}, axi_rdata[31:24]};
-                           2'b10: reg_write_data_delayed <= {{24{axi_rdata[23]}}, axi_rdata[23:16]};
-                           2'b01: reg_write_data_delayed <= {{24{axi_rdata[15]}}, axi_rdata[15:8]};
-                           2'b00: reg_write_data_delayed <= {{24{axi_rdata[7]}}, axi_rdata[7:0]};
-                           default: reg_write_data_delayed <= 32'b0;                       
-                         endcase
-                      end else if (instr.lh) begin
-                         case(exec_result[1:0])
-                           2'b10 : reg_write_data_delayed <= {{16{axi_rdata[31]}}, axi_rdata[31:16]};
-                           2'b00 : reg_write_data_delayed <= {{16{axi_rdata[15]}}, axi_rdata[15:0]};
-                           default: reg_write_data_delayed <= 32'b0;                       
-                         endcase
-                      end else if (instr.lw) begin
-                         reg_write_data_delayed <= axi_rdata;                     
-                      end else if (instr.lbu) begin                     
-                         case(exec_result[1:0])
-                           2'b11: reg_write_data_delayed <= {24'b0, axi_rdata[31:24]};
-                           2'b10: reg_write_data_delayed <= {24'b0, axi_rdata[23:16]};
-                           2'b01: reg_write_data_delayed <= {24'b0, axi_rdata[15:8]};
-                           2'b00: reg_write_data_delayed <= {24'b0, axi_rdata[7:0]};
-                           default: reg_write_data_delayed <= 32'b0;                       
-                         endcase
-                      end else if (instr.lhu) begin
-                         case(exec_result[1:0])
-                           2'b10 : reg_write_data_delayed <= {16'b0, axi_rdata[31:16]};
-                           2'b00 : reg_write_data_delayed <= {16'b0, axi_rdata[15:0]};
-                           default: reg_write_data_delayed <= 32'b0;                       
-                         endcase
-                      end
-                      state <= WRITE;
-                      reg_write_enabled_delayed <= 1;
-                      reg_write_dest_delayed <= reg_write_dest;                
-                   end               
-                end
-             end else if (instr.sb || instr.sh || instr.sw) begin
-                // if instr is for write to memory
-                if (mem_state ==  mem_w_init) begin // assert mem_w_init == mem_r_init
-                   axi_awaddr <= {exec_result[31:2], 2'b0}; // rs1 + imm
-                   axi_awvalid <= 1;
-    
-                   if(instr.sb) begin 
-                      case(exec_result[1:0])
-                        2'b11 : begin 
-                           axi_wstrb <= 4'b1000;
-                           axi_wdata <= {rs2_v[7:0], 24'b0};
-                        end
-                        2'b10 : begin
-                           axi_wstrb <= 4'b0100;
-                           axi_wdata <= {8'b0, rs2_v[7:0], 16'b0};
-                        end
-                        2'b01 : begin
-                           axi_wstrb <= 4'b0010;
-                           axi_wdata <= {16'b0, rs2_v[7:0], 8'b0};
-                        end
-                        2'b00 : begin
-                           axi_wstrb <= 4'b0001;
-                           axi_wdata <= {24'b0, rs2_v[7:0]};
-                        end
-                        default : begin
-                           state <= INVALID;                               
-                        end
-                      endcase	
-                   end else if (instr.sh) begin
-                      case(exec_result[1:0])
-                        2'b10 : begin
-                           axi_wstrb <= 4'b1100;
-                           axi_wdata <= {rs2_v[15:0], 16'b0};
-                        end
-                        2'b00 : begin
-                           axi_wstrb <= 4'b0011;
-                           axi_wdata <= {16'b0, rs2_v[15:0]};
-                        end
-                        default : begin
-                           state <= INVALID;                       
-                        end
-                      endcase
-                   end  else if (instr.sw) begin
-                      axi_wstrb <= 4'b1111;
-                      axi_wdata <= rs2_v;                  
-                   end
-                   axi_wvalid <= 1;
-                   mem_state <= mem_w_waiting_ready;
-                end else if (mem_state == mem_w_waiting_ready) begin
-                   if(axi_awready) begin
-                      axi_awvalid <= 0;
-                   end
-                   if(axi_wready) begin
-                      axi_wvalid <= 0;
-                   end
-                   if(!axi_awvalid && !axi_wvalid) begin
-                      axi_bready <= 1;
-                      mem_state <= mem_w_waiting_data;                  
-                   end               
-                end else if (mem_state == mem_w_waiting_data) begin
-                   if (axi_bvalid) begin
-                      // TODO: check bresp
-                      axi_bready <= 0;                  
-                      state <= WRITE;
-                      reg_write_enabled_delayed <= 0;
-                   end
-                end
-             end else if (is_jump_enabled) begin
-                // when we process jump instrcutions, we can skip WRITE phase :-)
-                pc <= jump_dest;
-                state <= FETCH;
-             end else begin
-                // if there's no need to r/w memory
-                reg_write_enabled_delayed <= reg_write_enabled;
-                reg_write_dest_delayed <= reg_write_dest;            
-                reg_write_data_delayed <= exec_result;      
-                state <= WRITE;
-             end          
-          end else if (state == WRITE) begin         
-             // TODO :thinking_face:
-             pc <= pc + 4;                       
-             state <= FETCH;
-          end
-       end
+         if (state == FETCH) begin
+            instr_raw <= instr_raw_from_mem;
+            state <= DECODE;
+         end else if (state == DECODE) begin
+            pc_instr <= pc;      
+            state <= EXEC;
+         end else if (state == EXEC) begin
+            state <= MEM;
+            mem_state <= mem_r_init;
+         end else if (state == MEM) begin;
+            if (mem_read_enabled) begin
+               // if instr is for read from mem
+               if (mem_state == mem_r_init) begin               
+                  axi_araddr <= {exec_result[31:2], 2'b0}; // rs1+imm, 2'b0 is for alignment
+                  axi_arvalid <= 1;
+                  mem_state <= mem_r_waiting_ready;               
+               end else if (mem_state == mem_r_waiting_ready) begin
+                  if (axi_arready) begin
+                     axi_arvalid <= 0;
+                     axi_rready <= 1;                  
+                     mem_state <= mem_r_waiting_data;                  
+                  end
+               end else if (mem_state == mem_r_waiting_data) begin
+                  if (axi_rvalid) begin
+                     axi_rready <= 0;
+                     if (instr.lb || instr.lbu) begin
+                        case(exec_result[1:0])
+                          2'b11: reg_write_data_delayed <= {{24{axi_rdata[31]}}, axi_rdata[31:24]};
+                          2'b10: reg_write_data_delayed <= {{24{axi_rdata[23]}}, axi_rdata[23:16]};
+                          2'b01: reg_write_data_delayed <= {{24{axi_rdata[15]}}, axi_rdata[15:8]};
+                          2'b00: reg_write_data_delayed <= {{24{axi_rdata[7]}}, axi_rdata[7:0]};
+                          default: reg_write_data_delayed <= 32'b0;                       
+                        endcase
+                     end else if (instr.lh) begin
+                        case(exec_result[1:0])
+                          2'b10 : reg_write_data_delayed <= {{16{axi_rdata[31]}}, axi_rdata[31:16]};
+                          2'b00 : reg_write_data_delayed <= {{16{axi_rdata[15]}}, axi_rdata[15:0]};
+                          default: reg_write_data_delayed <= 32'b0;                       
+                        endcase
+                     end else if (instr.lw) begin
+                        reg_write_data_delayed <= axi_rdata;                     
+                     end else if (instr.lbu) begin                     
+                        case(exec_result[1:0])
+                          2'b11: reg_write_data_delayed <= {24'b0, axi_rdata[31:24]};
+                          2'b10: reg_write_data_delayed <= {24'b0, axi_rdata[23:16]};
+                          2'b01: reg_write_data_delayed <= {24'b0, axi_rdata[15:8]};
+                          2'b00: reg_write_data_delayed <= {24'b0, axi_rdata[7:0]};
+                          default: reg_write_data_delayed <= 32'b0;                       
+                        endcase
+                     end else if (instr.lhu) begin
+                        case(exec_result[1:0])
+                          2'b10 : reg_write_data_delayed <= {16'b0, axi_rdata[31:16]};
+                          2'b00 : reg_write_data_delayed <= {16'b0, axi_rdata[15:0]};
+                          default: reg_write_data_delayed <= 32'b0;                       
+                        endcase
+                     end
+                     state <= WRITE;
+                     reg_write_enabled_delayed <= 1;
+                     reg_write_dest_delayed <= reg_write_dest;                
+                  end               
+               end
+            end else if (mem_write_enabled) begin
+               // if instr is for write to memory
+               if (mem_state ==  mem_w_init) begin // assert mem_w_init == mem_r_init
+                  axi_awaddr <= {exec_result[31:2], 2'b0}; // rs1 + imm
+                  axi_awvalid <= 1;
+                  
+                  if(instr.sb) begin 
+                     case(exec_result[1:0])
+                       2'b11 : begin 
+                          axi_wstrb <= 4'b1000;
+                          axi_wdata <= {rs2_v[7:0], 24'b0};
+                       end
+                       2'b10 : begin
+                          axi_wstrb <= 4'b0100;
+                          axi_wdata <= {8'b0, rs2_v[7:0], 16'b0};
+                       end
+                       2'b01 : begin
+                          axi_wstrb <= 4'b0010;
+                          axi_wdata <= {16'b0, rs2_v[7:0], 8'b0};
+                       end
+                       2'b00 : begin
+                          axi_wstrb <= 4'b0001;
+                          axi_wdata <= {24'b0, rs2_v[7:0]};
+                       end
+                       default : begin
+                          state <= INVALID;                               
+                       end
+                     endcase	
+                  end else if (instr.sh) begin
+                     case(exec_result[1:0])
+                       2'b10 : begin
+                          axi_wstrb <= 4'b1100;
+                          axi_wdata <= {rs2_v[15:0], 16'b0};
+                       end
+                       2'b00 : begin
+                          axi_wstrb <= 4'b0011;
+                          axi_wdata <= {16'b0, rs2_v[15:0]};
+                       end
+                       default : begin
+                          state <= INVALID;                       
+                       end
+                     endcase
+                  end  else if (instr.sw) begin
+                     axi_wstrb <= 4'b1111;
+                     axi_wdata <= rs2_v;                  
+                  end
+                  axi_wvalid <= 1;
+                  mem_state <= mem_w_waiting_ready;
+               end else if (mem_state == mem_w_waiting_ready) begin
+                  if(axi_awready) begin
+                     axi_awvalid <= 0;
+                  end
+                  if(axi_wready) begin
+                     axi_wvalid <= 0;
+                  end
+                  if(!axi_awvalid && !axi_wvalid) begin
+                     axi_bready <= 1;
+                     mem_state <= mem_w_waiting_data;                  
+                  end               
+               end else if (mem_state == mem_w_waiting_data) begin
+                  if (axi_bvalid) begin
+                     // TODO: check bresp
+                     axi_bready <= 0;                  
+                     state <= WRITE;
+                     reg_write_enabled_delayed <= 0;
+                  end
+               end
+            end else if (is_jump_enabled) begin
+               // when we process jump instrcutions, we can skip WRITE phase :-)
+               pc <= jump_dest;
+               state <= FETCH;
+            end else begin
+               // if there's no need to r/w memory
+               reg_write_enabled_delayed <= reg_write_enabled;
+               reg_write_dest_delayed <= reg_write_dest;            
+               reg_write_data_delayed <= exec_result;      
+               state <= WRITE;
+            end          
+         end else if (state == WRITE) begin         
+            // TODO :thinking_face:
+            pc <= pc + 4;                       
+            state <= FETCH;
+         end
+      end
    end
 endmodule

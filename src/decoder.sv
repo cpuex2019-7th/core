@@ -9,8 +9,8 @@ module decoder
    output            instructions instr,
 
    output reg [4:0]  rd,
-   output wire [4:0]  rs1,
-   output wire [4:0]  rs2,
+   output wire [4:0] rs1,
+   output wire [4:0] rs2,
    output reg [31:0] imm   
    );
 

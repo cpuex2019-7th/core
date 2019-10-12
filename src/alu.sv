@@ -10,14 +10,14 @@ module alu
    input wire [31:0]  rs2_v,
    input wire [31:0]  imm,
 
-   output wire [31:0] result
-
-   );
-   wire [63:0] mul_temp = $signed({{32{rs1_v[31]}}, rs1_v}) * $signed({{32{rs2_v[31]}}, rs2_v});
-   wire [63:0] mul_temp_hsu = $signed({{32{rs1_v[31]}}, rs1_v}) * $signed({32'b0, rs2_v});
-   wire [63:0] mul_temp_hu = $signed({32'b0, rs1_v}) * $signed({32'b0, rs2_v});
+   output wire [31:0] result);
+   
+   wire [63:0]        mul_temp = $signed({{32{rs1_v[31]}}, rs1_v}) * $signed({{32{rs2_v[31]}}, rs2_v});
+   wire [63:0]        mul_temp_hsu = $signed({{32{rs1_v[31]}}, rs1_v}) * $signed({32'b0, rs2_v});
+   wire [63:0]        mul_temp_hu = $signed({32'b0, rs1_v}) * $signed({32'b0, rs2_v});
+   
    assign result =  ///// rv32i /////
-                    // lui, auipc
+   // lui, auipc
                     instr.lui? imm:
                     instr.auipc? 31'b0: // TODO: sign
                     // jumps
