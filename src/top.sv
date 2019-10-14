@@ -266,9 +266,9 @@ module core
             pc <= pc + 4;                       
             state <= FETCH;
          end
-      end else begin // if (rstn)
-         pc <= 0;
-         state <= FETCH;
+      end else begin
+        pc <= 0;
+        state <= FETCH;
       end
    end
 endmodule

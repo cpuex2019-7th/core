@@ -89,11 +89,7 @@ module execute
          // what to write
          result <= instr.jal? pc + 4  :
                    instr.auipc? pc + imm :
-                   alu_result;         
-      end else begin
-         mem_write_enabled <= 0;
-         reg_write_enabled <= 0;
-         is_jump_enabled <= 0;         
+                   alu_result;             
       end
    end  
 endmodule // execute

@@ -7,93 +7,93 @@ module mmu_wrapper(
 	               // Bus for RAM
                    ////////////
                    // address read channel
-	               output reg [11:0] mem_axi_araddr,
+	               output wire [11:0] mem_axi_araddr,
 	               input wire        mem_axi_arready,
-	               output reg        mem_axi_arvalid,
-	               output reg [2:0]  mem_axi_arprot, 
+	               output wire        mem_axi_arvalid,
+	               output wire [2:0]  mem_axi_arprot, 
 
                    // response channel
-	               output reg        mem_axi_bready,
+	               output wire        mem_axi_bready,
 	               input wire [1:0]  mem_axi_bresp,
 	               input wire        mem_axi_bvalid,
 
                    // read data channel
 	               input wire [31:0] mem_axi_rdata,
-	               output reg        mem_axi_rready,
+	               output wire        mem_axi_rready,
 	               input wire [1:0]  mem_axi_rresp,
 	               input wire        mem_axi_rvalid,
 
                    // address write channel
-	               output reg [11:0] mem_axi_awaddr,
+	               output wire [11:0] mem_axi_awaddr,
 	               input wire        mem_axi_awready,
-	               output reg        mem_axi_awvalid,
-	               output reg [2:0]  mem_axi_awprot,
+	               output wire        mem_axi_awvalid,
+	               output wire [2:0]  mem_axi_awprot,
 
                    // data write channel
-	               output reg [31:0] mem_axi_wdata,
+	               output wire [31:0] mem_axi_wdata,
 	               input wire        mem_axi_wready,
-	               output reg [3:0]  mem_axi_wstrb,
-	               output reg        mem_axi_wvalid,
+	               output wire [3:0]  mem_axi_wstrb,
+	               output wire        mem_axi_wvalid,
 
 	               // Bus for Core
                    ////////////
 	               input wire [31:0] core_axi_araddr,
-	               output reg        core_axi_arready,
+	               output wire        core_axi_arready,
 	               input wire        core_axi_arvalid,
 	               input wire [2:0]  core_axi_arprot, 
 
 	               input wire        core_axi_bready,
-	               output reg [1:0]  core_axi_bresp,
-	               output reg        core_axi_bvalid,
+	               output wire [1:0]  core_axi_bresp,
+	               output wire        core_axi_bvalid,
 
-	               output reg [31:0] core_axi_rdata,
+	               output wire [31:0] core_axi_rdata,
 	               input wire        core_axi_rready,
-	               output reg [1:0]  core_axi_rresp,
-	               output reg        core_axi_rvalid,
+	               output wire [1:0]  core_axi_rresp,
+	               output wire        core_axi_rvalid,
 
 	               input wire [31:0] core_axi_awaddr,
-	               output reg        core_axi_awready,
+	               output wire        core_axi_awready,
 	               input wire        core_axi_awvalid,
 	               input wire [2:0]  core_axi_awprot, 
 
 	               input wire [31:0] core_axi_wdata,
-	               output reg        core_axi_wready,
+	               output wire        core_axi_wready,
 	               input wire [3:0]  core_axi_wstrb,
 	               input wire        core_axi_wvalid,
 
                    // Bus for UART
                    ////////////
-	               output reg [3:0]  uart_axi_araddr,
+	               output wire [3:0]  uart_axi_araddr,
 	               input wire        uart_axi_arready,
-	               output reg        uart_axi_arvalid,
-	               output [2:0]      uart_axi_arprot, 
+	               output wire        uart_axi_arvalid,
+	               output wire [2:0]      uart_axi_arprot, 
 
                    // response channel
-	               output reg        uart_axi_bready,
+	               output wire        uart_axi_bready,
 	               input wire [1:0]  uart_axi_bresp,
 	               input wire        uart_axi_bvalid,
 
                    // read data channel
 	               input wire [31:0] uart_axi_rdata,
-	               output reg        uart_axi_rready,
+	               output wire        uart_axi_rready,
 	               input wire [1:0]  uart_axi_rresp,
 	               input wire        uart_axi_rvalid,
 
                    // address write channel
-	               output reg [3:0]  uart_axi_awaddr,
+	               output wire [3:0]  uart_axi_awaddr,
 	               input wire        uart_axi_awready,
-	               output reg        uart_axi_awvalid,
-	               output reg [2:0]  uart_axi_awprot, 
+	               output wire        uart_axi_awvalid,
+	               output wire [2:0]  uart_axi_awprot, 
 
                    // data write channel
-	               output reg [31:0] uart_axi_wdata,
+	               output wire [31:0] uart_axi_wdata,
 	               input wire        uart_axi_wready,
-	               output reg [3:0]  uart_axi_wstrb,
-	               output reg        uart_axi_wvalid,
+	               output wire [3:0]  uart_axi_wstrb,
+	               output wire        uart_axi_wvalid,
 
                    // for debug
-                   output reg [2:0]  reading_state,
-                   output reg [2:0]  writing_state);             
+                   output wire [2:0]  reading_state,
+                   output wire [2:0]  writing_state);             
 
    mmu _mmu(.clk(clk), .rstn(rstn),
       

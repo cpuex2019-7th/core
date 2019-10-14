@@ -66,7 +66,7 @@ module mmu(
 	       output reg [3:0]  uart_axi_araddr,
 	       input wire        uart_axi_arready,
 	       output reg        uart_axi_arvalid,
-	       output [2:0]      uart_axi_arprot, 
+	       output reg [2:0]  uart_axi_arprot, 
 
            // response channel
 	       output reg        uart_axi_bready,
@@ -155,8 +155,8 @@ module mmu(
                   uart_axi_rready <= 0;
                   core_axi_rvalid <= 1;
                   core_axi_rdata <= uart_axi_rdata;
-                  core_axi_rresp <= uart_axi_rresp       
-                                    reading_state <= r_writing_data;            
+                  core_axi_rresp <= uart_axi_rresp;   
+                  reading_state <= r_writing_data;            
                end
             end else begin
                if (mem_axi_rvalid) begin

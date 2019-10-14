@@ -70,8 +70,8 @@ module core_wrapper
               .axi_wstrb(axi_wstrb),
               .axi_wvalid(axi_wvalid),
 
-              .debug_state(.debug_state),
-              .debug_mem_state(.debug_mem_state));   
+              .debug_state(debug_state),
+              .debug_mem_state(debug_mem_state));   
 endmodule
 
 `default_nettype wire
