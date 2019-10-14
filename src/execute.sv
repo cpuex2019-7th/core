@@ -42,6 +42,7 @@ module execute
    alu _alu(.clk(clk),
             .rstn(rstn),
             .instr(instr),
+            .pc(pc),
             .rs1_v(rs1_v), .rs2_v(rs2_v),
             .imm(imm),
             .result(alu_result));
