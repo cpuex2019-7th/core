@@ -258,19 +258,13 @@ module core
                   end
                end
             end else if (is_jump_enabled) begin
-               // when we process jump instrcutions, we can skip WRITE phase :-)
-               pc <= jump_dest;
-               state <= FETCH;
-            end else begin
-               // if there's no need to r/w memory
                reg_write_enabled_delayed <= reg_write_enabled;
                reg_write_dest_delayed <= reg_write_dest;            
                reg_write_data_delayed <= exec_result;      
                state <= WRITE;
             end          
          end else if (state == WRITE) begin         
-            // TODO :thinking_face:
-            pc <= pc + 4;                       
+            pc <= is_jump_enabled? jump_dest : pc + 4;                       
             state <= FETCH;
          end
       end else begin

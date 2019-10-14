@@ -67,11 +67,13 @@ module execute
                                 || instr.blt 
                                 || instr.bge 
                                 || instr.bltu 
-                                || instr.bgeu);      
-         reg_write_dest <= (instr.sb 
-                            || instr.sh 
-                            || instr.sw) ? rs2 : rd;
+                                || instr.bgeu
+                                || instr.sb
+                                || instr.sh
+                                || instr.sw);
          
+         reg_write_dest <= rd;
+                  
          // control flags
          is_jump_enabled <= (instr.jal 
                              || instr.jalr 
@@ -83,13 +85,18 @@ module execute
                                   || instr.bgeu) 
                                  &&  (alu_result == 32'd1)));
          
-         jump_dest <= (instr.jalr)? alu_result:
-                      pc + imm;
+         jump_dest <= instr.jal? pc + $signed(imm):
+                      instr.jalr? (pc + $signed(imm)) & ~(32b'0):
+                      (instr.beq 
+                       || instr.bne 
+                       || instr.blt 
+                       || instr.bge 
+                       || instr.bltu 
+                       || instr.bgeu)? pc + $signed(imm):
+                      32'b0;
 
          // what to write
-         result <= instr.jal? pc + 4  :
-                   instr.auipc? pc + imm :
-                   alu_result;             
+         result <= alu_result;             
       end
    end  
 endmodule // execute

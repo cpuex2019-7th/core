@@ -7,6 +7,7 @@ module alu
      
    input              instructions instr,
 
+   input wire [31:0]  pc,
    input wire [31:0]  rs1_v,
    input wire [31:0]  rs2_v,
    input wire [31:0]  imm,
@@ -20,10 +21,10 @@ module alu
    assign result =  ///// rv32i /////
    // lui, auipc
                     instr.lui? imm:
-                    instr.auipc? 31'b0: // TODO: sign
+                    instr.auipc? $signed(imm) + pc:
                     // jumps
-                    instr.jal? 31'b0:
-                    instr.jalr? $signed(rs1_v) + $signed(imm):
+                    instr.jal? pc + 4:
+                    instr.jalr? pc + 4:
                     // conditional breaks
                     instr.beq? (rs1_v == rs2_v):
                     instr.bne? (rs1_v != rs2_v):
