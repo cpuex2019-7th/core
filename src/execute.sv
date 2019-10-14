@@ -86,7 +86,7 @@ module execute
                                  &&  (alu_result == 32'd1)));
          
          jump_dest <= instr.jal? pc + $signed(imm):
-                      instr.jalr? (rs1_v + $signed(imm)) & ~(32b'0):
+                      instr.jalr? (rs1_v + $signed(imm)):// & ~(32b'0):
                       (instr.beq 
                        || instr.bne 
                        || instr.blt 
