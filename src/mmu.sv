@@ -107,8 +107,32 @@ module mmu(
    localparam r_writing_data = 3;
    
    initial begin
+      mem_axi_arvalid <= 0;
+      mem_axi_rready <= 0;
+      mem_axi_bready <= 0;
+      mem_axi_awvalid <= 0;
+      mem_axi_wvalid <= 0;            
+      mem_axi_arprot <= 3'b000;         
+      mem_axi_awprot <= 3'b000;
+      
       core_axi_arready <= 1;
+      core_axi_bvalid <= 0;
+      core_axi_rvalid <= 0;
+      core_axi_awready <= 1;
+      core_axi_wready <= 1;   
+      
+      uart_axi_arvalid <= 0;
+      uart_axi_rready <= 0;
+      uart_axi_bready <= 0;
+      uart_axi_awvalid <= 0;
+      uart_axi_wvalid <= 0;
+      uart_axi_arprot <= 3'b000;         
+      uart_axi_awprot <= 3'b000;
+            
       read_selector <= 1;
+      write_selector <= 1;
+
+      writing_state <= w_waiting_valid;      
       reading_state <= r_waiting_ready;      
    end
    
@@ -189,17 +213,7 @@ module mmu(
    localparam w_waiting_ready = 1;     
    localparam w_waiting_bresp = 2;   
    localparam w_writing_bresp = 3;   
-   
-   initial begin
-      write_selector <= 1;
-      writing_state <= w_waiting_valid;      
-      core_axi_awready <= 1;
-      core_axi_wready <= 1;   
       
-      mem_axi_arprot <= 3'b000;         
-      mem_axi_awprot <= 3'b000;            
-   end
-   
    always @(posedge clk) begin
       if(rstn) begin
          if (writing_state == w_waiting_valid) begin       
