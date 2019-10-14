@@ -117,6 +117,13 @@ module core
    initial begin
       pc <= 0;
       state <= FETCH;
+      axi_wvalid <= 0;
+      axi_awvalid <= 0;
+      
+      axi_arvalid <= 0;
+      
+      axi_bready <= 0;
+      axi_rready <= 0;
    end
 
    always @(posedge clk) begin
