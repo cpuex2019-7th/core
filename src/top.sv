@@ -257,7 +257,7 @@ module core
                      reg_write_enabled_delayed <= 0;
                   end
                end
-            end else if (is_jump_enabled) begin
+            end else begin
                reg_write_enabled_delayed <= reg_write_enabled;
                reg_write_dest_delayed <= reg_write_dest;            
                reg_write_data_delayed <= exec_result;      
