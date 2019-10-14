@@ -42,7 +42,7 @@ module core
    output wire [2:0] debug_mem_state);
    
    /////////////////////
-   // cpu internals
+    // cpu internals
    /////////////////////
    // TODO: use interface (including csr)
    (* mark_debug = "true" *) reg [2:0]         state;
@@ -266,6 +266,9 @@ module core
             pc <= pc + 4;                       
             state <= FETCH;
          end
+      end else begin // if (rstn)
+         pc <= 0;
+         state <= FETCH;
       end
    end
 endmodule
