@@ -52,33 +52,32 @@ module fadd
    wire [26:0] myd = (mye[26:26] == 1'b0) ? mye : (esi == 8'd255) ? {2'b1,25'b0} : mye >> 1;
    wire stck = (mye[26:26] == 1'b0) ? tstck : (esi == 8'd255) ? 1'b0 : tstck | mye[0:0];
    // 16
-   wire my1 = ~|myd[25:25];
-   wire my2 = ~|myd[25:24];
-   wire my3 = ~|myd[25:23];
-   wire my4 = ~|myd[25:22];
-   wire my5 = ~|myd[25:21];
-   wire my6 = ~|myd[25:20];
-   wire my7 = ~|myd[25:19];
-   wire my8 = ~|myd[25:18];
-   wire my9 = ~|myd[25:17];
-   wire my10 = ~|myd[25:16];
-   wire my11 = ~|myd[25:15];
-   wire my12 = ~|myd[25:14];
-   wire my13 = ~|myd[25:13];
-   wire my14 = ~|myd[25:12];
-   wire my15 = ~|myd[25:11];
-   wire my16 = ~|myd[25:10];
-   wire my17 = ~|myd[25:9];
-   wire my18 = ~|myd[25:8];
-   wire my19 = ~|myd[25:7];
-   wire my20 = ~|myd[25:6];
-   wire my21 = ~|myd[25:5];
-   wire my22 = ~|myd[25:4];
-   wire my23 = ~|myd[25:3];
-   wire my24 = ~|myd[25:2];
-   wire my25 = ~|myd[25:1];
-   wire my26 = ~|myd[25:0];
-   wire [4:0] se = {4'b0,my1} + {4'b0,my2} + {4'b0,my3} + {4'b0,my4} + {4'b0,my5} + {4'b0,my6} + {4'b0,my7} + {4'b0,my8} + {4'b0,my9} + {4'b0,my10} + {4'b0,my11} + {4'b0,my12} + {4'b0,my13} + {4'b0,my14} + {4'b0,my15} + {4'b0,my16} + {4'b0,my17} + {4'b0,my18} + {4'b0,my19} + {4'b0,my20} + {4'b0,my21} + {4'b0,my22} + {4'b0,my23} + {4'b0,my24} + {4'b0,my25} + {4'b0,my26};
+   wire [4:0] se = (myd[25:25]) ? 5'd0 :
+                   (myd[24:24]) ? 5'd1 :
+                   (myd[23:23]) ? 5'd2 :
+                   (myd[22:22]) ? 5'd3 :
+                   (myd[21:21]) ? 5'd4 :
+                   (myd[20:20]) ? 5'd5 :
+                   (myd[19:19]) ? 5'd6 :
+                   (myd[18:18]) ? 5'd7 :
+                   (myd[17:17]) ? 5'd8 :
+                   (myd[16:16]) ? 5'd9 :
+                   (myd[15:15]) ? 5'd10 :
+                   (myd[14:14]) ? 5'd11 :
+                   (myd[13:13]) ? 5'd12 :
+                   (myd[12:12]) ? 5'd13 :
+                   (myd[11:11]) ? 5'd14 :
+                   (myd[10:10]) ? 5'd15 :
+                   (myd[9:9]) ? 5'd16 :
+                   (myd[8:8]) ? 5'd17 :
+                   (myd[7:7]) ? 5'd18 :
+                   (myd[6:6]) ? 5'd19 :
+                   (myd[5:5]) ? 5'd20 :
+                   (myd[4:4]) ? 5'd21 :
+                   (myd[3:3]) ? 5'd22 :
+                   (myd[2:2]) ? 5'd23 :
+                   (myd[1:1]) ? 5'd24 :
+                   (myd[0:0]) ? 5'd25 : 5'd27;
    // 17
    wire [8:0] eyf = {1'b0,eyd} - {4'b0,se};
    // 18
