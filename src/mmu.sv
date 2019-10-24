@@ -95,16 +95,23 @@ module mmu(
            output reg [2:0]  reading_state,
            output reg [2:0]  writing_state);             
 
-   
-   // Read
-   /////////////
-   
    // 1 for UART, 0 for mem
-   (* mark_debug = "true" *) reg                       read_selector;
+   reg                       read_selector;
    localparam r_waiting_ready = 0;   
    localparam r_writing_ready = 1;   
    localparam r_waiting_data = 2;   
    localparam r_writing_data = 3;
+   
+   // 1 for UART, 0 for mem
+   reg                       write_selector;
+   
+   localparam w_waiting_valid = 0;   
+   localparam w_waiting_ready = 1;     
+   localparam w_waiting_bresp = 2;   
+   localparam w_writing_bresp = 3;  
+    
+   // Read
+   /////////////
    
    initial begin
       mem_axi_arvalid <= 0;
@@ -205,14 +212,6 @@ module mmu(
    
    // Write
    /////////////
-
-   // 1 for UART, 0 for mem
-   reg                       write_selector;
-   
-   localparam w_waiting_valid = 0;   
-   localparam w_waiting_ready = 1;     
-   localparam w_waiting_bresp = 2;   
-   localparam w_writing_bresp = 3;   
       
    always @(posedge clk) begin
       if(rstn) begin

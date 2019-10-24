@@ -30,7 +30,7 @@ module execute
   
    output reg        mem_write_enabled,
    output reg        mem_read_enabled,
-  
+   
    output reg        reg_write_enabled,
    output reg [4:0]  reg_write_dest,
   
@@ -61,42 +61,9 @@ module execute
             .frs1_v(frs1_v), .frs2_v(frs2_v),
             .imm(imm),
             .result(fpu_result));
-   
-   // set flags
-   //////////////////////
-   always @(posedge clk) begin
-      if (rstn && state == EXEC) begin
-         // memory read/write
-         mem_read_enabled <= (instr.lb
-                              || instr.lh
-                              || instr.lw
-                              || instr.lbu
-                              || instr.lhu
-                              || instr.flw);
-         
-         mem_write_enabled <= (instr.sb
-                               || instr.sh
-                               || instr.sw
-                               || instr.fsw);         
-
-         // integer register control flags
-         reg_write_enabled <= !(instr.beq 
-                                || instr.bne 
-                                || instr.blt 
-                                || instr.bge 
-                                || instr.bltu 
-                                || instr.bgeu
-                                || instr.sb
-                                || instr.sh
-                                || instr.sw
-                                || instr.fcvtws
-                                || instr.fmvxw
-                                || instr.feq
-                                || instr.fle);         
-         reg_write_dest <= rd;
-         
-         // floating-point register control flags
-         freg_write_enabled <= (instr.flw
+            
+   wire is_target_freg_f = (instr.fsw
+                                || instr.flw
                                 || instr.fadd 
                                 || instr.fsub
                                 || instr.fmul
@@ -106,49 +73,63 @@ module execute
                                 || instr.fsgnjn
                                 || instr.fsgnjx
                                 || instr.fcvtsw
-                                || instr.fmvwx);         
+                                || instr.fmvwx);
+                                
+  wire is_not_target_freg_f =  (instr.feq
+                    || instr.fle
+                    || instr.fcvtsw
+                    || instr.fmvwx);                              
+                                
+   wire is_store = (instr.sb
+                               || instr.sh
+                               || instr.sw
+                               || instr.fsw);
+                               
+  wire is_load =   (instr.lb
+                              || instr.lh
+                              || instr.lw
+                              || instr.lbu
+                              || instr.lhu
+                              || instr.flw);   
+                                  
+    wire is_conditional_jump =  (instr.beq 
+                                || instr.bne 
+                                || instr.blt 
+                                || instr.bge 
+                                || instr.bltu 
+                                || instr.bgeu);
+   // set flags
+   //////////////////////
+   always @(posedge clk) begin
+      if (rstn && state == EXEC) begin
+         // memory read/write
+         mem_read_enabled <= is_load;
+         
+         mem_write_enabled <= is_store;         
+
+         // integer register control flags
+         reg_write_enabled <= !(is_conditional_jump
+                                || is_store
+                                || is_target_freg_f);         
+         reg_write_dest <= rd;
+         
+         // floating-point register control flags
+         freg_write_enabled <= is_target_freg_f;         
          freg_write_dest <= rd;
          
          // control flags
          is_jump_enabled <= (instr.jal 
                              || instr.jalr 
-                             || ((instr.beq 
-                                  || instr.bne 
-                                  ||  instr.blt
-                                  || instr.bge
-                                  || instr.bltu
-                                  || instr.bgeu) 
-                                 &&  (alu_result == 32'd1)));
+                             || (is_conditional_jump &&  (alu_result == 32'd1)));
          
          jump_dest <= instr.jal? pc + $signed(imm):
                       instr.jalr? (rs1_v + $signed(imm)):// & ~(32b'0):
-                      (instr.beq 
-                       || instr.bne 
-                       || instr.blt 
-                       || instr.bge 
-                       || instr.bltu 
-                       || instr.bgeu)? pc + $signed(imm):
+                      is_conditional_jump? pc + $signed(imm):
                       32'b0;
 
          // what to write
-         result <= (instr.flw
-                    || instr.fsw
-                    || instr.fadd
-                    || instr.fsub
-                    || instr.fmul
-                    || instr.fdiv
-                    || instr.fsqrt
-                    || instr.fsgnj
-                    || instr.fsgnjn
-                    || instr.fsgnjx
-                    || instr.fcvtws
-                    || instr.fmvxw
-                    || instr.feq
-                    || instr.fle
-                    || instr.fcvtsw
-                    || instr.fmvwx)? fpu_result:
+         result <= (is_target_freg_f || is_not_target_freg_f)? fpu_result:
                    alu_result;
-         
       end
    end  
 endmodule // execute

@@ -39,7 +39,7 @@ module fpu
    
    wire [31:0]        fsqrt_result;
    wire               fsqrt_ovf;
-   fsqrt _fsqrt(.x1(frs1_v), .y(fsqrt_result), .exception(fsqrt_ovf));
+   fsqrt _fsqrt(.x(frs1_v), .y(fsqrt_result), .exception(fsqrt_ovf));
    
    wire [31:0]        fsgnj_result;
    wire               fsgnj_exception;
@@ -55,24 +55,23 @@ module fpu
 
    wire [31:0]        fcvtws_result;
    wire               fcvtws_exception;
-   fcvtws _fcvtws(.x1(frs1_v), .y(fcvtws_result), .exception(fcvtws_exception));
+   fcvtws _fcvtws(.x(frs1_v), .y(fcvtws_result), .exception(fcvtws_exception));
 
    wire [31:0]        feq_result;
    wire               feq_exception;
    feq _feq(.x1(frs1_v), .x2(frs2_v), .y(feq_result), .exception(feq_exception));
    
-   wire [31:0]        fle_result;
+   wire               fle_result;
    wire               fle_exception;
    fle _fle(.x1(frs1_v), .x2(frs2_v), .y(fle_result), .exception(fle_exception));
    
-   wire [31:0]        fcvtsw_result;
-   wire               fcvtsw_exception;
-   fcvtsw _fcvtsw(.x1(rs1_v), .y(fcvtsw_result), .exception(fcvtsw_exception));
+   wire               fcvtsw_result;
+   fcvtsw _fcvtsw(.x(rs1_v), .y(fcvtsw_result));
    
    // implementation
    ///////////////
    assign result = instr.flw? $signed({1'b0, rs1_v}) + $signed(imm):
-                   instr.sw? $signed({1'b0, rs1_v}) + $signed(imm):
+                   instr.fsw? $signed({1'b0, rs1_v}) + $signed(imm):
                    instr.fadd? fadd_result: 
                    instr.fsub? fsub_result: 
                    instr.fmul? fmul_result: 
@@ -83,8 +82,8 @@ module fpu
                    instr.fsgnjx? fsgnjx_result: 
                    instr.fcvtws? fcvtws_result: 
                    instr.fmvxw? frs1_v: 
-                   instr.feq? feq_result: 
-                   instr.fle? fle_result: 
+                   instr.feq? {31'b0, feq_result}: 
+                   instr.fle? {31'b0, fle_result}: 
                    instr.fcvtsw? fcvtsw_result: 
                    instr.fmvwx? rs1_v:                    
                    31'b0;      

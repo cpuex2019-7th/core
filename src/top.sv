@@ -112,7 +112,8 @@ module core
    // memory   
    wire              mem_write_enabled;
    wire              mem_read_enabled;
-
+   wire [31:0]       mem_data;
+   
    // pc
    wire              is_jump_enabled;
    wire [31:0]       jump_dest;
@@ -192,7 +193,9 @@ module core
                           default: reg_write_data_delayed <= 32'b0;                       
                         endcase
                      end else if (instr.lw) begin
-                        reg_write_data_delayed <= axi_rdata;                     
+                        reg_write_data_delayed <= axi_rdata;       
+                     end else if (instr.flw) begin
+                        freg_write_data_delayed <= axi_rdata;                                           
                      end else if (instr.lbu) begin                     
                         case(exec_result[1:0])
                           2'b11: reg_write_data_delayed <= {24'b0, axi_rdata[31:24]};
@@ -209,8 +212,12 @@ module core
                         endcase
                      end
                      state <= WRITE;
-                     reg_write_enabled_delayed <= 1;
-                     reg_write_dest_delayed <= reg_write_dest;                
+                     
+                     reg_write_enabled_delayed <= reg_write_enabled;
+                     reg_write_dest_delayed <= reg_write_dest;   
+                     
+                     freg_write_enabled_delayed <= freg_write_enabled;               
+                     freg_write_dest_delayed <= freg_write_dest;               
                   end               
                end
             end else if (mem_write_enabled) begin
@@ -259,6 +266,11 @@ module core
                   end  else if (instr.sw) begin
                      axi_wstrb <= 4'b1111;
                      axi_wdata <= rs2_v;                  
+                  end else if (instr.fsw) begin
+                     axi_wstrb <= 4'b1111;
+                     axi_wdata <= frs2_v;  
+                  end else begin
+                      state <= INVALID;
                   end
                   axi_wvalid <= 1;
                   mem_state <= mem_w_waiting_ready;
@@ -277,7 +289,8 @@ module core
                   if (axi_bvalid) begin
                      axi_bready <= 0;                  
                      state <= WRITE;
-                     reg_write_enabled_delayed <= 0;
+                     reg_write_enabled_delayed <= reg_write_enabled;
+                     freg_write_enabled_delayed <= freg_write_enabled;               
                   end
                end
             end else begin
