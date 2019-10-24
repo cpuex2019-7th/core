@@ -1,13 +1,13 @@
 `default_nettype none
 
-module mmu(
+module mmu # (parameter MEM_WIDTH = 21)(
 	       input wire        clk,
 	       input wire        rstn,
 
 	       // Bus for RAM
            ////////////
            // address read channel
-	       output reg [11:0] mem_axi_araddr,
+	       output reg [MEM_WIDTH-1:0] mem_axi_araddr,
 	       input wire        mem_axi_arready,
 	       output reg        mem_axi_arvalid,
 	       output reg [2:0]  mem_axi_arprot, 
@@ -24,7 +24,7 @@ module mmu(
 	       input wire        mem_axi_rvalid,
 
            // address write channel
-	       output reg [11:0] mem_axi_awaddr,
+	       output reg [MEM_WIDTH-1:0] mem_axi_awaddr,
 	       input wire        mem_axi_awready,
 	       output reg        mem_axi_awvalid,
 	       output reg [2:0]  mem_axi_awprot,
@@ -159,7 +159,7 @@ module mmu(
                end else begin
                   // Mem
                   mem_axi_arvalid <= 1;
-                  mem_axi_araddr <= core_axi_araddr[11:0];               
+                  mem_axi_araddr <= core_axi_araddr[MEM_WIDTH-1:0];               
                   mem_axi_arprot <= core_axi_arprot;                                    
                   read_selector <= 0;
                end
@@ -227,7 +227,7 @@ module mmu(
                end else begin       
                   // Mem        
                   write_selector <= 0;
-                  mem_axi_awaddr <= core_axi_awaddr[11:0];               
+                  mem_axi_awaddr <= core_axi_awaddr[MEM_WIDTH-1:0];               
                   mem_axi_awprot <= core_axi_awprot;                  
                end
             end

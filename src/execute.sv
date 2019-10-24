@@ -78,7 +78,7 @@ module execute
   wire is_not_target_freg_f =  (instr.feq
                     || instr.fle
                     || instr.fcvtsw
-                    || instr.fmvwx);                              
+                    || instr.fmvxw);                              
                                 
    wire is_store = (instr.sb
                                || instr.sh
