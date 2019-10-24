@@ -26,9 +26,9 @@ module decoder
    // r, i, s, b, u, j
    // TODO: check here when you add new instructions
    // TODO!!!!!!!!!!!!!!!!!!!
-   wire              r_type = (opcode == 7'b0110011); 
-   wire              i_type = (opcode == 7'b1100111 | opcode == 7'b0000011 | opcode == 7'b0010011); 
-   wire              s_type = (opcode == 7'b0100011); 
+   wire              r_type = (opcode == 7'b0110011 | opcode == 7'b1010011); 
+   wire              i_type = (opcode == 7'b1100111 | opcode == 7'b0000011 | opcode == 7'b0010011 | opcode == 7'b0000111); 
+   wire              s_type = (opcode == 7'b0100011 | opcode == 7'b0100111); 
    wire              b_type = (opcode == 7'b1100011); 
    wire              u_type = (opcode == 7'b0110111 | opcode == 7'b0010111);   
    wire              j_type = (opcode == 7'b1101111); 
@@ -112,14 +112,13 @@ module decoder
          instr.fsgnj <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0010000);
          instr.fsgnjn <= (opcode == 7'b1010011) && (funct3 == 3'b001) && (funct7 == 7'b0010000);
          instr.fsgnjx <= (opcode == 7'b1010011) && (funct3 == 3'b010) && (funct7 == 7'b0010000);         
-         instr.fcvws <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1110000) && (rs2 == 5'b00000);
-         instr.fmvxw <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1110000);
+         instr.fcvtws <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1100000) && (rs2 == 5'b00000);
+         instr.fmvxw <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1110000) && (rs2 == 5'b00000);
          instr.feq <= (opcode == 7'b1010011) && (funct3 == 3'b010) && (funct7 == 7'b1010000);
          instr.fle <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1010000);
-         instr.fcvtsw <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1100000) && (rs2 == 5'b00001);
+         instr.fcvtsw <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1101000) && (rs2 == 5'b00000);
          instr.fmvwx <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1111000) && (rs2 == 5'b00000);
-         
-         
+                  
          /////////   
          // rv32a
          /////////
