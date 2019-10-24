@@ -1,0 +1,5 @@
+!project.srcs/sources_1/bd/onboard_design/hdl/onboard_design_wrapper.v
+!project.srcs/constrs_1/new/led.xdc
+!core_wrapper_behav.wcfg
+!.gitignore
+*
