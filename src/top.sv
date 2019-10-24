@@ -74,9 +74,14 @@ module core
                     .instr_raw(instr_raw),
                     .instr(instr),
                     .rd(rd_a), .rs1(rs1_a), .rs2(rs2_a), .imm(imm));
-   
+
+   // integer register   
    wire [31:0]       rs1_v;
    wire [31:0]       rs2_v;
+   
+   wire              reg_write_enabled;
+   wire [4:0]        reg_write_dest;
+   
    reg               reg_write_enabled_delayed;
    reg [4:0]         reg_write_dest_delayed;
    reg [31:0]        reg_write_data_delayed;   
@@ -87,28 +92,46 @@ module core
                    .w_addr(reg_write_dest_delayed),
                    .w_data(reg_write_data_delayed));
    
-   reg [31:0]        pc_instr;
-   wire [31:0]       exec_result;
+   // floating-point register
+   wire [31:0]       frs1_v;
+   wire [31:0]       frs2_v;
    
-   wire              reg_write_enabled;
-   wire [4:0]        reg_write_dest;
+   wire              freg_write_enabled;
+   wire [4:0]        freg_write_dest;
    
+   reg               freg_write_enabled_delayed;
+   reg [4:0]         freg_write_dest_delayed;
+   reg [31:0]        freg_write_data_delayed;   
+   regf _fregisters(.clk(clk), 
+                    .rstn(rstn),
+                    .rs1(rs1_a), .rs2(rs2_a), .rd1(frs1_v), .rd2(frs2_v), 
+                    .w_enable(freg_write_enabled_delayed),
+                    .w_addr(freg_write_dest_delayed),
+                    .w_data(freg_write_data_delayed));
+   
+   // memory   
    wire              mem_write_enabled;
    wire              mem_read_enabled;
-   
+
+   // pc
    wire              is_jump_enabled;
    wire [31:0]       jump_dest;
+
+   // execution
+   reg [31:0]        pc_instr;
+   wire [31:0]       exec_result;
    
    execute _execute(.clk(clk), .rstn(rstn), 
                     .state(state),
                     .pc(pc_instr), .instr(instr), 
                     .rd(rd_a),
-                    .rs1(rs1_a), .rs1_v(rs1_v), 
-                    .rs2(rs2_a), .rs2_v(rs2_v), 
+                    .rs1(rs1_a), .rs1_v(rs1_v), .frs1_v(frs1_v), 
+                    .rs2(rs2_a), .rs2_v(rs2_v), .frs2_v(frs2_v), 
                     .imm(imm), 
                     .result(exec_result), 
                     .mem_write_enabled(mem_write_enabled), .mem_read_enabled(mem_read_enabled),
                     .reg_write_enabled(reg_write_enabled), .reg_write_dest(reg_write_dest), 
+                    .freg_write_enabled(freg_write_enabled), .freg_write_dest(freg_write_dest), 
                     .is_jump_enabled(is_jump_enabled), .jump_dest(jump_dest));
    
    /////////////////////
@@ -258,9 +281,13 @@ module core
                   end
                end
             end else begin
-               reg_write_enabled_delayed <= reg_write_enabled;
+               reg_write_enabled_delayed <= reg_write_enabled;               
                reg_write_dest_delayed <= reg_write_dest;            
-               reg_write_data_delayed <= exec_result;      
+               reg_write_data_delayed <= exec_result;
+               
+               freg_write_enabled_delayed <= freg_write_enabled;               
+               freg_write_dest_delayed <= freg_write_dest;            
+               freg_write_data_delayed <= exec_result;
                state <= WRITE;
             end          
          end else if (state == WRITE) begin         

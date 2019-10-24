@@ -14,13 +14,15 @@ module execute
 
    // operands
    input wire [4:0]  rd,
-   
+  
    input wire [4:0]  rs1,
    input wire [31:0] rs1_v,
-   
+   input wire [31:0] frs1_v,
+  
    input wire [4:0]  rs2,
    input wire [31:0] rs2_v,
-   
+   input wire [31:0] frs2_v,
+  
    input wire [31:0] imm,
 
    // results
@@ -31,6 +33,9 @@ module execute
   
    output reg        reg_write_enabled,
    output reg [4:0]  reg_write_dest,
+  
+   output reg        freg_write_enabled,
+   output reg [4:0]  freg_write_dest,
 
    output reg        is_jump_enabled,
    output reg [31:0] jump_dest);
@@ -53,16 +58,18 @@ module execute
       if (rstn && state == EXEC) begin
          // memory read/write
          mem_read_enabled <= (instr.lb
-                               || instr.lh
-                               || instr.lw
-                               || instr.lbu
-                               || instr.lhu);
-      
+                              || instr.lh
+                              || instr.lw
+                              || instr.lbu
+                              || instr.lhu
+                              || instr.flw);
+         
          mem_write_enabled <= (instr.sb
                                || instr.sh
-                               || instr.sw);         
+                               || instr.sw
+                               || instr.fsw);         
 
-         // register control flags
+         // integer register control flags
          reg_write_enabled <= !(instr.beq 
                                 || instr.bne 
                                 || instr.blt 
@@ -71,10 +78,27 @@ module execute
                                 || instr.bgeu
                                 || instr.sb
                                 || instr.sh
-                                || instr.sw);
-         
+                                || instr.sw
+                                || instr.fcvtws
+                                || instr.fmvxw
+                                || instr.feq
+                                || instr.fle);         
          reg_write_dest <= rd;
-                  
+         
+         // floating-point register control flags
+         freg_write_enabled <= (instr.flw
+                                || instr.fadd 
+                                || instr.fsub
+                                || instr.fmul
+                                || instr.fdiv
+                                || instr.fsqrt
+                                || instr.fsgnj
+                                || instr.fsgnjn
+                                || instr.fsgnjx
+                                || instr.fcvtsw
+                                || instr.fmvwx);         
+         freg_write_dest <= rd;
+         
          // control flags
          is_jump_enabled <= (instr.jal 
                              || instr.jalr 
