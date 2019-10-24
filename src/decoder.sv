@@ -118,6 +118,7 @@ module decoder
          instr.fle <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1010000);
          instr.fcvtsw <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1101000) && (rs2 == 5'b00000);
          instr.fmvwx <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1111000) && (rs2 == 5'b00000);
+   /////////   
                   
          /////////   
          // rv32a

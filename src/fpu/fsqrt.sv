@@ -1,6 +1,6 @@
 `default_nettype none
 
-module fmul
+module fmul_intl
    (  input wire [31:0]  x1,
       input wire [31:0]  x2,
       output wire [31:0] y,
@@ -230,7 +230,7 @@ module fsqrt
 
    wire [31:0] y_mul;
    wire ovf;
-   fmul u9(x,{s,ey,my},y_mul,ovf);
+   fmul_intl u9(x,{s,ey,my},y_mul,ovf);
 
    // nanかどうかの判定
    wire nzm = |m;

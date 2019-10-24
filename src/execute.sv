@@ -52,6 +52,16 @@ module execute
             .imm(imm),
             .result(alu_result));
    
+   wire [31:0]       fpu_result;   
+   fpu _fpu(.clk(clk),
+            .rstn(rstn),
+            .instr(instr),
+            .pc(pc),
+            .rs1_v(rs1_v), .rs2_v(rs2_v),
+            .frs1_v(frs1_v), .frs2_v(frs2_v),
+            .imm(imm),
+            .result(fpu_result));
+   
    // set flags
    //////////////////////
    always @(posedge clk) begin
@@ -121,7 +131,24 @@ module execute
                       32'b0;
 
          // what to write
-         result <= alu_result;             
+         result <= (instr.flw
+                    || instr.fsw
+                    || instr.fadd
+                    || instr.fsub
+                    || instr.fmul
+                    || instr.fdiv
+                    || instr.fsqrt
+                    || instr.fsgnj
+                    || instr.fsgnjn
+                    || instr.fsgnjx
+                    || instr.fcvtws
+                    || instr.fmvxw
+                    || instr.feq
+                    || instr.fle
+                    || instr.fcvtsw
+                    || instr.fmvwx)? fpu_result:
+                   alu_result;
+         
       end
    end  
 endmodule // execute
