@@ -69,6 +69,26 @@ typedef struct {
    reg remu;
 
    /////////   
+   // rv32f
+   /////////
+   reg flw;
+   reg fsw;
+   reg fadd;
+   reg fsub;
+   reg fmul;
+   reg fdiv;
+   reg fsqrt;
+   reg fsgnj;
+   reg fsgnjn;
+   reg fsgnjx;
+   reg fcvtws;
+   reg fmvxw;
+   reg feq;
+   reg fle;
+   reg fcvtsw;
+   reg fmvwx;
+   
+   /////////   
    // rv32a
    /////////
    // TODO
