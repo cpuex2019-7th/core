@@ -100,6 +100,27 @@ module decoder
          instr.remu <= (opcode == 7'b0110011) && (funct3 == 3'b111) && (funct7 == 7'b0000001);
 
          /////////   
+         // rv32f
+         /////////
+         instr.flw <= (opcode == 7'b0000111) && (funct3 == 3'b010);
+         instr.fsw <= (opcode == 7'b0100111) && (funct3 == 3'b010);
+         instr.fadd <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
+         instr.fsub <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0000100);
+         instr.fmul <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0001000);
+         instr.fdiv <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0001100);
+         instr.fsqrt <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0101100) && (rs2 == 5'b0);
+         instr.fsgnj <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0010000);
+         instr.fsgnjn <= (opcode == 7'b1010011) && (funct3 == 3'b001) && (funct7 == 7'b0010000);
+         instr.fsgnjx <= (opcode == 7'b1010011) && (funct3 == 3'b010) && (funct7 == 7'b0010000);         
+         instr.fcvws <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1110000) && (rs2 == 5'b00000);
+         instr.fmvxw <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1110000);
+         instr.feq <= (opcode == 7'b1010011) && (funct3 == 3'b010) && (funct7 == 7'b1010000);
+         instr.fle <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1010000);
+         instr.fcvtsw <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1100000) && (rs2 == 5'b00001);
+         instr.fmvwx <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1111000) && (rs2 == 5'b00000);
+         
+         
+         /////////   
          // rv32a
          /////////
          // TODO
