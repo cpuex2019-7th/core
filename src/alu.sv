@@ -6,72 +6,74 @@ module alu
    input wire         rstn,
      
    input              instructions instr,
-
-   input wire [31:0]  pc,
-   input wire [31:0]  rs1_v,
-   input wire [31:0]  rs2_v,
-   input wire [31:0]  imm,
-
+   input              regvpair register,
+  
+   output reg         completed,
    output wire [31:0] result);
    
-   wire [63:0]        mul_temp = $signed({{32{rs1_v[31]}}, rs1_v}) * $signed({{32{rs2_v[31]}}, rs2_v});
-   wire [63:0]        mul_temp_hsu = $signed({{32{rs1_v[31]}}, rs1_v}) * $signed({32'b0, rs2_v});
-   wire [63:0]        mul_temp_hu = $signed({32'b0, rs1_v}) * $signed({32'b0, rs2_v});
+   wire [63:0]        mul_temp = $signed({{32{register.rs1[31]}}, register.rs1}) * $signed({{32{register.rs2[31]}}, register.rs2});
+   wire [63:0]        mul_temp_hsu = $signed({{32{register.rs1[31]}}, register.rs1}) * $signed({32'b0, register.rs2});
+   wire [63:0]        mul_temp_hu = $signed({32'b0, register.rs1}) * $signed({32'b0, register.rs2});
    
    assign result =  ///// rv32i /////
    // lui, auipc
-                    instr.lui? imm:
-                    instr.auipc? $signed(imm) + pc:
+                    instr.lui? instr.imm:
+                    instr.auipc? $signed(instr.imm) + instr.pc:
                     // jumps
-                    instr.jal? pc + 4:
-                    instr.jalr? pc + 4:
+                    instr.jal? 32'd1:
+                    instr.jalr? 32'd1:
                     // conditional breaks
-                    instr.beq? (rs1_v == rs2_v):
-                    instr.bne? (rs1_v != rs2_v):
-                    instr.blt? ($signed(rs1_v) < $signed(rs2_v)):
-                    instr.bge? ($signed(rs1_v) >= $signed(rs2_v)):
-                    instr.bltu? rs1_v < rs2_v:
-                    instr.bgeu? rs1_v >= rs2_v:
+                    instr.beq? (register.rs1 == register.rs2):
+                    instr.bne? (register.rs1 != register.rs2):
+                    instr.blt? ($signed(register.rs1) < $signed(register.rs2)):
+                    instr.bge? ($signed(register.rs1) >= $signed(register.rs2)):
+                    instr.bltu? register.rs1 < register.rs2:
+                    instr.bgeu? register.rs1 >= register.rs2:
                     // memory control
-                    instr.lb? $signed({1'b0, rs1_v}) + $signed(imm):
-                    instr.lh? $signed({1'b0, rs1_v}) + $signed(imm):
-                    instr.lw? $signed({1'b0, rs1_v}) + $signed(imm):
-                    instr.lbu? $signed({1'b0, rs1_v}) + $signed(imm):
-                    instr.lhu? $signed({1'b0, rs1_v}) + $signed(imm):
-                    instr.sb? $signed({1'b0, rs1_v}) + $signed(imm):
-                    instr.sh? $signed({1'b0, rs1_v}) + $signed(imm):
-                    instr.sw? $signed({1'b0, rs1_v}) + $signed(imm):
-                    // arith immediate
-                    instr.addi? $signed(rs1_v) + $signed(imm):
-                    instr.slti? $signed(rs1_v) < $signed(imm):
-                    instr.sltiu? rs1_v < imm:
-                    instr.xori? rs1_v ^ imm:
-                    instr.ori? rs1_v | imm:
-                    instr.andi? rs1_v & imm:
-                    instr.slli? rs1_v << imm[4:0]:
-                    instr.srli? rs1_v >> imm[4:0]:
-                    instr.srai? $signed(rs1_v) << imm[4:0]:           
+                    instr.lb? $signed({1'b0, register.rs1}) + $signed(instr.imm):
+                    instr.lh? $signed({1'b0, register.rs1}) + $signed(instr.imm):
+                    instr.lw? $signed({1'b0, register.rs1}) + $signed(instr.imm):
+                    instr.lbu? $signed({1'b0, register.rs1}) + $signed(instr.imm):
+                    instr.lhu? $signed({1'b0, register.rs1}) + $signed(instr.imm):
+                    instr.sb? $signed({1'b0, register.rs1}) + $signed(instr.imm):
+                    instr.sh? $signed({1'b0, register.rs1}) + $signed(instr.imm):
+                    instr.sw? $signed({1'b0, register.rs1}) + $signed(instr.imm):
+                    // arith instr.immediate
+                    instr.addi? $signed(register.rs1) + $signed(instr.imm):
+                    instr.slti? $signed(register.rs1) < $signed(instr.imm):
+                    instr.sltiu? register.rs1 < instr.imm:
+                    instr.xori? register.rs1 ^ instr.imm:
+                    instr.ori? register.rs1 | instr.imm:
+                    instr.andi? register.rs1 & instr.imm:
+                    instr.slli? register.rs1 << instr.imm[4:0]:
+                    instr.srli? register.rs1 >> instr.imm[4:0]:
+                    instr.srai? $signed(register.rs1) << instr.imm[4:0]:           
                     // arith others
-                    instr.add? $signed(rs1_v) + $signed(rs2_v):      
-                    instr.sub? $signed(rs1_v) - $signed(rs2_v):
-                    instr.sll? rs1_v << rs2_v:                   
-                    instr.slt? $signed(rs1_v) < $signed(rs2_v):
-                    instr.sltu? $signed(rs1_v) < $signed(rs2_v):
-                    instr.i_xor? rs1_v ^ rs2_v:
-                    instr.srl? rs1_v >> rs2_v[4:0]:                   
-                    instr.sra? $signed(rs1_v) >>> rs2_v[4:0]:     
-                    instr.i_or? rs1_v | rs2_v:
-                    instr.i_and? rs1_v & rs2_v:
+                    instr.add? $signed(register.rs1) + $signed(register.rs2):      
+                    instr.sub? $signed(register.rs1) - $signed(register.rs2):
+                    instr.sll? register.rs1 << register.rs2:                   
+                    instr.slt? $signed(register.rs1) < $signed(register.rs2):
+                    instr.sltu? $signed(register.rs1) < $signed(register.rs2):
+                    instr.i_xor? register.rs1 ^ register.rs2:
+                    instr.srl? register.rs1 >> register.rs2[4:0]:                   
+                    instr.sra? $signed(register.rs1) >>> register.rs2[4:0]:     
+                    instr.i_or? register.rs1 | register.rs2:
+                    instr.i_and? register.rs1 & register.rs2:
                     ///// rv32m /////
                     // seems to be buggy; not fully tested yet.
                     instr.mul? mul_temp[31:0]:
                     instr.mulh? mul_temp[63:32]:
                     instr.mulhsu? mul_temp_hsu[63:32]:
                     instr.mulhu? mul_temp_hu[63:32]:
-                    instr.div? $signed(rs1_v) / $signed(rs2_v):
-                    instr.divu? rs1_v / rs2_v:
-                    instr.rem? $signed(rs1_v) % $signed(rs2_v):
-                    instr.remu? rs1_v % rs2_v:   
-                    31'b0;      
+                    instr.div? $signed(register.rs1) / $signed(register.rs2):
+                    instr.divu? register.rs1 / register.rs2:
+                    instr.rem? $signed(register.rs1) % $signed(register.rs2):
+                    instr.remu? register.rs1 % register.rs2:   
+                    31'b0;
+   
+   always @(posedge clk) begin
+      completed <= 1;      
+   end
+   
 endmodule
 `default_nettype wire

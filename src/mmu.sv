@@ -1,115 +1,115 @@
 `default_nettype none
 
 module mmu # (parameter MEM_WIDTH = 21)(
-	       input wire        clk,
-	       input wire        rstn,
+	                                    input wire                 clk,
+	                                    input wire                 rstn,
 
-	       // Bus for RAM
-           ////////////
-           // address read channel
-	       output reg [MEM_WIDTH-1:0] mem_axi_araddr,
-	       input wire        mem_axi_arready,
-	       output reg        mem_axi_arvalid,
-	       output reg [2:0]  mem_axi_arprot, 
+	                                    // Bus for RAM
+                                        ////////////
+                                        // address read channel
+	                                    output reg [MEM_WIDTH-1:0] mem_axi_araddr,
+	                                    input wire                 mem_axi_arready,
+	                                    output reg                 mem_axi_arvalid,
+	                                    output reg [2:0]           mem_axi_arprot, 
 
-           // response channel
-	       output reg        mem_axi_bready,
-	       input wire [1:0]  mem_axi_bresp,
-	       input wire        mem_axi_bvalid,
+                                        // response channel
+	                                    output reg                 mem_axi_bready,
+	                                    input wire [1:0]           mem_axi_bresp,
+	                                    input wire                 mem_axi_bvalid,
 
-           // read data channel
-	       input wire [31:0] mem_axi_rdata,
-	       output reg        mem_axi_rready,
-	       input wire [1:0]  mem_axi_rresp,
-	       input wire        mem_axi_rvalid,
+                                        // read data channel
+	                                    input wire [31:0]          mem_axi_rdata,
+	                                    output reg                 mem_axi_rready,
+	                                    input wire [1:0]           mem_axi_rresp,
+	                                    input wire                 mem_axi_rvalid,
 
-           // address write channel
-	       output reg [MEM_WIDTH-1:0] mem_axi_awaddr,
-	       input wire        mem_axi_awready,
-	       output reg        mem_axi_awvalid,
-	       output reg [2:0]  mem_axi_awprot,
+                                        // address write channel
+	                                    output reg [MEM_WIDTH-1:0] mem_axi_awaddr,
+	                                    input wire                 mem_axi_awready,
+	                                    output reg                 mem_axi_awvalid,
+	                                    output reg [2:0]           mem_axi_awprot,
 
-           // data write channel
-	       output reg [31:0] mem_axi_wdata,
-	       input wire        mem_axi_wready,
-	       output reg [3:0]  mem_axi_wstrb,
-	       output reg        mem_axi_wvalid,
+                                        // data write channel
+	                                    output reg [31:0]          mem_axi_wdata,
+	                                    input wire                 mem_axi_wready,
+	                                    output reg [3:0]           mem_axi_wstrb,
+	                                    output reg                 mem_axi_wvalid,
 
-	       // Bus for Core
-           ////////////
-	       input wire [31:0] core_axi_araddr,
-	       output reg        core_axi_arready,
-	       input wire        core_axi_arvalid,
-	       input wire [2:0]  core_axi_arprot, 
+	                                    // Bus for Core
+                                        ////////////
+	                                    input wire [31:0]          core_axi_araddr,
+	                                    output reg                 core_axi_arready,
+	                                    input wire                 core_axi_arvalid,
+	                                    input wire [2:0]           core_axi_arprot, 
 
-	       input wire        core_axi_bready,
-	       output reg [1:0]  core_axi_bresp,
-	       output reg        core_axi_bvalid,
+	                                    input wire                 core_axi_bready,
+	                                    output reg [1:0]           core_axi_bresp,
+	                                    output reg                 core_axi_bvalid,
 
-	       output reg [31:0] core_axi_rdata,
-	       input wire        core_axi_rready,
-	       output reg [1:0]  core_axi_rresp,
-	       output reg        core_axi_rvalid,
+	                                    output reg [31:0]          core_axi_rdata,
+	                                    input wire                 core_axi_rready,
+	                                    output reg [1:0]           core_axi_rresp,
+	                                    output reg                 core_axi_rvalid,
 
-	       input wire [31:0] core_axi_awaddr,
-	       output reg        core_axi_awready,
-	       input wire        core_axi_awvalid,
-	       input wire [2:0]  core_axi_awprot, 
+	                                    input wire [31:0]          core_axi_awaddr,
+	                                    output reg                 core_axi_awready,
+	                                    input wire                 core_axi_awvalid,
+	                                    input wire [2:0]           core_axi_awprot, 
 
-	       input wire [31:0] core_axi_wdata,
-	       output reg        core_axi_wready,
-	       input wire [3:0]  core_axi_wstrb,
-	       input wire        core_axi_wvalid,
+	                                    input wire [31:0]          core_axi_wdata,
+	                                    output reg                 core_axi_wready,
+	                                    input wire [3:0]           core_axi_wstrb,
+	                                    input wire                 core_axi_wvalid,
 
-           // Bus for UART
-           ////////////
-	       output reg [3:0]  uart_axi_araddr,
-	       input wire        uart_axi_arready,
-	       output reg        uart_axi_arvalid,
-	       output reg [2:0]  uart_axi_arprot, 
+                                        // Bus for UART
+                                        ////////////
+	                                    output reg [3:0]           uart_axi_araddr,
+	                                    input wire                 uart_axi_arready,
+	                                    output reg                 uart_axi_arvalid,
+	                                    output reg [2:0]           uart_axi_arprot, 
 
-           // response channel
-	       output reg        uart_axi_bready,
-	       input wire [1:0]  uart_axi_bresp,
-	       input wire        uart_axi_bvalid,
+                                        // response channel
+	                                    output reg                 uart_axi_bready,
+	                                    input wire [1:0]           uart_axi_bresp,
+	                                    input wire                 uart_axi_bvalid,
 
-           // read data channel
-	       input wire [31:0] uart_axi_rdata,
-	       output reg        uart_axi_rready,
-	       input wire [1:0]  uart_axi_rresp,
-	       input wire        uart_axi_rvalid,
+                                        // read data channel
+	                                    input wire [31:0]          uart_axi_rdata,
+	                                    output reg                 uart_axi_rready,
+	                                    input wire [1:0]           uart_axi_rresp,
+	                                    input wire                 uart_axi_rvalid,
 
-           // address write channel
-	       output reg [3:0]  uart_axi_awaddr,
-	       input wire        uart_axi_awready,
-	       output reg        uart_axi_awvalid,
-	       output reg [2:0]  uart_axi_awprot, 
+                                        // address write channel
+	                                    output reg [3:0]           uart_axi_awaddr,
+	                                    input wire                 uart_axi_awready,
+	                                    output reg                 uart_axi_awvalid,
+	                                    output reg [2:0]           uart_axi_awprot, 
 
-           // data write channel
-	       output reg [31:0] uart_axi_wdata,
-	       input wire        uart_axi_wready,
-	       output reg [3:0]  uart_axi_wstrb,
-	       output reg        uart_axi_wvalid,
+                                        // data write channel
+	                                    output reg [31:0]          uart_axi_wdata,
+	                                    input wire                 uart_axi_wready,
+	                                    output reg [3:0]           uart_axi_wstrb,
+	                                    output reg                 uart_axi_wvalid,
 
-           // for debug
-           output reg [2:0]  reading_state,
-           output reg [2:0]  writing_state);             
+                                        // for debug
+                                        output reg [2:0]           reading_state,
+                                        ou tput reg [2:0] writing_state);             
 
    // 1 for UART, 0 for mem
-   reg                       read_selector;
+   reg                                                             read_selector;
    localparam r_waiting_ready = 0;   
    localparam r_writing_ready = 1;   
    localparam r_waiting_data = 2;   
    localparam r_writing_data = 3;
    
    // 1 for UART, 0 for mem
-   reg                       write_selector;
+   reg                                                             write_selector;
    
    localparam w_waiting_valid = 0;   
    localparam w_waiting_ready = 1;     
    localparam w_waiting_bresp = 2;   
    localparam w_writing_bresp = 3;  
-    
+   
    // Read
    /////////////
    
@@ -135,7 +135,7 @@ module mmu # (parameter MEM_WIDTH = 21)(
       uart_axi_wvalid <= 0;
       uart_axi_arprot <= 3'b000;         
       uart_axi_awprot <= 3'b000;
-            
+      
       read_selector <= 1;
       write_selector <= 1;
 
@@ -212,7 +212,7 @@ module mmu # (parameter MEM_WIDTH = 21)(
    
    // Write
    /////////////
-      
+   
    always @(posedge clk) begin
       if(rstn) begin
          if (writing_state == w_waiting_valid) begin       
