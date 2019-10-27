@@ -95,19 +95,19 @@ module mem(
                   case(addr[1:0])
                     2'b11 : begin 
                        axi_wstrb <= 4'b1000;
-                       axi_wdata <= {rs2_v[7:0], 24'b0};
+                       axi_wdata <= {register.rs2[7:0], 24'b0};
                     end
                     2'b10 : begin
                        axi_wstrb <= 4'b0100;
-                       axi_wdata <= {8'b0, rs2_v[7:0], 16'b0};
+                       axi_wdata <= {8'b0, register.rs2[7:0], 16'b0};
                     end
                     2'b01 : begin
                        axi_wstrb <= 4'b0010;
-                       axi_wdata <= {16'b0, rs2_v[7:0], 8'b0};
+                       axi_wdata <= {16'b0, register.rs2[7:0], 8'b0};
                     end
                     2'b00 : begin
                        axi_wstrb <= 4'b0001;
-                       axi_wdata <= {24'b0, rs2_v[7:0]};
+                       axi_wdata <= {24'b0, register.rs2[7:0]};
                     end
                     default : begin
                        state <= INVALID;                               
@@ -117,11 +117,11 @@ module mem(
                   case(addr[1:0])
                     2'b10 : begin
                        axi_wstrb <= 4'b1100;
-                       axi_wdata <= {rs2_v[15:0], 16'b0};
+                       axi_wdata <= {register.rs2[15:0], 16'b0};
                     end
                     2'b00 : begin
                        axi_wstrb <= 4'b0011;
-                       axi_wdata <= {16'b0, rs2_v[15:0]};
+                       axi_wdata <= {16'b0, register.rs2[15:0]};
                     end
                     default : begin
                        state <= INVALID;                       
@@ -129,10 +129,10 @@ module mem(
                   endcase
                end  else if (instr.sw) begin
                   axi_wstrb <= 4'b1111;
-                  axi_wdata <= rs2_v;                  
+                  axi_wdata <= register.rs2;                  
                end else if (instr.fsw) begin
                   axi_wstrb <= 4'b1111;
-                  axi_wdata <= frs2_v;  
+                  axi_wdata <= fregister.rs2;  
                end else begin
                   state <= INVALID;
                end
