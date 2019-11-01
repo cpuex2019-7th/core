@@ -93,7 +93,7 @@ module mmu # (parameter MEM_WIDTH = 21)(
 
                                         // for debug
                                         output reg [2:0]           reading_state,
-                                        output reg [2:0] writing_state);             
+                                        output reg [2:0]           writing_state);             
 
    // 1 for UART, 0 for mem
    reg                                                             read_selector;

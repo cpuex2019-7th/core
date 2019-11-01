@@ -110,7 +110,7 @@ module mem(
                        axi_wdata <= {24'b0, register.rs2[7:0]};
                     end
                     default : begin    
-                         // TODO                         
+                       // TODO                         
                     end
                   endcase	
                end else if (instr.sh) begin
@@ -124,7 +124,7 @@ module mem(
                        axi_wdata <= {16'b0, register.rs2[15:0]};
                     end
                     default : begin
-                         // TODO                          
+                       // TODO                          
                     end
                   endcase
                end  else if (instr.sw) begin
@@ -134,7 +134,7 @@ module mem(
                   axi_wstrb <= 4'b1111;
                   axi_wdata <= fregister.rs2;  
                end else begin
-                         // TODO    
+                  // TODO    
                end
                axi_wvalid <= 1;
                mem_state <= mem_w_waiting_ready;

@@ -1,28 +1,28 @@
 module write(
-             input wire        clk,
-             input wire        rstn,
-             input wire        enabled,
-   input wire        is_jump_chosen,
-   input wire [31:0] next_pc,
-   
-             input             instructions instr,
-             input wire [31:0] data,
+             input wire         clk,
+             input wire         rstn,
+             input wire         enabled,
+             input wire         is_jump_chosen,
+             input wire [31:0]  next_pc,
 
-             output wire       reg_w_enable,
-             output wire       freg_w_enable,
+             input              instructions instr,
+             input wire [31:0]  data,
 
-             output wire [4:0]      reg_w_dest,
-             output wire [31:0]      reg_w_data,
+             output wire        reg_w_enable,
+             output wire        freg_w_enable,
 
-             output reg        completed,
-   output reg        is_jump_chosen_n,
-   output reg [31:0] next_pc_n);
+             output wire [4:0]  reg_w_dest,
+             output wire [31:0] reg_w_data,
 
-   reg [1:0]                   state;
+             output reg         completed,
+             output reg         is_jump_chosen_n,
+             output reg [31:0]  next_pc_n);
+
+   reg [1:0]                    state;
    
    assign reg_w_enable = enabled &&   !(instr.is_conditional_jump
-                                  || instr.is_store
-                                 || instr.writes_to_freg_as_rv32f);   
+                                        || instr.is_store
+                                        || instr.writes_to_freg_as_rv32f);   
    assign freg_w_enable = enabled && instr.writes_to_freg_as_rv32f;
 
    assign reg_w_dest = instr.rd;

@@ -125,17 +125,17 @@ module core
    
    wire               freg_w_enable;   
    regf _fregisters(.clk(clk), 
-                   .rstn(rstn),
-                   .r_enabled(decode_enabled),
+                    .rstn(rstn),
+                    .r_enabled(decode_enabled),
       
-                   .w_enable(freg_w_enable),
-                   .w_addr(reg_w_dest),
-                   .w_data(reg_w_data),
+                    .w_enable(freg_w_enable),
+                    .w_addr(reg_w_dest),
+                    .w_data(reg_w_data),
 
-                   .rs1(rs1_a),
-                   .rs2(rs2_a),
+                    .rs1(rs1_a),
+                    .rs2(rs2_a),
       
-                   .register(fregister_de));
+                    .register(fregister_de));
    
    
    // exec
@@ -273,37 +273,37 @@ module core
    always @(posedge clk) begin
       if(rstn) begin
          if (state == FETCH) begin
-           if(fetch_enabled) begin
-                fetch_enabled <= 0;      
+            if(fetch_enabled) begin
+               fetch_enabled <= 0;      
             end else if (is_fetch_done) begin
                state <= DECODE;
                decode_enabled <= 1;
             end
          end else if (state == DECODE) begin
-         if (decode_enabled) begin
-            decode_enabled <= 0;            
-          end else if (is_decode_done) begin
+            if (decode_enabled) begin
+               decode_enabled <= 0;            
+            end else if (is_decode_done) begin
                state <= EXEC;
                exec_enabled <= 1;
             end
          end else if (state == EXEC) begin
-           if (exec_enabled) begin
-            exec_enabled <= 0;            
-           end else if (is_exec_done) begin            
+            if (exec_enabled) begin
+               exec_enabled <= 0;            
+            end else if (is_exec_done) begin            
                state <= MEM;
                mem_enabled <= 1;
             end
          end else if (state == MEM) begin;
             if (mem_enabled) begin
-                mem_enabled <= 0;            
+               mem_enabled <= 0;            
             end else if (is_mem_done) begin
                state <= WRITE;
                write_enabled <= 1;
             end
          end else if (state == WRITE) begin
-           if(write_enabled) begin
-            write_enabled <= 0;            
-           end else if (is_write_done) begin
+            if(write_enabled) begin
+               write_enabled <= 0;            
+            end else if (is_write_done) begin
                pc <= next_pc_wf;
                state <= FETCH;
                fetch_enabled <= 1;

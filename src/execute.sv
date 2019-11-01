@@ -63,7 +63,7 @@ module execute
             
             is_jump_chosen <= (instr.jal 
                                || instr.jalr) 
-                               || (instr.is_conditional_jump &&  alu_result == 32'd1);
+              || (instr.is_conditional_jump &&  alu_result == 32'd1);
             
             next_pc <= instr.jal? instr.pc + $signed(instr.imm):
                        instr.jalr? (register.rs1 + $signed(instr.imm)):// & ~(32b'0):

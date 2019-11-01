@@ -112,15 +112,15 @@ typedef struct {
    /////////   
    // control flags
    /////////
-      reg        writes_to_freg_as_rv32f;
+   reg         writes_to_freg_as_rv32f;
    
-   reg        writes_to_reg_as_rv32f;                            
-   reg        rv32f;                           
+   reg         writes_to_reg_as_rv32f;                            
+   reg         rv32f;                           
    
-reg        is_store;
+   reg         is_store;
    
-   reg        is_load;
+   reg         is_load;
    
-   reg        is_conditional_jump;
+   reg         is_conditional_jump;
 } instructions;
 `endif
