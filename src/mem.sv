@@ -3,7 +3,7 @@ module mem(
            input wire        rstn,
 
            input wire        enabled,
-           input             instr instr,
+           input             instructions instr,
            input             regvpair register,
            input             regvpair fregister,
            input wire        is_jump_chosen,
@@ -77,15 +77,15 @@ module mem(
             fregister_n <= fregister;
             is_jump_chosen_n <= is_jump_chosen;
             next_pc_n <= next_pc;            
-            result <= 0;            
+            result <= addr;            
             
-            if (is_load) begin
+            if (instr.is_load) begin
                completed <= 0;            
                axi_araddr <= {addr[31:2], 2'b0};
                axi_arprot <= 3'b000;                  
                axi_arvalid <= 1;
                mem_state <= mem_r_waiting_ready;               
-            end else if (is_store) begin
+            end else if (instr.is_store) begin
                completed <= 0;            
                axi_awaddr <= {addr[31:2], 2'b0}; // rs1 + imm
                axi_awprot <= 3'b000;                  
@@ -109,8 +109,8 @@ module mem(
                        axi_wstrb <= 4'b0001;
                        axi_wdata <= {24'b0, register.rs2[7:0]};
                     end
-                    default : begin
-                       state <= INVALID;                               
+                    default : begin    
+                         // TODO                         
                     end
                   endcase	
                end else if (instr.sh) begin
@@ -124,7 +124,7 @@ module mem(
                        axi_wdata <= {16'b0, register.rs2[15:0]};
                     end
                     default : begin
-                       state <= INVALID;                       
+                         // TODO                          
                     end
                   endcase
                end  else if (instr.sw) begin
@@ -134,7 +134,7 @@ module mem(
                   axi_wstrb <= 4'b1111;
                   axi_wdata <= fregister.rs2;  
                end else begin
-                  state <= INVALID;
+                         // TODO    
                end
                axi_wvalid <= 1;
                mem_state <= mem_w_waiting_ready;
@@ -202,9 +202,8 @@ module mem(
                completed <= 1;
             end
          end
-      end else begin // if (rstn && state == MEM)
+      end else begin 
          completed <= 0;         
       end // else: !if(enabled)
    end
-end
 endmodule

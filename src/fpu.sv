@@ -50,7 +50,7 @@ module fpu
    wire               fcvtws_exception;
    fcvtws _fcvtws(.x(fregister.rs1), .y(fcvtws_result), .exception(fcvtws_exception));
 
-   wire [31:0]        feq_result;
+   wire         feq_result;
    wire               feq_exception;
    feq _feq(.x1(fregister.rs1), .x2(fregister.rs2), .y(feq_result), .exception(feq_exception));
    
@@ -58,7 +58,7 @@ module fpu
    wire               fle_exception;
    fle _fle(.x1(fregister.rs1), .x2(fregister.rs2), .y(fle_result), .exception(fle_exception));
    
-   wire               fcvtsw_result;
+   wire            [31:0]   fcvtsw_result;
    fcvtsw _fcvtsw(.x(register.rs1), .y(fcvtsw_result));
    
    // implementation

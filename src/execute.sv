@@ -28,8 +28,6 @@ module execute
             .rstn(rstn),
       
             .instr(instr),
-            .pc(pc),
-      
             .register(register),
       
             .completed(alu_completed),      
@@ -41,8 +39,6 @@ module execute
             .rstn(rstn),
       
             .instr(instr),
-            .pc(pc),
-      
             .register(register),
             .fregister(fregister),
 
@@ -66,13 +62,13 @@ module execute
             fregister_n <= fregister;
             
             is_jump_chosen <= (instr.jal 
-                               || instr.jalr 
-                               || is_conditional_jump) &&  (alu_result == 32'd1);
+                               || instr.jalr) 
+                               || (instr.is_conditional_jump &&  alu_result == 32'd1);
             
-            next_pc <= instr.jal? pc + $signed(imm):
-                       instr.jalr? (register.rs1 + $signed(imm)):// & ~(32b'0):
-                       is_conditional_jump? pc + $signed(imm):
-                       pc + 4;
+            next_pc <= instr.jal? instr.pc + $signed(instr.imm):
+                       instr.jalr? (register.rs1 + $signed(instr.imm)):// & ~(32b'0):
+                       (instr.is_conditional_jump && alu_result == 32'd1)? instr.pc + $signed(instr.imm):
+                       instr.pc + 4;
 
          end
       end

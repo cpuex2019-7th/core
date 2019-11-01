@@ -112,61 +112,15 @@ typedef struct {
    /////////   
    // control flags
    /////////
-   wire        writes_to_freg_as_rv32f = (fsw
-                                          || flw
-                                          || fadd 
-                                          || fsub
-                                          || fmul
-                                          || fdiv
-                                          || fsqrt
-                                          || fsgnj
-                                          || fsgnjn
-                                          || fsgnjx
-                                          || fcvtsw
-                                          || fmvwx);
+      reg        writes_to_freg_as_rv32f;
    
-   wire        writes_to_reg_as_rv32f =  (feq
-                                          || fle
-                                          || fcvtsw
-                                          || fmvxw);                              
-   wire        rv32f = (fsw
-                        || flw
-                        || fadd 
-                        || fsub
-                        || fmul
-                        || fdiv
-                        || fsqrt
-                        || fsgnj
-                        || fsgnjn
-                        || fsgnjx
-                        || fcvtsw
-                        || fmvwx
-                        || feq
-                        || fle
-                        || fcvtsw
-                        || fmvxw);                              
+   reg        writes_to_reg_as_rv32f;                            
+   reg        rv32f;                           
    
-   wire        is_store = (sb
-                           || sh
-                           || sw
-                           || fsw);
+reg        is_store;
    
-   wire        is_load =   (lb
-                            || lh
-                            || lw
-                            || lbu
-                            || lhu
-                            || flw);   
+   reg        is_load;
    
-   wire        is_conditional_jump =  (beq 
-                                       || bne 
-                                       || blt 
-                                       || bge 
-                                       || bltu 
-                                       || bgeu);
-
-   wire        writes_to_reg = !(is_conditional_jump
-                                 || is_store
-                                 || writes_to_freg_as_rv32f);   
+   reg        is_conditional_jump;
 } instructions;
 `endif

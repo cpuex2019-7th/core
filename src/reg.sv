@@ -1,4 +1,5 @@
 `default_nettype none
+`include "def.sv"
 
 module regf
   (input wire         clk,
@@ -9,7 +10,7 @@ module regf
    input wire [4:0]  rs1,
    input wire [4:0]  rs2,
 
-   output            register register,
+   output            regvpair register,
 
    input wire        w_enable,
    input wire [4:0]  w_addr,

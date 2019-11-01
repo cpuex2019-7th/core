@@ -5,7 +5,7 @@ module decoder
   (input wire         clk,
    input wire        rstn,
    input wire [31:0] pc,
-   input wire [2:0]  enabled,
+   input wire  enabled,
   
    input wire [31:0] instr_raw,
 
@@ -36,8 +36,80 @@ module decoder
    
    assign rs1 = (r_type || i_type || s_type || b_type) ? _rs1 : 5'b00000;
    assign rs2 = (r_type || s_type || b_type) ? _rs2 : 5'b00000;
-   
-   always @(posedge clk) begin
+  
+  wire _lui = (opcode == 7'b0110111);
+  wire _auipc =  (opcode == 7'b0010111);
+  wire _jal = (opcode == 7'b1101111);
+  wire _jalr =  (opcode == 7'b1100111);
+  wire _beq = (opcode == 7'b1100011) && (funct3 == 3'b000);
+  wire _bne =  (opcode == 7'b1100011) && (funct3 == 3'b001);
+  wire _blt =  (opcode == 7'b1100011) && (funct3 == 3'b100);
+  wire _bge = (opcode == 7'b1100011) && (funct3 == 3'b101);
+  wire _bltu = (opcode == 7'b1100011) && (funct3 == 3'b110);
+  wire _bgeu =  (opcode == 7'b1100011) && (funct3 == 3'b111);  
+  wire _lb =  (opcode == 7'b0000011) && (funct3 == 3'b000);
+  wire _lh =  (opcode == 7'b0000011) && (funct3 == 3'b001); 
+  wire _lw =  (opcode == 7'b0000011) && (funct3 == 3'b010);  
+  wire _lbu = (opcode == 7'b0000011) && (funct3 == 3'b100);  
+  wire _lhu =  (opcode == 7'b0000011) && (funct3 == 3'b101);      
+  wire _sb =  (opcode == 7'b0100011) && (funct3 == 3'b000);     
+  wire _sh =  (opcode == 7'b0100011) && (funct3 == 3'b001);
+  wire _sw = (opcode == 7'b0100011) && (funct3 == 3'b010);
+  wire _addi =  (opcode == 7'b0010011) && (funct3 == 3'b000);
+  wire _slti =  (opcode == 7'b0010011) && (funct3 == 3'b010);
+             wire _sltiu = (opcode == 7'b0010011) && (funct3 == 3'b011);
+            wire _xori = (opcode == 7'b0010011) && (funct3 == 3'b100);
+            wire _ori = (opcode == 7'b0010011) && (funct3 == 3'b110);
+            wire _andi = (opcode == 7'b0010011) && (funct3 == 3'b111);
+            wire _slli = (opcode == 7'b0010011) && (funct3 == 3'b001);
+            wire _srli = (opcode == 7'b0010011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
+            wire _srai = (opcode == 7'b0010011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
+
+            // arith others
+            wire _add = (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
+            wire _sub = (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 7'b0100000);
+            wire _sll = (opcode == 7'b0110011) && (funct3 == 3'b001) && (funct7 == 7'b0000000);
+            wire _slt = (opcode == 7'b0110011) && (funct3 == 3'b010) && (funct7 == 7'b0000000);
+            wire _sltu = (opcode == 7'b0110011) && (funct3 == 3'b011) && (funct7 == 7'b0000000);
+            wire _xor = (opcode == 7'b0110011) && (funct3 == 3'b100) && (funct7 == 7'b0000000);
+            wire _srl = (opcode == 7'b0110011) && (funct3 == 3'b101) && (funct7 == 7'b0000000);
+            wire _sra = (opcode == 7'b0110011) && (funct3 == 3'b101) && (funct7 == 7'b0100000);
+            wire _or =  (opcode == 7'b0110011) && (funct3 == 3'b110) && (funct7 == 7'b0000000);
+            wire _and = (opcode == 7'b0110011) && (funct3 == 3'b111) && (funct7 == 7'b0000000);
+
+            /////////   
+            // rv32m
+            /////////
+            wire _mul = (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 7'b0000001);
+            wire _mulh = (opcode == 7'b0110011) && (funct3 == 3'b001) && (funct7 == 7'b0000001);
+            wire _mulhsu = (opcode == 7'b0110011) && (funct3 == 3'b010) && (funct7 == 7'b0000001);
+            wire _mulhu = (opcode == 7'b0110011) && (funct3 == 3'b011) && (funct7 == 7'b0000001);
+            wire _div = (opcode == 7'b0110011) && (funct3 == 3'b100) && (funct7 == 7'b0000001);
+            wire _divu = (opcode == 7'b0110011) && (funct3 == 3'b101) && (funct7 == 7'b0000001);
+            wire _rem = (opcode == 7'b0110011) && (funct3 == 3'b110) && (funct7 == 7'b0000001);
+            wire _remu = (opcode == 7'b0110011) && (funct3 == 3'b111) && (funct7 == 7'b0000001);
+
+            /////////   
+            // rv32f
+            /////////
+            wire _flw = (opcode == 7'b0000111) && (funct3 == 3'b010);
+            wire _fsw = (opcode == 7'b0100111) && (funct3 == 3'b010);
+            wire _fadd = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
+            wire _fsub = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0000100);
+            wire _fmul = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0001000);
+            wire _fdiv = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0001100);
+            wire _fsqrt = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0101100) && (rs2 == 5'b0);
+            wire _fsgnj = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0010000);
+            wire _fsgnjn = (opcode == 7'b1010011) && (funct3 == 3'b001) && (funct7 == 7'b0010000);
+            wire _fsgnjx = (opcode == 7'b1010011) && (funct3 == 3'b010) && (funct7 == 7'b0010000);         
+            wire _fcvtws = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1100000) && (rs2 == 5'b00000);
+            wire _fmvxw = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1110000) && (rs2 == 5'b00000);
+            wire _feq = (opcode == 7'b1010011) && (funct3 == 3'b010) && (funct7 == 7'b1010000);
+            wire _fle = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1010000);
+            wire _fcvtsw = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1101000) && (rs2 == 5'b00000);
+            wire _fmvwx = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1111000) && (rs2 == 5'b00000);
+             
+     always @(posedge clk) begin
       if (rstn) begin
          if (enabled) begin
             completed <= 1;            
@@ -46,82 +118,82 @@ module decoder
             // rv32i
             /////////   
             // lui, auipc
-            instr.lui <= (opcode == 7'b0110111);
-            instr.auipc <= (opcode == 7'b0010111);         
+            instr.lui <= _lui;
+            instr.auipc <= _auipc;         
             // jumps
-            instr.jal <= (opcode == 7'b1101111);         
-            instr.jalr <= (opcode == 7'b1100111);         
+            instr.jal <= _jal;         
+            instr.jalr <= _jalr;         
             // conditional breaks
-            instr.beq <= (opcode == 7'b1100011) && (funct3 == 3'b000);         
-            instr.bne <= (opcode == 7'b1100011) && (funct3 == 3'b001);         
-            instr.blt <= (opcode == 7'b1100011) && (funct3 == 3'b100);         
-            instr.bge <= (opcode == 7'b1100011) && (funct3 == 3'b101);         
-            instr.bltu <= (opcode == 7'b1100011) && (funct3 == 3'b110);         
-            instr.bgeu <= (opcode == 7'b1100011) && (funct3 == 3'b111);         
+            instr.beq <= _beq;         
+            instr.bne <= _bne;         
+            instr.blt <= _blt;         
+            instr.bge <= _bge;         
+            instr.bltu <= _bltu;         
+            instr.bgeu <= _bgeu;       
             // memory control
-            instr.lb = (opcode == 7'b0000011) && (funct3 == 3'b000);         
-            instr.lh = (opcode == 7'b0000011) && (funct3 == 3'b001);         
-            instr.lw = (opcode == 7'b0000011) && (funct3 == 3'b010);         
-            instr.lbu = (opcode == 7'b0000011) && (funct3 == 3'b100);         
-            instr.lhu = (opcode == 7'b0000011) && (funct3 == 3'b101);         
-            instr.sb = (opcode == 7'b0100011) && (funct3 == 3'b000);         
-            instr.sh = (opcode == 7'b0100011) && (funct3 == 3'b001);         
-            instr.sw = (opcode == 7'b0100011) && (funct3 == 3'b010);         
+            instr.lb = _lb;         
+            instr.lh = _lh;        
+            instr.lw = _lw;       
+            instr.lbu = _lbu;       
+            instr.lhu = _lhu; 
+            instr.sb = _sb;    
+            instr.sh = _sh;         
+            instr.sw = _sw;         
 
             // arith imm
-            instr.addi <= (opcode == 7'b0010011) && (funct3 == 3'b000);
-            instr.slti <= (opcode == 7'b0010011) && (funct3 == 3'b010);
-            instr.sltiu <= (opcode == 7'b0010011) && (funct3 == 3'b011);
-            instr.xori <= (opcode == 7'b0010011) && (funct3 == 3'b100);
-            instr.ori <= (opcode == 7'b0010011) && (funct3 == 3'b110);
-            instr.andi <= (opcode == 7'b0010011) && (funct3 == 3'b111);
-            instr.slli <= (opcode == 7'b0010011) && (funct3 == 3'b001);
-            instr.srli <= (opcode == 7'b0010011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
-            instr.srai <= (opcode == 7'b0010011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
+            instr.addi <= _addi;
+            instr.slti <= _slti;
+            instr.sltiu <= _sltiu;
+            instr.xori <= _xori;
+            instr.ori <= _ori;
+            instr.andi <= _andi;
+            instr.slli <= _slli;
+            instr.srli <= _srli;
+            instr.srai <= _srai;
 
             // arith others
-            instr.add <= (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
-            instr.sub <= (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 7'b0100000);
-            instr.sll <= (opcode == 7'b0110011) && (funct3 == 3'b001) && (funct7 == 7'b0000000);
-            instr.slt <= (opcode == 7'b0110011) && (funct3 == 3'b010) && (funct7 == 7'b0000000);
-            instr.sltu <= (opcode == 7'b0110011) && (funct3 == 3'b011) && (funct7 == 7'b0000000);
-            instr.i_xor <= (opcode == 7'b0110011) && (funct3 == 3'b100) && (funct7 == 7'b0000000);
-            instr.srl <= (opcode == 7'b0110011) && (funct3 == 3'b101) && (funct7 == 7'b0000000);
-            instr.sra <= (opcode == 7'b0110011) && (funct3 == 3'b101) && (funct7 == 7'b0100000);
-            instr.i_or <= (opcode == 7'b0110011) && (funct3 == 3'b110) && (funct7 == 7'b0000000);
-            instr.i_and <= (opcode == 7'b0110011) && (funct3 == 3'b111) && (funct7 == 7'b0000000);
+            instr.add <= _add;
+            instr.sub <= _sub;
+            instr.sll <= _sll;
+            instr.slt <= _slt;
+            instr.sltu <= _sltu;
+            instr.i_xor <= _xor;
+            instr.srl <= _srl;
+            instr.sra <= _sra;
+            instr.i_or <= _or;
+            instr.i_and <= _and;
 
             /////////   
             // rv32m
             /////////
-            instr.mul <= (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 7'b0000001);
-            instr.mulh <= (opcode == 7'b0110011) && (funct3 == 3'b001) && (funct7 == 7'b0000001);
-            instr.mulhsu <= (opcode == 7'b0110011) && (funct3 == 3'b010) && (funct7 == 7'b0000001);
-            instr.mulhu <= (opcode == 7'b0110011) && (funct3 == 3'b011) && (funct7 == 7'b0000001);
-            instr.div <= (opcode == 7'b0110011) && (funct3 == 3'b100) && (funct7 == 7'b0000001);
-            instr.divu <= (opcode == 7'b0110011) && (funct3 == 3'b101) && (funct7 == 7'b0000001);
-            instr.rem <= (opcode == 7'b0110011) && (funct3 == 3'b110) && (funct7 == 7'b0000001);
-            instr.remu <= (opcode == 7'b0110011) && (funct3 == 3'b111) && (funct7 == 7'b0000001);
+            instr.mul <= _mul;
+            instr.mulh <= _mulh;
+            instr.mulhsu <= _mulhsu;
+            instr.mulhu <= _mulhu;
+            instr.div <= _div;
+            instr.divu <= _divu;
+            instr.rem <= _rem;
+            instr.remu <= _remu;
 
             /////////   
             // rv32f
             /////////
-            instr.flw <= (opcode == 7'b0000111) && (funct3 == 3'b010);
-            instr.fsw <= (opcode == 7'b0100111) && (funct3 == 3'b010);
-            instr.fadd <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
-            instr.fsub <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0000100);
-            instr.fmul <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0001000);
-            instr.fdiv <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0001100);
-            instr.fsqrt <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0101100) && (rs2 == 5'b0);
-            instr.fsgnj <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b0010000);
-            instr.fsgnjn <= (opcode == 7'b1010011) && (funct3 == 3'b001) && (funct7 == 7'b0010000);
-            instr.fsgnjx <= (opcode == 7'b1010011) && (funct3 == 3'b010) && (funct7 == 7'b0010000);         
-            instr.fcvtws <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1100000) && (rs2 == 5'b00000);
-            instr.fmvxw <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1110000) && (rs2 == 5'b00000);
-            instr.feq <= (opcode == 7'b1010011) && (funct3 == 3'b010) && (funct7 == 7'b1010000);
-            instr.fle <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1010000);
-            instr.fcvtsw <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1101000) && (rs2 == 5'b00000);
-            instr.fmvwx <= (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1111000) && (rs2 == 5'b00000);
+            instr.flw <= _flw;
+            instr.fsw <= _fsw;
+            instr.fadd <= _fadd;
+            instr.fsub <= _fsub;
+            instr.fmul <= _fmul;
+            instr.fdiv <= _fdiv;
+            instr.fsqrt <= _fsqrt;
+            instr.fsgnj <= _fsgnj;
+            instr.fsgnjn <= _fsgnjn;
+            instr.fsgnjx <= _fsgnjx;
+            instr.fcvtws <= _fcvtws;
+            instr.fmvxw <= _fmvxw;
+            instr.feq <= _feq;
+            instr.fle <= _fle;
+            instr.fcvtsw <= _fcvtsw;
+            instr.fmvwx <= _fmvwx; 
             /////////   
             
             /////////   
@@ -137,6 +209,60 @@ module decoder
             /////////   
             // other controls
             /////////
+                 instr.writes_to_freg_as_rv32f <= (_fsw
+                                          || _flw
+                                          || _fadd 
+                                          || _fsub
+                                          || _fmul
+                                          || _fdiv
+                                          || _fsqrt
+                                          || _fsgnj
+                                          || _fsgnjn
+                                          || _fsgnjx
+                                          || _fcvtsw
+                                          || _fmvwx);
+   
+ instr.writes_to_reg_as_rv32f <=  (_feq
+                                          || _fle
+                                          || _fcvtsw
+                                          || _fmvxw);                              
+  instr.rv32f <= (_fsw
+                        || _flw
+                        || _fadd 
+                        || _fsub
+                        || _fmul
+                        || _fdiv
+                        || _fsqrt
+                        || _fsgnj
+                        || _fsgnjn
+                        || _fsgnjx
+                        || _fcvtsw
+                        || _fmvwx
+                        || _feq
+                        || _fle
+                        || _fcvtsw
+                        || _fmvxw);                              
+   
+instr.is_store <= (_sb
+                           || _sh
+                           || _sw
+                           || _fsw);
+   
+  instr.is_load <=   (_lb
+                            || _lh
+                            || _lw
+                            || _lbu
+                            || _lhu
+                            || _flw);   
+   
+   instr.is_conditional_jump <=  (_beq 
+                                       || _bne 
+                                       || _blt 
+                                       || _bge 
+                                       || _bltu 
+                                       || _bgeu);
+
+            
             instr.rd <= (r_type || i_type || u_type || j_type) ? _rd : 5'b00000;
             instr.rs1 <= (r_type || i_type || s_type || b_type) ? _rs1 : 5'b00000;
             instr.rs2 <= (r_type || s_type || b_type) ? _rs2 : 5'b00000;

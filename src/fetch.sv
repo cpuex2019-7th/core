@@ -1,4 +1,5 @@
 `default_nettype none
+`include "def.sv"
 
 module fetch
   (input wire         clk,
@@ -27,7 +28,7 @@ module fetch
       if(rstn) begin
          if (enabled) begin
             state <= 0;
-            comleted <= 0;
+            completed <= 0;
             pc_n <= pc;
          end else if (state == 0) begin
             state <= 1;            

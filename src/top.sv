@@ -45,7 +45,6 @@ module core
    /////////////////////
    // TODO: use interface (including csr)
    reg [2:0]          state;
-   assign debug_state = state;   
    reg [31:0]         pc;
 
    
@@ -72,11 +71,11 @@ module core
                 .enabled(fetch_enabled),
                 .pc(pc),
 
-                .rom_addr(rom_addr)
-                .rom_data(rom_data)
+                .rom_addr(rom_addr),
+                .rom_data(rom_data),
 
                 .completed(is_fetch_done),
-                .pc_n(pc_fd)
+                .pc_n(pc_fd),
                 .instr_raw(instr_fd));      
 
    // decode & reg
@@ -125,7 +124,7 @@ module core
                    .register(register_de));   
    
    wire               freg_w_enable;   
-   regf _registers(.clk(clk), 
+   regf _fregisters(.clk(clk), 
                    .rstn(rstn),
                    .r_enabled(decode_enabled),
       
@@ -160,13 +159,13 @@ module core
       
                     .enabled(exec_enabled),
                     .instr(instr_de),
-                    .register(regsiter_de),
-                    .fregister(fregsiter_de),
+                    .register(register_de),
+                    .fregister(fregister_de),
       
                     .completed(is_exec_done),
                     .instr_n(instr_em),
-                    .register_n(regsiter_em), 
-                    .fregister_n(fregsiter_em),
+                    .register_n(register_em), 
+                    .fregister_n(fregister_em),
       
                     .result(result_em), 
                     .is_jump_chosen(is_jump_chosen_em), 
@@ -193,8 +192,8 @@ module core
       
             .enabled(mem_enabled),
             .instr(instr_em),
-            .register(regsiter_em),
-            .fregister(fregsiter_em),
+            .register(register_em),
+            .fregister(fregister_em),
             .is_jump_chosen(is_jump_chosen_em),
             .next_pc(next_pc_em),
 
@@ -224,10 +223,10 @@ module core
             .axi_wstrb(axi_wstrb), 
             .axi_wvalid(axi_wvalid),
 
-            .completed(is_mem_done);
+            .completed(is_mem_done),
             .instr_n(instr_mw),
-            .register_n(regsiter_mw),                    
-            .fregister_n(fregsiter_mw),
+            .register_n(register_mw),                    
+            .fregister_n(fregister_mw),
       
             .result(result_mw),
             .is_jump_chosen_n(is_jump_chosen_mw), 
@@ -250,7 +249,7 @@ module core
                 .is_jump_chosen(is_jump_chosen_mw),
                 .next_pc(next_pc_mw),
       
-                .result(result_mw),
+                .data(result_mw),
 
                 .reg_w_enable(reg_w_enable),
                 .freg_w_enable(freg_w_enable),
@@ -274,32 +273,37 @@ module core
    always @(posedge clk) begin
       if(rstn) begin
          if (state == FETCH) begin
-            fetch_enabled <= 0;            
-            if (is_fetch_done) begin
+           if(fetch_enabled) begin
+                fetch_enabled <= 0;      
+            end else if (is_fetch_done) begin
                state <= DECODE;
                decode_enabled <= 1;
             end
          end else if (state == DECODE) begin
+         if (decode_enabled) begin
             decode_enabled <= 0;            
-            if (is_decode_done) begin
+          end else if (is_decode_done) begin
                state <= EXEC;
                exec_enabled <= 1;
             end
          end else if (state == EXEC) begin
+           if (exec_enabled) begin
             exec_enabled <= 0;            
-            if (is_exec_done) begin            
+           end else if (is_exec_done) begin            
                state <= MEM;
                mem_enabled <= 1;
             end
          end else if (state == MEM) begin;
-            mem_enabled <= 0;            
-            if (is_mem_done) begin
+            if (mem_enabled) begin
+                mem_enabled <= 0;            
+            end else if (is_mem_done) begin
                state <= WRITE;
                write_enabled <= 1;
             end
          end else if (state == WRITE) begin
+           if(write_enabled) begin
             write_enabled <= 0;            
-            if (is_write_done) begin
+           end else if (is_write_done) begin
                pc <= next_pc_wf;
                state <= FETCH;
                fetch_enabled <= 1;

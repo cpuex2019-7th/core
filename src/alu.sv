@@ -20,8 +20,8 @@ module alu
                     instr.lui? instr.imm:
                     instr.auipc? $signed(instr.imm) + instr.pc:
                     // jumps
-                    instr.jal? 32'd1:
-                    instr.jalr? 32'd1:
+                    instr.jal? instr.pc + 4:
+                    instr.jalr? instr.pc + 4:
                     // conditional breaks
                     instr.beq? (register.rs1 == register.rs2):
                     instr.bne? (register.rs1 != register.rs2):

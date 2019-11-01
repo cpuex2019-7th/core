@@ -147,7 +147,7 @@ module mmu_wrapper #
                                      .core_axi_wready(core_axi_wready), 
                                      .core_axi_wstrb(core_axi_wstrb), 
                                      .core_axi_wvalid(core_axi_wvalid),
-                                     n
+                                     
                                      // uart
                                      .uart_axi_araddr(uart_axi_araddr), 
                                      .uart_axi_arready(uart_axi_arready), 
