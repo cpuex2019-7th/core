@@ -8,12 +8,6 @@ typedef struct {
 
 parameter FORWARD_TARGET_INT = 0;
 parameter FORWARD_TARGET_FLOAT = 1;
-typedef struct {
-   reg         enabled;
-   reg         fenabled;
-   reg [4:0]   key;  
-   reg [31:0]  value;
-} fwdregkv;
 
 typedef struct {
    /////////

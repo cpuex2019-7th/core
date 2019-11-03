@@ -89,13 +89,13 @@ module core
    // None
    
    // stage input
-   reg [31:0]        pc_fd_in;
-   reg [31:0]        instr_fd_in;
+   reg [31:0]         pc_fd_in;
+   reg [31:0]         instr_fd_in;
    task set_fd;      
       begin
          pc_fd_in <= pc_fd_out;
          instr_fd_in <= instr_fd_out;         
-     end
+      end
    endtask
    
    // stage outputs
@@ -108,7 +108,7 @@ module core
    decoder _decoder(.clk(clk), 
                     .rstn(rstn && !decode_reset),                    
                     .enabled(decode_enabled),
-                    
+      
                     .pc(pc_fd_in),      
                     .instr_raw(instr_fd_in),                    
       
@@ -156,17 +156,41 @@ module core
    reg                exec_reset;   
    wire               is_exec_done;
    wire               is_exec_available = is_exec_done && !exec_reset;   
-      
+   
    // stage input
    instructions instr_de_in;   
    regvpair register_de_in;
    regvpair fregister_de_in;
-   task set_de;      
+   task set_de_bothstep;      
       begin
          instr_de_in <= instr_de_out;
-         register_de_in <= register_de_out;
-         fregister_de_in <= fregister_de_out;         
-     end
+         register_de_in.rs1 <= (reg_onestep_forwarding_required  && instr_em_out.rd == instr.rs1)? result_em_out:
+                               (reg_twostep_forwarding_required && instr_mw_out.rd == instr.rs1)? result_mw_out:
+                               register_de_out.rs1;
+         register_de_in.rs2 <= (reg_onestep_forwarding_required  && instr_em_out.rd == instr.rs2)? result_em_out:
+                               (reg_twostep_forwarding_required && instr_mw_out.rd == instr.rs2)? result_mw_out:
+                               register_de_out.rs2;
+         fregister_de_in.rs1 <= (freg_onestep_forwarding_required  && instr_em_out.rd == instr.rs2)? result_em_out:
+                                (freg_twostep_forwarding_required && instr_mw_out.rd == instr.rs2)? result_mw_out:
+                                fregister_de_out.rs1;
+         fregister_de_in.rs2 <= (freg_onestep_forwarding_required  && instr_em_out.rd == instr.rs2)? result_em_out:
+                                (freg_twostep_forwarding_required && instr_mw_out.rd == instr.rs2)? result_mw_out:
+                                fregister_de_out.rs2;
+      end
+   endtask // set_de_bothstep
+   
+   task set_de_mw;      
+      begin
+         instr_de_in <= instr_de_out;
+         register_de_in.rs1 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr.rs1)? result_mw_out:
+                               register_de_out.rs1;
+         register_de_in.rs2 <= (reg_twostep_forwarding_required && instr_mw_out.rd== instr.rs2)? result_mw_out:
+                               register_de_out.rs2;
+         fregister_de_in.rs1 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr.rs2)? result_mw_out:
+                                fregister_de_out.rs1;
+         fregister_de_in.rs2 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr.rs2)? result_mw_out:
+                                fregister_de_out.rs2;
+      end
    endtask
    
    // stage outputs
@@ -177,8 +201,6 @@ module core
    wire               is_jump_chosen_em_out;
    wire [31:0]        jump_dest_em_out;   
 
-   fwdregkv onestep_forwarding;
-   fwdregkv twostep_forwarding;
    execute _execute(.clk(clk), 
                     .rstn(rstn && !exec_reset),
       
@@ -186,11 +208,9 @@ module core
                     .instr(instr_de_in),
                     .register(register_de_in),
                     .fregister(fregister_de_in),                    
-                    .onestep_forwarding(onestep_forwarding),
-                    .twostep_forwarding(twostep_forwarding),
       
                     .completed(is_exec_done),
-                    
+      
                     .instr_n(instr_em_out),
                     .register_n(register_em_out), 
                     .fregister_n(fregister_em_out),      
@@ -209,14 +229,14 @@ module core
    instructions instr_em_in;   
    regvpair register_em_in;
    regvpair fregister_em_in;
-   reg [31:0]        result_em_in;
+   reg [31:0]         result_em_in;
    task set_em;      
       begin
          instr_em_in <= instr_em_out;
          register_em_in <= register_em_out;
          fregister_em_in <= fregister_em_out;
          result_em_in <= result_em_out;         
-     end
+      end
    endtask
    
    // stage outputs
@@ -257,7 +277,7 @@ module core
             .axi_wvalid(axi_wvalid),
 
             .completed(is_mem_done),
-            
+      
             .instr_n(instr_mw_out),
             .result(result_mw_out));
    
@@ -273,16 +293,16 @@ module core
 
    // stage input
    instructions instr_mw_in;   
-   reg [31:0]        result_mw_in;
+   reg [31:0]         result_mw_in;
    task set_mw;      
       begin
          instr_mw_in <= instr_mw_out;
          result_mw_in <= result_mw_out;         
-     end
+      end
    endtask
 
    // there is no stage output
-      
+   
    write _write(.clk(clk), 
                 .rstn(rstn && !write_reset),
       
@@ -302,25 +322,24 @@ module core
    wire               are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset || is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
 
    wire               reg_onestep_forwarding_required = (instr_de_out.uses_reg 
-                                                 && instr_em_out.writes_to_reg
-                                                 && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_em_out.rd)
-                                                     || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_em_out.rd))) ;   
+                                                         && instr_em_out.writes_to_reg
+                                                         && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_em_out.rd)
+                                                             || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_em_out.rd))) ;   
    wire               freg_onestep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
-                                                  && instr_em_out.writes_to_freg_as_rv32f
-                                                  && (instr_de_out.rs1 == instr_em_out.rd 
-                                                      || instr_de_out.rs2 == instr_em_out.rd));
+                                                          && instr_em_out.writes_to_freg_as_rv32f
+                                                          && (instr_de_out.rs1 == instr_em_out.rd 
+                                                              || instr_de_out.rs2 == instr_em_out.rd));
    
    wire               reg_twostep_forwarding_required = (instr_de_out.uses_reg 
-                                                 && instr_mw_out.writes_to_reg
-                                                 && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_mw_out.rd)
-                                                     || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_mw_out.rd))) ;   
+                                                         && instr_mw_out.writes_to_reg
+                                                         && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_mw_out.rd)
+                                                             || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_mw_out.rd))) ;   
    wire               freg_twostep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
-                                                  && instr_mw_out.writes_to_freg_as_rv32f
-                                                  && (instr_de_out.rs1 == instr_mw_out.rd 
-                                                      || instr_de_out.rs2 == instr_mw_out.rd));
+                                                          && instr_mw_out.writes_to_freg_as_rv32f
+                                                          && (instr_de_out.rs1 == instr_mw_out.rd 
+                                                              || instr_de_out.rs2 == instr_mw_out.rd));
    wire               onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
-   
-   
+      
    
    /////////////////////
    // main
@@ -365,10 +384,6 @@ module core
             // we do not have to forward any register.
 
             if (stalling_for_mem_forwarding) begin               
-               twostep_forwarding.enabled <= reg_twostep_forwarding_required;
-               twostep_forwarding.fenabled <= freg_twostep_forwarding_required;
-               twostep_forwarding.key <= instr_mw_out.rd;
-               twostep_forwarding.value <= result_mw_out;                              
                stalling_for_mem_forwarding <= 0;
 
                pc <= pc + 4;               
@@ -382,14 +397,9 @@ module core
                
                exec_enabled <= 1;            
                exec_reset <= 0;
-               set_de();               
+               set_de_mw();
             end else if (instr_em_out.is_load && onestep_forwarding_required && is_exec_available) begin
                // case 00
-               // here i use twostep_forwarding intendedly.
-               onestep_forwarding.enabled <= reg_twostep_forwarding_required;                  
-               onestep_forwarding.fenabled <= freg_twostep_forwarding_required;                  
-               onestep_forwarding.key <= instr_mw_out.rd;               
-               onestep_forwarding.value <= result_mw_out;
                stalling_for_mem_forwarding <= 1;
                
                fetch_enabled <= 0;
@@ -401,7 +411,7 @@ module core
                
                exec_enabled <= 0;               
                exec_reset <= 0;
-               // no set_de();
+               set_de_mw();
             end else if (is_jump_chosen_em_out && is_exec_available) begin
                // when the branch prediction failed
                pc <= jump_dest_em_out;
@@ -417,18 +427,6 @@ module core
                exec_reset <= 1;
                // no set_de();
             end else begin
-               // case 01 & 02
-               onestep_forwarding.enabled <= reg_onestep_forwarding_required;                  
-               onestep_forwarding.fenabled <= freg_onestep_forwarding_required;                  
-               onestep_forwarding.key <= instr_em_out.rd;               
-               onestep_forwarding.value <= result_em_out;
-               
-               twostep_forwarding.enabled <= reg_twostep_forwarding_required;                  
-               twostep_forwarding.fenabled <= freg_twostep_forwarding_required;                  
-               twostep_forwarding.key <= instr_mw_out.rd;               
-               twostep_forwarding.value <= result_mw_out;                  
-               stalling_for_mem_forwarding <= 0;
-               
                pc <= pc + 4;               
                
                fetch_enabled <= 1;
@@ -440,9 +438,9 @@ module core
                
                exec_enabled <= is_decode_done;
                exec_reset <= !is_decode_done;
-               set_de();              
+               set_de_bothstep();              
             end
-                        
+            
             mem_enabled <= is_exec_done;
             mem_reset <= !is_exec_done;
             set_em();              

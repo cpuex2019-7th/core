@@ -9,8 +9,6 @@ module fpu
    input              instructions instr,
    input              regvpair register,
    input              regvpair fregister,
-   input              fwdregkv onestep_forwarding,
-   input              fwdregkv twostep_forwarding,
 
    output reg         completed,
    output reg [31:0] result);
