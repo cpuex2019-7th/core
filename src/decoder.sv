@@ -9,7 +9,7 @@ module decoder
   
    input wire [31:0] instr_raw,
 
-   output reg        completed,
+   output wire        completed,
    output            instructions instr,
    output wire [4:0] rs1,
    output wire [4:0] rs2);
@@ -62,8 +62,8 @@ module decoder
    wire              _ori = (opcode == 7'b0010011) && (funct3 == 3'b110);
    wire              _andi = (opcode == 7'b0010011) && (funct3 == 3'b111);
    wire              _slli = (opcode == 7'b0010011) && (funct3 == 3'b001);
-   wire              _srli = (opcode == 7'b0010011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
-   wire              _srai = (opcode == 7'b0010011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
+   wire              _srli = (opcode == 7'b0010011) && (funct3 == 3'b101) && (funct7 == 7'b0000000);
+   wire              _srai = (opcode == 7'b0010011) && (funct3 == 3'b101) && (funct7 == 7'b0100000);
 
    // arith others
    wire              _add = (opcode == 7'b0110011) && (funct3 == 3'b000) && (funct7 == 7'b0000000);
@@ -126,7 +126,7 @@ module decoder
                                                  || _fcvtsw
                                                  || _fmvxw);
 
-   wire              _uses_reg_as_rv32f = (_flw || _fsw || _fcvtsw || _fcvtwx);
+   wire              _uses_reg_as_rv32f = (_flw || _fsw || _fcvtsw || _fmvwx);
    wire              _uses_freg_as_rv32f = (_fadd 
                                             || _fsub
                                             || _fmul
@@ -177,11 +177,13 @@ module decoder
                                              || _bgeu);
    
 
+      reg _completed;
+   assign completed = _completed & !enabled;
    
    always @(posedge clk) begin
       if (rstn) begin
          if (enabled) begin
-            completed <= 1;            
+            _completed <= 1;            
             
             /////////   
             // rv32i
@@ -286,6 +288,7 @@ module decoder
                                      || _writes_to_freg_as_rv32f);
             instr.uses_reg_as_rv32f <= _uses_reg_as_rv32f;            
             instr.uses_freg_as_rv32f <= _uses_freg_as_rv32f;
+            instr.uses_reg <= !_rv32f || _uses_reg_as_rv32f;
             
             instr.is_store <= _is_store;                        
             instr.is_load <= _is_load;               
@@ -310,7 +313,7 @@ module decoder
                          32'b0;
          end
       end else begin // if (rstn)
-         compelted <= 0;
+         _completed <= 0;
       end      
    end
 endmodule

@@ -12,7 +12,7 @@ module execute
    
    input             fwdregkv forwarding,
 
-   output reg        completed,
+   output wire        completed,
    output            instructions instr_n,
    output            regvpair register_n,
    output            regvpair fregister_n,
@@ -43,13 +43,13 @@ module execute
       
             .instr(instr),
             .register(register),
-            .forwarding_i(forwarding_i),
             .fregister(fregister),
             .forwarding(forwarding),
 
             .completed(fpu_completed),
             .result(fpu_result));
-   
+      reg _completed;
+   assign completed = _completed & !enabled;
    
    // set flags
    //////////////////////
@@ -59,7 +59,7 @@ module execute
             result <= (instr.rv32f)? fpu_result:
                       alu_result;
 
-            completed <= (instr.rv32f)? fpu_completed:
+            _completed <= (instr.rv32f)? fpu_completed:
                          alu_completed;
 
             instr_n <= instr;
@@ -76,6 +76,8 @@ module execute
                        0;            
 
          end
+      end else begin
+        _completed <= 0;
       end
    end  
 endmodule // execute

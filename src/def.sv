@@ -124,6 +124,7 @@ typedef struct {
    reg         writes_to_reg; // writes_to_reg_as_rv32f + rv32im instrs
    reg         uses_freg_as_rv32f;
    reg         uses_reg_as_rv32f;
+   reg         uses_reg; // uses_reg_as_rv32f + rv32im instrs
       
    reg         is_store;   
    reg         is_load;   

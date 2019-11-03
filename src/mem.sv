@@ -40,7 +40,7 @@ module mem(
            output reg [3:0]  axi_wstrb,
            output reg        axi_wvalid,
 
-           output reg        completed,
+           output wire        completed,
            output            instructions instr_n,
            output            regvpair register_n,
            output            regvpair fregister_n,
@@ -48,7 +48,9 @@ module mem(
 
            output reg [31:0] result);
    
-
+     reg _completed;
+   assign completed = _completed & !enabled;
+   
    reg [3:0]                 mem_state;
    localparam mem_r_waiting_ready = 1;
    localparam mem_r_waiting_data = 2;
@@ -77,13 +79,13 @@ module mem(
             result <= addr;            
             
             if (instr.is_load) begin
-               completed <= 0;            
+               _completed <= 0;            
                axi_araddr <= {addr[31:2], 2'b0};
                axi_arprot <= 3'b000;                  
                axi_arvalid <= 1;
                mem_state <= mem_r_waiting_ready;               
             end else if (instr.is_store) begin
-               completed <= 0;            
+               _completed <= 0;            
                axi_awaddr <= {addr[31:2], 2'b0}; // rs1 + imm
                axi_awprot <= 3'b000;                  
                axi_awvalid <= 1;
@@ -136,7 +138,7 @@ module mem(
                axi_wvalid <= 1;
                mem_state <= mem_w_waiting_ready;
             end else begin
-               completed <= 1;               
+               _completed <= 1;               
             end
          end else if (mem_state == mem_r_waiting_ready) begin
             if (axi_arready) begin
@@ -180,7 +182,7 @@ module mem(
                     default: result <= 32'b0;                       
                   endcase
                end
-               completed <= 1;                  
+               _completed <= 1;                  
             end               
          end else if (mem_state == mem_w_waiting_ready) begin
             if(axi_awready) begin
@@ -196,11 +198,11 @@ module mem(
          end else if (mem_state == mem_w_waiting_data) begin
             if (axi_bvalid) begin
                axi_bready <= 0;                  
-               completed <= 1;
+               _completed <= 1;
             end
          end
       end else begin 
-         completed <= 0;         
+         _completed <= 0;         
       end // else: !if(enabled)
    end
 endmodule

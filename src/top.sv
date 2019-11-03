@@ -265,16 +265,16 @@ module core
                 .completed(is_write_done),
                 .is_jump_chosen_n(is_jump_chosen_wf));   
 
-   wire               are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset && is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
+   wire               are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset || is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
 
-   wire               reg_forwarding_required = (instr_de.use_reg 
+   wire               reg_forwarding_required = (instr_de.uses_reg 
                                                  && instr_em.writes_to_reg
                                                  && ((instr_de.rs1 != 0 && instr_de.rs1 == instr_em.rd)
-                                                     || (instr_de.rs2 != 0 && instr_de.rs2 = instr_em.rd))) ;   
-   wire               freg_forwarding_required = (instr_de.use_freg 
-                                                  && instr_em.writes_to_freg
+                                                     || (instr_de.rs2 != 0 && instr_de.rs2 == instr_em.rd))) ;   
+   wire               freg_forwarding_required = (instr_de.uses_freg_as_rv32f 
+                                                  && instr_em.writes_to_freg_as_rv32f
                                                   && (instr_de.rs1 == instr_em.rd 
-                                                      || instr_de.rs2 = instr_em.rd));
+                                                      || instr_de.rs2 == instr_em.rd));
    wire               forwarding_required = reg_forwarding_required || freg_forwarding_required;
    
    
@@ -292,10 +292,10 @@ module core
       write_enabled <= 0;
 
       fetch_reset <= 0;
-      decode_reset <= 0;
-      exec_reset <= 0;
-      mem_reset <= 0;
-      write_reset <= 0;      
+      decode_reset <= 1;
+      exec_reset <= 1;
+      mem_reset <= 1;
+      write_reset <= 1;      
    end
 
    always @(posedge clk) begin
