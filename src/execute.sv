@@ -22,6 +22,11 @@ module execute
    output reg        is_jump_chosen,
    output reg [31:0] jump_dest);
 
+   // internal state
+   //////////////////////
+   regvpair _register;
+   regvpair _fregister;   
+
    // connection with ALU
    //////////////////////
    wire [31:0]       alu_result;
@@ -31,7 +36,7 @@ module execute
             .enabled(enabled),
       
             .instr(instr),
-            .register(register),
+            .register(register_n),
             .onestep_forwarding(onestep_forwarding),
             .twostep_forwarding(twostep_forwarding),
       
@@ -45,8 +50,8 @@ module execute
             .enabled(enabled),
       
             .instr(instr),
-            .register(register),
-            .fregister(fregister),
+            .register(register_n),
+            .fregister(fregister_n),
             .onestep_forwarding(onestep_forwarding),
             .twostep_forwarding(twostep_forwarding),
 
@@ -61,9 +66,20 @@ module execute
       if (rstn) begin
          if (enabled) begin
             instr_n <= instr;
-            register_n <= register;
-            fregister_n <= fregister;
-            _completed <= 0;            
+            _completed <= 0;
+
+            register_n.rs1 <= (onestep_forwarding.enabled && onestep_forwarding.key == instr.rs1)? onestep_forwarding.value :
+                             (twostep_forwarding.enabled && twostep_forwarding.key == instr.rs1)? twostep_forwarding.value : 
+                             register.rs1;
+            register_n.rs2 <= (onestep_forwarding.enabled && onestep_forwarding.key == instr.rs2)? onestep_forwarding.value :
+                             (twostep_forwarding.enabled && twostep_forwarding.key == instr.rs2)? twostep_forwarding.value : 
+                             register.rs2;
+            fregister_n.rs1 <= (onestep_forwarding.fenabled && onestep_forwarding.key == instr.rs1)? onestep_forwarding.value :
+                             (twostep_forwarding.fenabled && twostep_forwarding.key == instr.rs1)? twostep_forwarding.value : 
+                             fregister.rs1;
+            fregister_n.rs2 <= (onestep_forwarding.fenabled && onestep_forwarding.key == instr.rs2)? onestep_forwarding.value :
+                              (twostep_forwarding.fenabled && twostep_forwarding.key == instr.rs2)? twostep_forwarding.value : 
+                              fregister.rs2;            
          end else if ((instr.rv32f && fpu_completed) 
                       || (!instr.rv32f && alu_completed)) begin            
             result <= (instr.rv32f)? fpu_result:
@@ -75,7 +91,7 @@ module execute
               || (instr.is_conditional_jump && alu_result == 32'd1);
             
             jump_dest <= instr.jal? instr.pc + $signed(instr.imm):
-                         instr.jalr? (register.rs1 + $signed(instr.imm)):// & ~(32b'0):
+                         instr.jalr? (rs1 + $signed(instr.imm)):// & ~(32b'0):
                          (instr.is_conditional_jump && alu_result == 32'd1)? instr.pc + $signed(instr.imm):
                          0;                        
          end else begin
