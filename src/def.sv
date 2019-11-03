@@ -1,18 +1,24 @@
 `ifndef _parameters_state_
  `define _parameters_state_
-parameter FETCH = 0;
-parameter DECODE = 1;
-parameter EXEC = 2;
-parameter MEM = 3;
-parameter WRITE = 4;
-parameter INVALID = 5;
 
 typedef struct {  
    reg [31:0]  rs1;  
    reg [31:0]  rs2;
 } regvpair;
 
+parameter FORWARD_TARGET_INT = 0;
+parameter FORWARD_TARGET_FLOAT = 1;
 typedef struct {
+   reg         enabled;
+   reg         fenabled;
+   reg [4:0]   key;  
+   reg [31:0]  value;
+} fwdregkv;
+
+typedef struct {
+   /////////
+   // decoded metadata
+   /////////   
    reg [4:0]   rd;
    reg [4:0]   rs1;
    reg [4:0]   rs2;
@@ -112,15 +118,15 @@ typedef struct {
    /////////   
    // control flags
    /////////
-   reg         writes_to_freg_as_rv32f;
-   
-   reg         writes_to_reg_as_rv32f;                            
-   reg         rv32f;                           
-   
-   reg         is_store;
-   
-   reg         is_load;
-   
+   reg         rv32f;      
+   reg         writes_to_freg_as_rv32f;   
+   reg         writes_to_reg_as_rv32f;
+   reg         writes_to_reg; // writes_to_reg_as_rv32f + rv32im instrs
+   reg         uses_freg_as_rv32f;
+   reg         uses_reg_as_rv32f;
+      
+   reg         is_store;   
+   reg         is_load;   
    reg         is_conditional_jump;
 } instructions;
 `endif

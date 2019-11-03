@@ -26,15 +26,9 @@ module regf
       end
    end
 
-   // main
+   // write
    always @(posedge clk) begin
       if(rstn) begin
-         if (r_enabled) begin
-            // update rd1 and rd2
-            register.rs1 <= regs[rs1];         
-            register.rs2 <= regs[rs2];         
-         end
-
          // write w_data to w_addr
          if(w_enable) begin
             if(w_addr != 0) begin
@@ -46,6 +40,21 @@ module regf
          register.rs2 <= 0;         
       end
    end
+
+   // read
+   always @(negedge clk) begin
+      if(rstn) begin
+         if (r_enabled) begin
+            // update rd1 and rd2
+            register.rs1 <= regs[rs1];         
+            register.rs2 <= regs[rs2];         
+         end
+      end else begin // if (rstn)
+         register.rs1 <= 0;
+         register.rs2 <= 0;         
+      end
+   end // always @ (posedge clk)
+   
 endmodule
 
 `default_nettype wire

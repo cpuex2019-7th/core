@@ -7,7 +7,6 @@ module mem(
            input             regvpair register,
            input             regvpair fregister,
            input wire        is_jump_chosen,
-           input wire [31:0] next_pc,
 
            input wire [31:0] addr,
 
@@ -46,7 +45,6 @@ module mem(
            output            regvpair register_n,
            output            regvpair fregister_n,
            output reg        is_jump_chosen_n,
-           output reg [31:0] next_pc_n,
 
            output reg [31:0] result);
    
@@ -76,7 +74,6 @@ module mem(
             register_n <= register;
             fregister_n <= fregister;
             is_jump_chosen_n <= is_jump_chosen;
-            next_pc_n <= next_pc;            
             result <= addr;            
             
             if (instr.is_load) begin

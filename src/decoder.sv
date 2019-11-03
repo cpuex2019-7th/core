@@ -108,6 +108,75 @@ module decoder
    wire              _fle = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1010000);
    wire              _fcvtsw = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1101000) && (rs2 == 5'b00000);
    wire              _fmvwx = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1111000) && (rs2 == 5'b00000);
+
+   wire              _writes_to_freg_as_rv32f = (_fsw
+                                                 || _flw
+                                                 || _fadd 
+                                                 || _fsub
+                                                 || _fmul
+                                                 || _fdiv
+                                                 || _fsqrt
+                                                 || _fsgnj
+                                                 || _fsgnjn
+                                                 || _fsgnjx
+                                                 || _fcvtsw
+                                                 || _fmvwx);
+   wire              _writes_to_reg_as_rv32f =  (_feq
+                                                 || _fle
+                                                 || _fcvtsw
+                                                 || _fmvxw);
+
+   wire              _uses_reg_as_rv32f = (_flw || _fsw || _fcvtsw || _fcvtwx);
+   wire              _uses_freg_as_rv32f = (_fadd 
+                                            || _fsub
+                                            || _fmul
+                                            || _fdiv
+                                            || _fsqrt
+                                            || _fsgnj
+                                            || _fsgnjn
+                                            || _fsgnjx
+                                            || _fcvtsw
+                                            || _feq
+                                            || _fle
+                                            || _fmvxw);
+   
+   wire              _rv32f = (_fsw
+                               || _flw
+                               || _fadd 
+                               || _fsub
+                               || _fmul
+                               || _fdiv
+                               || _fsqrt
+                               || _fsgnj
+                               || _fsgnjn
+                               || _fsgnjx
+                               || _fcvtsw
+                               || _fmvwx
+                               || _feq
+                               || _fle
+                               || _fcvtsw
+                               || _fmvxw);
+
+   
+   wire              _is_store = (_sb
+                                  || _sh
+                                  || _sw
+                                  || _fsw);
+   wire              _is_load = (_lb
+                                 || _lh
+                                 || _lw
+                                 || _lbu
+                                 || _lhu
+                                 || _flw);
+   
+   wire              _is_conditional_jump = (_beq 
+                                             || _bne 
+                                             || _blt 
+                                             || _bge 
+                                             || _bltu 
+                                             || _bgeu);
+   
+
    
    always @(posedge clk) begin
       if (rstn) begin
@@ -208,60 +277,19 @@ module decoder
 
             /////////   
             // other controls
-            /////////
-            instr.writes_to_freg_as_rv32f <= (_fsw
-                                              || _flw
-                                              || _fadd 
-                                              || _fsub
-                                              || _fmul
-                                              || _fdiv
-                                              || _fsqrt
-                                              || _fsgnj
-                                              || _fsgnjn
-                                              || _fsgnjx
-                                              || _fcvtsw
-                                              || _fmvwx);
+            /////////            
+            instr.rv32f <= _rv32f;
+            instr.writes_to_freg_as_rv32f <= _writes_to_freg_as_rv32f;                        
+            instr.writes_to_reg_as_rv32f <=  _writes_to_reg_as_rv32f;            
+            instr.writes_to_reg <= !(_is_conditional_jump
+                                     || _is_store
+                                     || _writes_to_freg_as_rv32f);
+            instr.uses_reg_as_rv32f <= _uses_reg_as_rv32f;            
+            instr.uses_freg_as_rv32f <= _uses_freg_as_rv32f;
             
-            instr.writes_to_reg_as_rv32f <=  (_feq
-                                              || _fle
-                                              || _fcvtsw
-                                              || _fmvxw);                              
-            instr.rv32f <= (_fsw
-                            || _flw
-                            || _fadd 
-                            || _fsub
-                            || _fmul
-                            || _fdiv
-                            || _fsqrt
-                            || _fsgnj
-                            || _fsgnjn
-                            || _fsgnjx
-                            || _fcvtsw
-                            || _fmvwx
-                            || _feq
-                            || _fle
-                            || _fcvtsw
-                            || _fmvxw);                              
-            
-            instr.is_store <= (_sb
-                               || _sh
-                               || _sw
-                               || _fsw);
-            
-            instr.is_load <=   (_lb
-                                || _lh
-                                || _lw
-                                || _lbu
-                                || _lhu
-                                || _flw);   
-            
-            instr.is_conditional_jump <=  (_beq 
-                                           || _bne 
-                                           || _blt 
-                                           || _bge 
-                                           || _bltu 
-                                           || _bgeu);
-
+            instr.is_store <= _is_store;                        
+            instr.is_load <= _is_load;               
+            instr.is_conditional_jump <=  _is_conditional_jump;            
             
             instr.rd <= (r_type || i_type || u_type || j_type) ? _rd : 5'b00000;
             instr.rs1 <= (r_type || i_type || s_type || b_type) ? _rs1 : 5'b00000;
@@ -281,7 +309,9 @@ module decoder
                                    {11'b0, instr_raw[31], instr_raw[19:12], instr_raw[20], instr_raw[30:21], 1'b0}):
                          32'b0;
          end
-      end
+      end else begin // if (rstn)
+         compelted <= 0;
+      end      
    end
 endmodule
 `default_nettype wire

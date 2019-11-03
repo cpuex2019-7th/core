@@ -9,6 +9,8 @@ module execute
    input             instructions instr,
    input             regvpair register,
    input             regvpair fregister,
+   
+   input             fwdregkv forwarding,
 
    output reg        completed,
    output            instructions instr_n,
@@ -17,7 +19,7 @@ module execute
 
    output reg [31:0] result,
    output reg        is_jump_chosen,
-   output reg [31:0] next_pc);
+   output reg [31:0] jump_dest);
 
    
    // connection with ALU
@@ -29,6 +31,7 @@ module execute
       
             .instr(instr),
             .register(register),
+            .forwarding(forwarding),
       
             .completed(alu_completed),      
             .result(alu_result));
@@ -40,7 +43,9 @@ module execute
       
             .instr(instr),
             .register(register),
+            .forwarding_i(forwarding_i),
             .fregister(fregister),
+            .forwarding(forwarding),
 
             .completed(fpu_completed),
             .result(fpu_result));
@@ -63,12 +68,12 @@ module execute
             
             is_jump_chosen <= (instr.jal 
                                || instr.jalr) 
-              || (instr.is_conditional_jump &&  alu_result == 32'd1);
+              || (instr.is_conditional_jump && alu_result == 32'd1);
             
-            next_pc <= instr.jal? instr.pc + $signed(instr.imm):
+            jump_dest <= instr.jal? instr.pc + $signed(instr.imm):
                        instr.jalr? (register.rs1 + $signed(instr.imm)):// & ~(32b'0):
                        (instr.is_conditional_jump && alu_result == 32'd1)? instr.pc + $signed(instr.imm):
-                       instr.pc + 4;
+                       0;            
 
          end
       end
