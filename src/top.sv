@@ -164,17 +164,17 @@ module core
    task set_de_bothstep;      
       begin
          instr_de_in <= instr_de_out;
-         register_de_in.rs1 <= (reg_onestep_forwarding_required  && instr_em_out.rd == instr.rs1)? result_em_out:
-                               (reg_twostep_forwarding_required && instr_mw_out.rd == instr.rs1)? result_mw_out:
+         register_de_in.rs1 <= (reg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
+                               (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
                                register_de_out.rs1;
-         register_de_in.rs2 <= (reg_onestep_forwarding_required  && instr_em_out.rd == instr.rs2)? result_em_out:
-                               (reg_twostep_forwarding_required && instr_mw_out.rd == instr.rs2)? result_mw_out:
+         register_de_in.rs2 <= (reg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
+                               (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
                                register_de_out.rs2;
-         fregister_de_in.rs1 <= (freg_onestep_forwarding_required  && instr_em_out.rd == instr.rs2)? result_em_out:
-                                (freg_twostep_forwarding_required && instr_mw_out.rd == instr.rs2)? result_mw_out:
+         fregister_de_in.rs1 <= (freg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
+                                (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
                                 fregister_de_out.rs1;
-         fregister_de_in.rs2 <= (freg_onestep_forwarding_required  && instr_em_out.rd == instr.rs2)? result_em_out:
-                                (freg_twostep_forwarding_required && instr_mw_out.rd == instr.rs2)? result_mw_out:
+         fregister_de_in.rs2 <= (freg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
+                                (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
                                 fregister_de_out.rs2;
       end
    endtask // set_de_bothstep

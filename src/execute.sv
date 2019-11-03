@@ -54,9 +54,8 @@ module execute
       if (rstn) begin
          if (enabled) begin
             instr_n <= instr;
-            register_n <= register;
-            
-            fregister_n <= fregister;            
+            register_n <= register;            
+            fregister_n <= fregister;
             _completed <= 0;
          end else if ((instr.rv32f && fpu_completed) 
                       || (!instr.rv32f && alu_completed)) begin            
@@ -69,7 +68,7 @@ module execute
               || (instr.is_conditional_jump && alu_result == 32'd1);
             
             jump_dest <= instr.jal? instr.pc + $signed(instr.imm):
-                         instr.jalr? (registr_n.rs1 + $signed(instr.imm)):// & ~(32b'0):
+                         instr.jalr? (registr.rs1 + $signed(instr.imm)):// & ~(32b'0):
                          (instr.is_conditional_jump && alu_result == 32'd1)? instr.pc + $signed(instr.imm):
                          0;                        
          end else begin
