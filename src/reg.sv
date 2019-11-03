@@ -27,7 +27,7 @@ module regf
    end
 
    // write
-   always @(posedge clk) begin
+   always @(negedge clk) begin
       if(rstn) begin
          // write w_data to w_addr
          if(w_enable) begin
@@ -42,7 +42,7 @@ module regf
    end
 
    // read
-   always @(negedge clk) begin
+   always @(posedge clk) begin
       if(rstn) begin
          if (r_enabled) begin
             // update rd1 and rd2

@@ -68,7 +68,7 @@ module execute
               || (instr.is_conditional_jump && alu_result == 32'd1);
             
             jump_dest <= instr.jal? instr.pc + $signed(instr.imm):
-                         instr.jalr? (registr.rs1 + $signed(instr.imm)):// & ~(32b'0):
+                         instr.jalr? (register.rs1 + $signed(instr.imm)):// & ~(32b'0):
                          (instr.is_conditional_jump && alu_result == 32'd1)? instr.pc + $signed(instr.imm):
                          0;                        
          end else begin
