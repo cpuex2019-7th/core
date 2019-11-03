@@ -16,18 +16,17 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="2980221332334fs"></ZoomStartTime>
-      <ZoomEndTime time="3243421332335fs"></ZoomEndTime>
-      <Cursor1Time time="3024087999000fs"></Cursor1Time>
+      <ZoomStartTime time="1467404665000fs"></ZoomStartTime>
+      <ZoomEndTime time="1533504665001fs"></ZoomEndTime>
+      <Cursor1Time time="1506954665000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="216"></NameColumnWidth>
-      <ValueColumnWidth column_width="64"></ValueColumnWidth>
+      <ValueColumnWidth column_width="58"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="60" />
+   <WVObjectSize size="68" />
    <wave_markers>
-      <marker time="54330000000" label="" />
-      <marker time="51930000000" label="" />
+      <marker time="13554666000" label="" />
    </wave_markers>
    <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
@@ -57,29 +56,33 @@
       <obj_property name="ElementShortName">axi_araddr[31:0]</obj_property>
       <obj_property name="ObjectShortName">axi_araddr[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/state" type="array">
-      <obj_property name="ElementShortName">state[2:0]</obj_property>
-      <obj_property name="ObjectShortName">state[2:0]</obj_property>
-   </wvobject>
    <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/pc" type="array">
       <obj_property name="ElementShortName">pc[31:0]</obj_property>
       <obj_property name="ObjectShortName">pc[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/stalling_for_mem_forwarding" type="logic">
+      <obj_property name="ElementShortName">stalling_for_mem_forwarding</obj_property>
+      <obj_property name="ObjectShortName">stalling_for_mem_forwarding</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/are_all_stages_completed" type="logic">
+      <obj_property name="ElementShortName">are_all_stages_completed</obj_property>
+      <obj_property name="ObjectShortName">are_all_stages_completed</obj_property>
    </wvobject>
    <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/fetch_enabled" type="logic">
       <obj_property name="ElementShortName">fetch_enabled</obj_property>
       <obj_property name="ObjectShortName">fetch_enabled</obj_property>
    </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/fetch_reset" type="logic">
+      <obj_property name="ElementShortName">fetch_reset</obj_property>
+      <obj_property name="ObjectShortName">fetch_reset</obj_property>
+   </wvobject>
    <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/is_fetch_done" type="logic">
       <obj_property name="ElementShortName">is_fetch_done</obj_property>
       <obj_property name="ObjectShortName">is_fetch_done</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/pc_fd" type="array">
-      <obj_property name="ElementShortName">pc_fd[31:0]</obj_property>
-      <obj_property name="ObjectShortName">pc_fd[31:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_fd" type="array">
-      <obj_property name="ElementShortName">instr_fd[31:0]</obj_property>
-      <obj_property name="ObjectShortName">instr_fd[31:0]</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/decode_reset" type="logic">
+      <obj_property name="ElementShortName">decode_reset</obj_property>
+      <obj_property name="ObjectShortName">decode_reset</obj_property>
    </wvobject>
    <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/decode_enabled" type="logic">
       <obj_property name="ElementShortName">decode_enabled</obj_property>
@@ -89,41 +92,9 @@
       <obj_property name="ElementShortName">is_decode_done</obj_property>
       <obj_property name="ObjectShortName">is_decode_done</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_de" type="array">
-      <obj_property name="ElementShortName">instr_de</obj_property>
-      <obj_property name="ObjectShortName">instr_de</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/register_de" type="array">
-      <obj_property name="ElementShortName">register_de</obj_property>
-      <obj_property name="ObjectShortName">register_de</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/fregister_de" type="array">
-      <obj_property name="ElementShortName">fregister_de</obj_property>
-      <obj_property name="ObjectShortName">fregister_de</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/rs1_a" type="array">
-      <obj_property name="ElementShortName">rs1_a[4:0]</obj_property>
-      <obj_property name="ObjectShortName">rs1_a[4:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/rs2_a" type="array">
-      <obj_property name="ElementShortName">rs2_a[4:0]</obj_property>
-      <obj_property name="ObjectShortName">rs2_a[4:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/reg_w_dest" type="array">
-      <obj_property name="ElementShortName">reg_w_dest[4:0]</obj_property>
-      <obj_property name="ObjectShortName">reg_w_dest[4:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/reg_w_data" type="array">
-      <obj_property name="ElementShortName">reg_w_data[31:0]</obj_property>
-      <obj_property name="ObjectShortName">reg_w_data[31:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/reg_w_enable" type="logic">
-      <obj_property name="ElementShortName">reg_w_enable</obj_property>
-      <obj_property name="ObjectShortName">reg_w_enable</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/freg_w_enable" type="logic">
-      <obj_property name="ElementShortName">freg_w_enable</obj_property>
-      <obj_property name="ObjectShortName">freg_w_enable</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/exec_reset" type="logic">
+      <obj_property name="ElementShortName">exec_reset</obj_property>
+      <obj_property name="ObjectShortName">exec_reset</obj_property>
    </wvobject>
    <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/exec_enabled" type="logic">
       <obj_property name="ElementShortName">exec_enabled</obj_property>
@@ -133,29 +104,13 @@
       <obj_property name="ElementShortName">is_exec_done</obj_property>
       <obj_property name="ObjectShortName">is_exec_done</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_em" type="array">
-      <obj_property name="ElementShortName">instr_em</obj_property>
-      <obj_property name="ObjectShortName">instr_em</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/write_reset" type="logic">
+      <obj_property name="ElementShortName">write_reset</obj_property>
+      <obj_property name="ObjectShortName">write_reset</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/register_em" type="array">
-      <obj_property name="ElementShortName">register_em</obj_property>
-      <obj_property name="ObjectShortName">register_em</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/fregister_em" type="array">
-      <obj_property name="ElementShortName">fregister_em</obj_property>
-      <obj_property name="ObjectShortName">fregister_em</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/result_em" type="array">
-      <obj_property name="ElementShortName">result_em[31:0]</obj_property>
-      <obj_property name="ObjectShortName">result_em[31:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/is_jump_chosen_em" type="logic">
-      <obj_property name="ElementShortName">is_jump_chosen_em</obj_property>
-      <obj_property name="ObjectShortName">is_jump_chosen_em</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/next_pc_em" type="array">
-      <obj_property name="ElementShortName">next_pc_em[31:0]</obj_property>
-      <obj_property name="ObjectShortName">next_pc_em[31:0]</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/mem_reset" type="logic">
+      <obj_property name="ElementShortName">mem_reset</obj_property>
+      <obj_property name="ObjectShortName">mem_reset</obj_property>
    </wvobject>
    <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/mem_enabled" type="logic">
       <obj_property name="ElementShortName">mem_enabled</obj_property>
@@ -165,30 +120,6 @@
       <obj_property name="ElementShortName">is_mem_done</obj_property>
       <obj_property name="ObjectShortName">is_mem_done</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_mw" type="array">
-      <obj_property name="ElementShortName">instr_mw</obj_property>
-      <obj_property name="ObjectShortName">instr_mw</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/register_mw" type="array">
-      <obj_property name="ElementShortName">register_mw</obj_property>
-      <obj_property name="ObjectShortName">register_mw</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/fregister_mw" type="array">
-      <obj_property name="ElementShortName">fregister_mw</obj_property>
-      <obj_property name="ObjectShortName">fregister_mw</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/is_jump_chosen_mw" type="logic">
-      <obj_property name="ElementShortName">is_jump_chosen_mw</obj_property>
-      <obj_property name="ObjectShortName">is_jump_chosen_mw</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/next_pc_mw" type="array">
-      <obj_property name="ElementShortName">next_pc_mw[31:0]</obj_property>
-      <obj_property name="ObjectShortName">next_pc_mw[31:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/result_mw" type="array">
-      <obj_property name="ElementShortName">result_mw[31:0]</obj_property>
-      <obj_property name="ObjectShortName">result_mw[31:0]</obj_property>
-   </wvobject>
    <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/write_enabled" type="logic">
       <obj_property name="ElementShortName">write_enabled</obj_property>
       <obj_property name="ObjectShortName">write_enabled</obj_property>
@@ -197,65 +128,125 @@
       <obj_property name="ElementShortName">is_write_done</obj_property>
       <obj_property name="ObjectShortName">is_write_done</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/is_jump_chosen_wf" type="logic">
-      <obj_property name="ElementShortName">is_jump_chosen_wf</obj_property>
-      <obj_property name="ObjectShortName">is_jump_chosen_wf</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/pc_fd_out" type="array">
+      <obj_property name="ElementShortName">pc_fd_out[31:0]</obj_property>
+      <obj_property name="ObjectShortName">pc_fd_out[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/next_pc_wf" type="array">
-      <obj_property name="ElementShortName">next_pc_wf[31:0]</obj_property>
-      <obj_property name="ObjectShortName">next_pc_wf[31:0]</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_fd_out" type="array">
+      <obj_property name="ElementShortName">instr_fd_out[31:0]</obj_property>
+      <obj_property name="ObjectShortName">instr_fd_out[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_registers/regs" type="array">
-      <obj_property name="ElementShortName">regs[0:31][31:0]</obj_property>
-      <obj_property name="ObjectShortName">regs[0:31][31:0]</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/pc_fd_in" type="array">
+      <obj_property name="ElementShortName">pc_fd_in[31:0]</obj_property>
+      <obj_property name="ObjectShortName">pc_fd_in[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/clk" type="logic">
-      <obj_property name="ElementShortName">clk</obj_property>
-      <obj_property name="ObjectShortName">clk</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_fd_in" type="array">
+      <obj_property name="ElementShortName">instr_fd_in[31:0]</obj_property>
+      <obj_property name="ObjectShortName">instr_fd_in[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/rstn" type="logic">
-      <obj_property name="ElementShortName">rstn</obj_property>
-      <obj_property name="ObjectShortName">rstn</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_de_out" type="array">
+      <obj_property name="ElementShortName">instr_de_out</obj_property>
+      <obj_property name="ObjectShortName">instr_de_out</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/r_enabled" type="logic">
-      <obj_property name="ElementShortName">r_enabled</obj_property>
-      <obj_property name="ObjectShortName">r_enabled</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/register_de_out" type="array">
+      <obj_property name="ElementShortName">register_de_out</obj_property>
+      <obj_property name="ObjectShortName">register_de_out</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/rs1" type="array">
-      <obj_property name="ElementShortName">rs1[4:0]</obj_property>
-      <obj_property name="ObjectShortName">rs1[4:0]</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/fregister_de_out" type="array">
+      <obj_property name="ElementShortName">fregister_de_out</obj_property>
+      <obj_property name="ObjectShortName">fregister_de_out</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/rs2" type="array">
-      <obj_property name="ElementShortName">rs2[4:0]</obj_property>
-      <obj_property name="ObjectShortName">rs2[4:0]</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_de_in" type="array">
+      <obj_property name="ElementShortName">instr_de_in</obj_property>
+      <obj_property name="ObjectShortName">instr_de_in</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/register" type="array">
-      <obj_property name="ElementShortName">register</obj_property>
-      <obj_property name="ObjectShortName">register</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/register_de_in" type="array">
+      <obj_property name="ElementShortName">register_de_in</obj_property>
+      <obj_property name="ObjectShortName">register_de_in</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/w_enable" type="logic">
-      <obj_property name="ElementShortName">w_enable</obj_property>
-      <obj_property name="ObjectShortName">w_enable</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/fregister_de_in" type="array">
+      <obj_property name="ElementShortName">fregister_de_in</obj_property>
+      <obj_property name="ObjectShortName">fregister_de_in</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/w_addr" type="array">
-      <obj_property name="ElementShortName">w_addr[4:0]</obj_property>
-      <obj_property name="ObjectShortName">w_addr[4:0]</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_em_out" type="array">
+      <obj_property name="ElementShortName">instr_em_out</obj_property>
+      <obj_property name="ObjectShortName">instr_em_out</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/w_data" type="array">
-      <obj_property name="ElementShortName">w_data[31:0]</obj_property>
-      <obj_property name="ObjectShortName">w_data[31:0]</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/register_em_out" type="array">
+      <obj_property name="ElementShortName">register_em_out</obj_property>
+      <obj_property name="ObjectShortName">register_em_out</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_registers/regs" type="array">
-      <obj_property name="ElementShortName">regs[0:31][31:0]</obj_property>
-      <obj_property name="ObjectShortName">regs[0:31][31:0]</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/fregister_em_out" type="array">
+      <obj_property name="ElementShortName">fregister_em_out</obj_property>
+      <obj_property name="ObjectShortName">fregister_em_out</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/i" type="array">
-      <obj_property name="ElementShortName">i[31:0]</obj_property>
-      <obj_property name="ObjectShortName">i[31:0]</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/result_em_out" type="array">
+      <obj_property name="ElementShortName">result_em_out[31:0]</obj_property>
+      <obj_property name="ObjectShortName">result_em_out[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/regs" type="array">
-      <obj_property name="ElementShortName">regs[0:31][31:0]</obj_property>
-      <obj_property name="ObjectShortName">regs[0:31][31:0]</obj_property>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_execute/alu_result" type="array">
+      <obj_property name="ElementShortName">alu_result[31:0]</obj_property>
+      <obj_property name="ObjectShortName">alu_result[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_execute/alu_completed" type="logic">
+      <obj_property name="ElementShortName">alu_completed</obj_property>
+      <obj_property name="ObjectShortName">alu_completed</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_execute/fpu_result" type="array">
+      <obj_property name="ElementShortName">fpu_result[31:0]</obj_property>
+      <obj_property name="ObjectShortName">fpu_result[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_execute/fpu_completed" type="logic">
+      <obj_property name="ElementShortName">fpu_completed</obj_property>
+      <obj_property name="ObjectShortName">fpu_completed</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/is_jump_chosen_em_out" type="logic">
+      <obj_property name="ElementShortName">is_jump_chosen_em_out</obj_property>
+      <obj_property name="ObjectShortName">is_jump_chosen_em_out</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/jump_dest_em_out" type="array">
+      <obj_property name="ElementShortName">jump_dest_em_out[31:0]</obj_property>
+      <obj_property name="ObjectShortName">jump_dest_em_out[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_em_in" type="array">
+      <obj_property name="ElementShortName">instr_em_in</obj_property>
+      <obj_property name="ObjectShortName">instr_em_in</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/register_em_in" type="array">
+      <obj_property name="ElementShortName">register_em_in</obj_property>
+      <obj_property name="ObjectShortName">register_em_in</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/fregister_em_in" type="array">
+      <obj_property name="ElementShortName">fregister_em_in</obj_property>
+      <obj_property name="ObjectShortName">fregister_em_in</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/result_em_in" type="array">
+      <obj_property name="ElementShortName">result_em_in[31:0]</obj_property>
+      <obj_property name="ObjectShortName">result_em_in[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_mw_out" type="array">
+      <obj_property name="ElementShortName">instr_mw_out</obj_property>
+      <obj_property name="ObjectShortName">instr_mw_out</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/result_mw_out" type="array">
+      <obj_property name="ElementShortName">result_mw_out[31:0]</obj_property>
+      <obj_property name="ObjectShortName">result_mw_out[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/instr_mw_in" type="array">
+      <obj_property name="ElementShortName">instr_mw_in</obj_property>
+      <obj_property name="ObjectShortName">instr_mw_in</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/result_mw_in" type="array">
+      <obj_property name="ElementShortName">result_mw_in[31:0]</obj_property>
+      <obj_property name="ObjectShortName">result_mw_in[31:0]</obj_property>
    </wvobject>
    <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/core_axi" type="protoinst">
       <obj_property name="ElementShortName">core_axi</obj_property>
@@ -277,6 +268,131 @@
       <obj_property name="Render_Data">/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/uart_axi.readWriteSummary</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       <obj_property name="CellHeight">36</obj_property>
-      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject fp_name="group5745" type="group">
+      <obj_property name="label">Channels</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="children_use_element_short_name">true</obj_property>
+      <obj_property name="canCopy">false</obj_property>
+      <obj_property name="canUngroup">false</obj_property>
+      <wvobject fp_name="group5747" type="group">
+         <obj_property name="label">Read Address</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="children_use_element_short_name">true</obj_property>
+         <obj_property name="canCopy">false</obj_property>
+         <obj_property name="canUngroup">false</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ENUM_TRANSACTION</obj_property>
+         <obj_property name="EnumTransactionColorTable">00000000=blank</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="CustomSignalColor">#9A11FF</obj_property>
+         <obj_property name="Render_Data">/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/uart_axi.readAddrWaveData</obj_property>
+         <obj_property name="Detail_Data">/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/uart_axi.readAddrTooltipData</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="EnumTransactionValueTable">0=blank</obj_property>
+      </wvobject>
+      <wvobject fp_name="group5751" type="group">
+         <obj_property name="label">Read Data</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="children_use_element_short_name">true</obj_property>
+         <obj_property name="canCopy">false</obj_property>
+         <obj_property name="canUngroup">false</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ENUM_TRANSACTION</obj_property>
+         <obj_property name="EnumTransactionColorTable">00000000=blank</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="CustomSignalColor">#9A11FF</obj_property>
+         <obj_property name="Render_Data">/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/uart_axi.readDataWaveData</obj_property>
+         <obj_property name="Detail_Data">/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/uart_axi.readDataTooltipData</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="EnumTransactionValueTable">0=blank</obj_property>
+      </wvobject>
+      <wvobject fp_name="group5755" type="group">
+         <obj_property name="label">Write Address</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="children_use_element_short_name">true</obj_property>
+         <obj_property name="canCopy">false</obj_property>
+         <obj_property name="canUngroup">false</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ENUM_TRANSACTION</obj_property>
+         <obj_property name="EnumTransactionColorTable">00000000=blank</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="CustomSignalColor">#FF8096</obj_property>
+         <obj_property name="Render_Data">/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/uart_axi.writeAddrWaveData</obj_property>
+         <obj_property name="Detail_Data">/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/uart_axi.writeAddrTooltipData</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="EnumTransactionValueTable">0=blank</obj_property>
+      </wvobject>
+      <wvobject fp_name="group5759" type="group">
+         <obj_property name="label">Write Data</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="children_use_element_short_name">true</obj_property>
+         <obj_property name="canCopy">false</obj_property>
+         <obj_property name="canUngroup">false</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ENUM_TRANSACTION</obj_property>
+         <obj_property name="EnumTransactionColorTable">00000000=blank</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="CustomSignalColor">#FF8096</obj_property>
+         <obj_property name="Render_Data">/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/uart_axi.writeDataWaveData</obj_property>
+         <obj_property name="Detail_Data">/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/uart_axi.writeDataTooltipData</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="EnumTransactionValueTable">0=blank</obj_property>
+      </wvobject>
+      <wvobject fp_name="group5763" type="group">
+         <obj_property name="label">Write Response</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="children_use_element_short_name">true</obj_property>
+         <obj_property name="canCopy">false</obj_property>
+         <obj_property name="canUngroup">false</obj_property>
+         <obj_property name="WaveformStyle">STYLE_ENUM_TRANSACTION</obj_property>
+         <obj_property name="EnumTransactionColorTable">00000000=blank</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="CustomSignalColor">#FF8096</obj_property>
+         <obj_property name="Render_Data">/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/uart_axi.writeRespWaveData</obj_property>
+         <obj_property name="Detail_Data">/onboard_design_wrapper/onboard_design_i/mmu_wrapper_0/uart_axi.writeRespTooltipData</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="EnumTransactionValueTable">0=blank</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/reg_onestep_forwarding_required" type="logic">
+      <obj_property name="ElementShortName">reg_onestep_forwarding_required</obj_property>
+      <obj_property name="ObjectShortName">reg_onestep_forwarding_required</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/freg_onestep_forwarding_required" type="logic">
+      <obj_property name="ElementShortName">freg_onestep_forwarding_required</obj_property>
+      <obj_property name="ObjectShortName">freg_onestep_forwarding_required</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/reg_twostep_forwarding_required" type="logic">
+      <obj_property name="ElementShortName">reg_twostep_forwarding_required</obj_property>
+      <obj_property name="ObjectShortName">reg_twostep_forwarding_required</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/freg_twostep_forwarding_required" type="logic">
+      <obj_property name="ElementShortName">freg_twostep_forwarding_required</obj_property>
+      <obj_property name="ObjectShortName">freg_twostep_forwarding_required</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/onestep_forwarding_required" type="logic">
+      <obj_property name="ElementShortName">onestep_forwarding_required</obj_property>
+      <obj_property name="ObjectShortName">onestep_forwarding_required</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/reg_w_dest" type="array">
+      <obj_property name="ElementShortName">reg_w_dest[4:0]</obj_property>
+      <obj_property name="ObjectShortName">reg_w_dest[4:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/reg_w_data" type="array">
+      <obj_property name="ElementShortName">reg_w_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">reg_w_data[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/reg_w_enable" type="logic">
+      <obj_property name="ElementShortName">reg_w_enable</obj_property>
+      <obj_property name="ObjectShortName">reg_w_enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/freg_w_enable" type="logic">
+      <obj_property name="ElementShortName">freg_w_enable</obj_property>
+      <obj_property name="ObjectShortName">freg_w_enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_registers/regs" type="array">
+      <obj_property name="ElementShortName">regs[0:31][31:0]</obj_property>
+      <obj_property name="ObjectShortName">regs[0:31][31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/_fregisters/regs" type="array">
+      <obj_property name="ElementShortName">regs[0:31][31:0]</obj_property>
+      <obj_property name="ObjectShortName">regs[0:31][31:0]</obj_property>
    </wvobject>
 </wave_config>
