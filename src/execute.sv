@@ -61,10 +61,8 @@ module execute
             register_n <= register;
             fregister_n <= fregister;
             _completed <= 0;            
-         end
-         if (!_completed 
-             && ((instr.rv32f && fpu_completed) 
-                 || (!instr.rv32f && alu_completed))) begin            
+         end else if ((instr.rv32f && fpu_completed) 
+                 || (!instr.rv32f && alu_completed)) begin            
             result <= (instr.rv32f)? fpu_result:
                       alu_result;
             _completed <= 1;            

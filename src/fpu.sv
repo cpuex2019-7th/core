@@ -70,7 +70,7 @@ module fpu
    
    // implementation
    ///////////////
-   wire _result = instr.flw? $signed({1'b0, rs1}) + $signed(instr.imm):
+   wire [31:0] _result = instr.flw? $signed({1'b0, rs1}) + $signed(instr.imm):
                    instr.fsw? $signed({1'b0, rs1}) + $signed(instr.imm):
                    instr.fadd? fadd_result: 
                    instr.fsub? fsub_result: 

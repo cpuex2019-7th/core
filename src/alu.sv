@@ -20,8 +20,8 @@ module alu
    wire [31:0]        rs1 = forwarding.enabled && forwarding.key == instr.rs1? forwarding.value : register.rs1;
    wire [31:0]        rs2 = forwarding.enabled && forwarding.key == instr.rs2? forwarding.value : register.rs2;
    
-   wire _result =  ///// rv32i /////
-   // lui, auipc
+   wire [31:0] _result =  ///// rv32i /////
+                    // lui, auipc
                     instr.lui? instr.imm:
                     instr.auipc? $signed(instr.imm) + instr.pc:
                     // jumps
