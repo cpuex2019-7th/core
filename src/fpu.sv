@@ -9,24 +9,24 @@ module fpu
    input              instructions instr,
    input              regvpair register,
    input              regvpair fregister,
-   input              fwdregkv forwarding_from_exec,
-   input              fwdregkv forwarding_from_mem,
+   input              fwdregkv onestep_forwarding,
+   input              fwdregkv twostep_forwarding,
 
    output reg         completed,
    output reg [31:0] result);
 
-   wire [31:0]        frs1 = (forwarding_from_exec.fenabled && forwarding_from_exec.key == instr.rs1)? forwarding_from_exec.value :
-                      (forwarding_from_mem.fenabled && forwarding_from_mem.key == instr.rs1)? forwarding_from_exec.value : 
+   wire [31:0]        frs1 = (onestep_forwarding.fenabled && onestep_forwarding.key == instr.rs1)? onestep_forwarding.value :
+                      (twostep_forwarding.fenabled && twostep_forwarding.key == instr.rs1)? onestep_forwarding.value : 
                       fregister.rs1;
-   wire [31:0]        frs2 = (forwarding_from_exec.fenabled && forwarding_from_exec.key == instr.rs2)? forwarding_from_exec.value :
-                      (forwarding_from_mem.fenabled && forwarding_from_mem.key == instr.rs2)? forwarding_from_exec.value : 
+   wire [31:0]        frs2 = (onestep_forwarding.fenabled && onestep_forwarding.key == instr.rs2)? onestep_forwarding.value :
+                      (twostep_forwarding.fenabled && twostep_forwarding.key == instr.rs2)? onestep_forwarding.value : 
                       fregister.rs2;
    
-   wire [31:0]        rs1 = (forwarding_from_exec.enabled && forwarding_from_exec.key == instr.rs1)? forwarding_from_exec.value :
-                      (forwarding_from_mem.enabled && forwarding_from_mem.key == instr.rs1)? forwarding_from_exec.value : 
+   wire [31:0]        rs1 = (onestep_forwarding.enabled && onestep_forwarding.key == instr.rs1)? onestep_forwarding.value :
+                      (twostep_forwarding.enabled && twostep_forwarding.key == instr.rs1)? onestep_forwarding.value : 
                       register.rs1;
-   wire [31:0]        rs2 = (forwarding_from_exec.enabled && forwarding_from_exec.key == instr.rs2)? forwarding_from_exec.value :
-                      (forwarding_from_mem.enabled && forwarding_from_mem.key == instr.rs2)? forwarding_from_exec.value : 
+   wire [31:0]        rs2 = (onestep_forwarding.enabled && onestep_forwarding.key == instr.rs2)? onestep_forwarding.value :
+                      (twostep_forwarding.enabled && twostep_forwarding.key == instr.rs2)? onestep_forwarding.value : 
                       register.rs2;
    
       
