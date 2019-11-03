@@ -62,8 +62,8 @@ module core
    // None
    
    // stage outputs
-   wire [31:0]        pc_fd;
-   wire [31:0]        instr_fd;
+   wire [31:0]        pc_fd_out;
+   wire [31:0]        instr_fd_out;
    
    fetch _fetch(.clk(clk),
                 .rstn(rstn && !fetch_reset),
@@ -75,8 +75,8 @@ module core
                 .rom_data(rom_data),
 
                 .completed(is_fetch_done),
-                .pc_n(pc_fd),
-                .instr_raw(instr_fd));      
+                .pc_n(pc_fd_out),
+                .instr_raw(instr_fd_out));      
 
    // decode & reg
    /////////
@@ -88,22 +88,32 @@ module core
    // pipeline regs
    // None
    
+   // stage input
+   wire [31:0]        pc_fd_in;
+   wire [31:0]        instr_fd_in;
+   task set_fd;      
+      begin
+         pc_fd_in <= pc_fd_out;
+         instr_fd_in <= instr_fd_out;         
+     end
+   endtask
+   
    // stage outputs
-   instructions instr_de;   
-   regvpair register_de;
-   regvpair fregister_de;
+   instructions instr_de_out;   
+   regvpair register_de_out;
+   regvpair fregister_de_out;
    
    wire [4:0]         rs1_a;
    wire [4:0]         rs2_a;
    decoder _decoder(.clk(clk), 
                     .rstn(rstn && !decode_reset),                    
                     .enabled(decode_enabled),
-                    .pc(pc_fd),
-      
-                    .instr_raw(instr_fd),                    
+                    
+                    .pc(pc_fd_in),      
+                    .instr_raw(instr_fd_in),                    
       
                     .completed(is_decode_done),
-                    .instr(instr_de),
+                    .instr(instr_de_out),
                     .rs1(rs1_a), .rs2(rs2_a));
 
    // registers
@@ -122,7 +132,7 @@ module core
                    .w_addr(reg_w_dest),
                    .w_data(reg_w_data),
       
-                   .register(register_de));   
+                   .register(register_de_out));   
    
    wire               freg_w_enable;   
    regf _fregisters(.clk(clk), 
@@ -136,7 +146,7 @@ module core
                     .rs1(rs1_a),
                     .rs2(rs2_a),
       
-                    .register(fregister_de));
+                    .register(fregister_de_out));
    
    
    // exec
@@ -145,35 +155,45 @@ module core
    reg                exec_enabled;
    reg                exec_reset;   
    wire               is_exec_done;
-   
-   // pipeline regs
-   instructions instr_em;   
-   regvpair register_em;
-   regvpair fregister_em;
+      
+   // stage input
+   instructions instr_de_in;   
+   regvpair register_de_in;
+   regvpair fregister_de_in;
+   task set_de;      
+      begin
+         instr_de_in <= instr_de_out;
+         register_de_in <= register_de_out;
+         fregister_de_in <= fregister_de_out;         
+     end
+   endtask
    
    // stage outputs
-   wire [31:0]        result_em;
-   wire               is_jump_chosen_em;
-   wire [31:0]        jump_dest_em;   
+   instructions instr_em_out;   
+   regvpair register_em_out;
+   regvpair fregister_em_out;
+   wire [31:0]        result_em_out;
+   wire               is_jump_chosen_em_out;
+   wire [31:0]        jump_dest_em_out;   
 
    fwdregkv forwarding;
    execute _execute(.clk(clk), 
                     .rstn(rstn && !exec_reset),
       
                     .enabled(exec_enabled),
-                    .instr(instr_de),
-                    .register(register_de),
-                    .fregister(fregister_de),
+                    .instr(instr_de_in),
+                    .register(register_de_in),
+                    .fregister(fregister_de_in),
                     .forwarding(forwarding),
       
                     .completed(is_exec_done),
-                    .instr_n(instr_em),
-                    .register_n(register_em), 
-                    .fregister_n(fregister_em),
-      
-                    .result(result_em), 
-                    .is_jump_chosen(is_jump_chosen_em), 
-                    .jump_dest(jump_dest_em));
+                    
+                    .instr_n(instr_em_out),
+                    .register_n(register_em_out), 
+                    .fregister_n(fregister_em_out),      
+                    .result(result_em_out), 
+                    .is_jump_chosen(is_jump_chosen_em_out), 
+                    .jump_dest(jump_dest_em_out));
 
    // mem
    /////////
@@ -182,26 +202,32 @@ module core
    reg                mem_reset;   
    wire               is_mem_done;
 
-   // pipeline regs
-   instructions instr_mw;   
-   regvpair register_mw;
-   regvpair fregister_mw;
-   wire               is_jump_chosen_mw;
-   wire [31:0]        next_pc_mw;
-
+   // stage inputs
+   instructions instr_em_in;   
+   regvpair register_em_in;
+   regvpair fregister_em_in;
+   wire [31:0]        result_em_in;
+   task set_em;      
+      begin
+         instr_em_in <= instr_em_out;
+         register_em_in <= register_em_out;
+         fregister_em_in <= fregister_em_out;
+         result_em_in <= result_em_out;         
+     end
+   endtask
+   
    // stage outputs
-   wire [31:0]        result_mw;
+   instructions instr_mw_out;   
+   wire [31:0]        result_mw_out;
    
    mem _mem(.clk(clk), 
             .rstn(rstn && !mem_reset),
       
             .enabled(mem_enabled),
-            .instr(instr_em),
-            .register(register_em),
-            .fregister(fregister_em),
-            .is_jump_chosen(is_jump_chosen_em),
-
-            .addr(result_em),
+            .instr(instr_em_in),
+            .register(register_em_in),
+            .fregister(fregister_em_in),
+            .addr(result_em_in),
 
             .axi_araddr(axi_araddr), 
             .axi_arready(axi_arready), 
@@ -228,12 +254,10 @@ module core
             .axi_wvalid(axi_wvalid),
 
             .completed(is_mem_done),
-            .instr_n(instr_mw),
-            .register_n(register_mw),                    
-            .fregister_n(fregister_mw),
-      
-            .result(result_mw),
-            .is_jump_chosen_n(is_jump_chosen_mw));
+            
+            .instr_n(instr_mw_out),
+            .result(result_mw_out));
+   
    
    
    // write
@@ -244,17 +268,24 @@ module core
    
    wire               is_write_done;   
 
-   // pipeline regs   
-   wire               is_jump_chosen_wf;
-   wire [31:0]        next_pc_wf;      
+   // stage input
+   instructions instr_mw_in;   
+   wire [31:0]        result_mw_in;
+   task set_mw;      
+      begin
+         instr_mw_in <= instr_mw_out;
+         result_mw_in <= result_mw_out;         
+     end
+   endtask
+
+   // there is no stage output
+      
    write _write(.clk(clk), 
                 .rstn(rstn && !write_reset),
       
                 .enabled(write_enabled), 
-                .instr(instr_mw),
-                .is_jump_chosen(is_jump_chosen_mw),
-      
-                .data(result_mw),
+                .instr(instr_mw_in),      
+                .data(result_mw_in),
 
                 .reg_w_enable(reg_w_enable),
                 .freg_w_enable(freg_w_enable),
@@ -262,8 +293,8 @@ module core
                 .reg_w_dest(reg_w_dest),
                 .reg_w_data(reg_w_data),
 
-                .completed(is_write_done),
-                .is_jump_chosen_n(is_jump_chosen_wf));   
+                .completed(is_write_done));
+   
 
    wire               are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset || is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
 
@@ -335,9 +366,11 @@ module core
                
                decode_enabled <= 1;
                decode_reset <= 0;
+               set_fd();
                
                exec_enabled <= 1;            
-               exec_reset <= 0;   
+               exec_reset <= 0;
+               set_de();               
             end else if (instr_em.is_load && forwarding_required) begin
                // case 00                  
                stalling_for_mem_forwarding <= 1;
@@ -347,9 +380,11 @@ module core
                
                decode_enabled <= 0;
                decode_reset <= 0;
+               // no set_fd();
                
                exec_enabled <= 0;               
                exec_reset <= 0;
+               // no set_de();
             end else if (is_jump_chosen_em) begin
                pc <= jump_dest_em;
                
@@ -358,9 +393,11 @@ module core
                
                decode_enabled <= 0;
                decode_reset <= 1;
+               // no set_fd();
                
                exec_enabled <= 0;               
                exec_reset <= 1;
+               // no set_de();
             end else begin
                // case 01 & 02
                forwarding.enabled <= reg_forwarding_required;                  
@@ -376,16 +413,20 @@ module core
                
                decode_enabled <= is_fetch_done;
                decode_reset <= !is_fetch_done;
+               set_fd();              
                
                exec_enabled <= is_decode_done;
                exec_reset <= !is_decode_done;
+               set_de();              
             end
                         
             mem_enabled <= is_exec_done;
             mem_reset <= !is_exec_done;
+            set_em();              
             
             write_enabled <= is_mem_done;
             write_reset <= !is_mem_done;
+            set_mw();              
          end else begin
             fetch_enabled <= 0;
             decode_enabled <= 0;

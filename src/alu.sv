@@ -4,6 +4,7 @@
 module alu 
   (input wire        clk,
    input wire         rstn,
+   input wire         enabled,
      
    input              instructions instr,
    input              regvpair register,
@@ -19,7 +20,7 @@ module alu
    wire [31:0]        rs1 = forwarding.enabled && forwarding.key == instr.rs1? forwarding.value : register.rs1;
    wire [31:0]        rs2 = forwarding.enabled && forwarding.key == instr.rs2? forwarding.value : register.rs2;
    
-   assign result =  ///// rv32i /////
+   wire _result =  ///// rv32i /////
    // lui, auipc
                     instr.lui? instr.imm:
                     instr.auipc? $signed(instr.imm) + instr.pc:
@@ -76,7 +77,14 @@ module alu
                     31'b0;
    
    always @(posedge clk) begin
-      completed <= 1;      
+      if (rstn) begin
+         if (enabled) begin
+            result <= _result;            
+            completed <= 1;
+         end
+      end else begin
+         completed <= 0;         
+      end
    end
    
 endmodule

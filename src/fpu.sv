@@ -4,6 +4,7 @@
 module fpu
   (input wire        clk,
    input wire         rstn,
+   input wire         enabled,
      
    input              instructions instr,
    input              regvpair register,
@@ -69,7 +70,7 @@ module fpu
    
    // implementation
    ///////////////
-   assign result = instr.flw? $signed({1'b0, rs1}) + $signed(instr.imm):
+   wire _result = instr.flw? $signed({1'b0, rs1}) + $signed(instr.imm):
                    instr.fsw? $signed({1'b0, rs1}) + $signed(instr.imm):
                    instr.fadd? fadd_result: 
                    instr.fsub? fsub_result: 
@@ -87,8 +88,18 @@ module fpu
                    instr.fmvwx? rs1:                    
                    31'b0;
    
+   reg               _completed;
+   assign completed = _completed & !enabled;
+   
    always @(posedge clk) begin
-      completed <= 1;      
+      if (rstn) begin
+         if (enabled) begin
+            result <= _result;            
+            _completed <= 1;
+         end
+      end else begin
+         _completed <= 0;         
+      end
    end
    
 endmodule

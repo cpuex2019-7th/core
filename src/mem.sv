@@ -6,7 +6,6 @@ module mem(
            input             instructions instr,
            input             regvpair register,
            input             regvpair fregister,
-           input wire        is_jump_chosen,
 
            input wire [31:0] addr,
 
@@ -42,13 +41,10 @@ module mem(
 
            output wire        completed,
            output            instructions instr_n,
-           output            regvpair register_n,
-           output            regvpair fregister_n,
-           output reg        is_jump_chosen_n,
-
            output reg [31:0] result);
    
-     reg _completed;
+   reg                       _completed;
+   
    assign completed = _completed & !enabled;
    
    reg [3:0]                 mem_state;
@@ -73,9 +69,6 @@ module mem(
       if(rstn) begin
          if (enabled) begin
             instr_n <= instr;
-            register_n <= register;
-            fregister_n <= fregister;
-            is_jump_chosen_n <= is_jump_chosen;
             result <= addr;            
             
             if (instr.is_load) begin
@@ -149,7 +142,7 @@ module mem(
          end else if (mem_state == mem_r_waiting_data) begin
             if (axi_rvalid) begin
                axi_rready <= 0;
-               if (instr.lb) begin
+               if (instr_n.lb) begin
                   case(addr[1:0])
                     2'b11: result <= {{24{axi_rdata[31]}}, axi_rdata[31:24]};
                     2'b10: result <= {{24{axi_rdata[23]}}, axi_rdata[23:16]};
@@ -157,17 +150,17 @@ module mem(
                     2'b00: result <= {{24{axi_rdata[7]}}, axi_rdata[7:0]};
                     default: result <= 32'b0;                       
                   endcase
-               end else if (instr.lh) begin
+               end else if (instr_n.lh) begin
                   case(addr[1:0])
                     2'b10 : result <= {{16{axi_rdata[31]}}, axi_rdata[31:16]};
                     2'b00 : result <= {{16{axi_rdata[15]}}, axi_rdata[15:0]};
                     default: result <=  32'b0;                       
                   endcase
-               end else if (instr.lw) begin
+               end else if (instr_n.lw) begin
                   result <= axi_rdata;       
-               end else if (instr.flw) begin
+               end else if (instr_n.flw) begin
                   result <= axi_rdata;                                           
-               end else if (instr.lbu) begin                     
+               end else if (instr_n.lbu) begin                     
                   case(addr[1:0])
                     2'b11: result = {24'b0, axi_rdata[31:24]};
                     2'b10: result <= {24'b0, axi_rdata[23:16]};
@@ -175,7 +168,7 @@ module mem(
                     2'b00: result <= {24'b0, axi_rdata[7:0]};
                     default: result <= 32'b0;                       
                   endcase
-               end else if (instr.lhu) begin
+               end else if (instr_n.lhu) begin
                   case(addr[1:0])
                     2'b10 : result <= {16'b0, axi_rdata[31:16]};
                     2'b00 : result <= {16'b0, axi_rdata[15:0]};

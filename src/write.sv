@@ -2,7 +2,6 @@ module write(
              input wire         clk,
              input wire         rstn,
              input wire         enabled,
-             input wire         is_jump_chosen,
 
              input              instructions instr,
              input wire [31:0]  data,
@@ -13,8 +12,8 @@ module write(
              output wire [4:0]  reg_w_dest,
              output wire [31:0] reg_w_data,
 
-             output wire         completed,
-             output reg         is_jump_chosen_n);
+             output wire        completed);
+   
    
   
    reg [1:0]                    state;
@@ -35,7 +34,6 @@ module write(
    always @(posedge clk) begin
       if (rstn) begin
          if(enabled) begin
-            is_jump_chosen_n <= is_jump_chosen;
             _completed <= 1;
          end
       end else begin
