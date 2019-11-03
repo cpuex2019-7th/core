@@ -155,6 +155,7 @@ module core
    reg                exec_enabled;
    reg                exec_reset;   
    wire               is_exec_done;
+   wire               is_exec_available = is_exec_done && !exec_reset;   
       
    // stage input
    instructions instr_de_in;   
@@ -176,15 +177,17 @@ module core
    wire               is_jump_chosen_em_out;
    wire [31:0]        jump_dest_em_out;   
 
-   fwdregkv forwarding;
+   fwdregkv forwarding_from_exec;
+   fwdregkv forwarding_from_mem;
    execute _execute(.clk(clk), 
                     .rstn(rstn && !exec_reset),
       
                     .enabled(exec_enabled),
                     .instr(instr_de_in),
                     .register(register_de_in),
-                    .fregister(fregister_de_in),
-                    .forwarding(forwarding),
+                    .fregister(fregister_de_in),                    
+                    .forwarding_from_exec(forwarding_from_exec),
+                    .forwarding_from_mem(forwarding_from_mem),
       
                     .completed(is_exec_done),
                     
@@ -298,14 +301,23 @@ module core
 
    wire               are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset || is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
 
-   wire               reg_forwarding_required = (instr_de_out.uses_reg 
+   wire               reg_forwarding_from_exec_required = (instr_de_out.uses_reg 
                                                  && instr_em_out.writes_to_reg
                                                  && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_em_out.rd)
                                                      || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_em_out.rd))) ;   
-   wire               freg_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
+   wire               freg_forwarding_from_exec_required = (instr_de_out.uses_freg_as_rv32f 
                                                   && instr_em_out.writes_to_freg_as_rv32f
                                                   && (instr_de_out.rs1 == instr_em_out.rd 
                                                       || instr_de_out.rs2 == instr_em_out.rd));
+   
+   wire               reg_forwarding_from_mem_required = (instr_de_out.uses_reg 
+                                                 && instr_mw_out.writes_to_reg
+                                                 && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_mw_out.rd)
+                                                     || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_mw_out.rd))) ;   
+   wire               freg_forwarding_from_mem_required = (instr_de_out.uses_freg_as_rv32f 
+                                                  && instr_mw_out.writes_to_freg_as_rv32f
+                                                  && (instr_de_out.rs1 == instr_mw_out.rd 
+                                                      || instr_de_out.rs2 == instr_mw_out.rd));
    wire               forwarding_required = reg_forwarding_required || freg_forwarding_required;
    
    
@@ -353,10 +365,13 @@ module core
             // we do not have to forward any register.
 
             if (stalling_for_mem_forwarding) begin
-               forwarding.enabled <= reg_forwarding_required;
-               forwarding.enabled <= freg_forwarding_required;
-               forwarding.key <= instr_mw_out.rd;
-               forwarding.value <= result_mw_out;                              
+               forwarding_from_exec.enabled <= 0;
+               forwarding_from_exec.fenabled <= 0;
+               
+               forwarding_from_mem.enabled <= reg_forwarding_from_mem_required;
+               forwarding_from_mem.enabled <= freg_forwarding_from_mem_required;
+               forwarding_from_mem.key <= instr_mw_out.rd;
+               forwarding_from_mem.value <= result_mw_out;                              
                stalling_for_mem_forwarding <= 0;
 
                pc <= pc + 4;               
@@ -371,7 +386,7 @@ module core
                exec_enabled <= 1;            
                exec_reset <= 0;
                set_de();               
-            end else if (instr_em_out.is_load && forwarding_required) begin
+            end else if (instr_em_out.is_load && forwarding_required && is_exec_available) begin
                // case 00                  
                stalling_for_mem_forwarding <= 1;
                
@@ -385,8 +400,8 @@ module core
                exec_enabled <= 0;               
                exec_reset <= 0;
                // no set_de();
-            end else if (is_jump_chosen_em_out && !exec_reset) begin
-              // when the branch prediction failed
+            end else if (is_jump_chosen_em_out && is_exec_available) begin
+               // when the branch prediction failed
                pc <= jump_dest_em_out;
                
                fetch_enabled <= 1;
@@ -401,10 +416,15 @@ module core
                // no set_de();
             end else begin
                // case 01 & 02
-               forwarding.enabled <= reg_forwarding_required;                  
-               forwarding.fenabled <= freg_forwarding_required;                  
-               forwarding.key <= instr_em_out.rd;               
-               forwarding.value <= result_em_out;                  
+               forwarding_from_exec.enabled <= reg_forwarding_from_exec_required;                  
+               forwarding_from_exec.fenabled <= freg_forwarding_from_exec_required;                  
+               forwarding_from_exec.key <= instr_em_out.rd;               
+               forwarding_from_exec.value <= result_em_out;
+               
+               forwarding_from_mem.enabled <= reg_forwarding_from_mem_required;                  
+               forwarding_from_mem.fenabled <= freg_forwarding_from_mem_required;                  
+               forwarding_from_mem.key <= instr_mw_out.rd;               
+               forwarding_from_mem.value <= result_mw_out;                  
                stalling_for_mem_forwarding <= 0;
                
                pc <= pc + 4;               

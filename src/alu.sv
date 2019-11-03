@@ -8,7 +8,8 @@ module alu
      
    input              instructions instr,
    input              regvpair register,
-   input              fwdregkv forwarding,
+   input              fwdregkv forwarding_from_exec,
+   input              fwdregkv forwarding_from_mem,
   
    output reg         completed,
    output reg [31:0] result);
@@ -17,8 +18,12 @@ module alu
    wire [63:0]        mul_temp_hsu = $signed({{32{rs1[31]}}, rs1}) * $signed({32'b0, rs2});
    wire [63:0]        mul_temp_hu = $signed({32'b0, rs1}) * $signed({32'b0, rs2});
    
-   wire [31:0]        rs1 = forwarding.enabled && forwarding.key == instr.rs1? forwarding.value : register.rs1;
-   wire [31:0]        rs2 = forwarding.enabled && forwarding.key == instr.rs2? forwarding.value : register.rs2;
+   wire [31:0]        rs1 = (forwarding_from_exec.enabled && forwarding_from_exec.key == instr.rs1)? forwarding_from_exec.value :
+                      (forwarding_from_mem.enabled && forwarding_from_mem.key == instr.rs1)? forwarding_from_exec.value : 
+                      register.rs1;
+   wire [31:0]        rs2 = (forwarding_from_exec.enabled && forwarding_from_exec.key == instr.rs2)? forwarding_from_exec.value :
+                      (forwarding_from_mem.enabled && forwarding_from_mem.key == instr.rs2)? forwarding_from_exec.value : 
+                      register.rs2;
    
    wire [31:0] _result =  ///// rv32i /////
                     // lui, auipc

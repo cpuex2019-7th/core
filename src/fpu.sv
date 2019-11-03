@@ -9,15 +9,26 @@ module fpu
    input              instructions instr,
    input              regvpair register,
    input              regvpair fregister,
-   input              fwdregkv forwarding,
+   input              fwdregkv forwarding_from_exec,
+   input              fwdregkv forwarding_from_mem,
 
    output reg         completed,
    output reg [31:0] result);
 
-   wire [31:0]        frs1 = forwarding.fenabled && forwarding.key == instr.rs1? forwarding.value : fregister.rs1;
-   wire [31:0]        frs2 = forwarding.fenabled && forwarding.key == instr.rs2? forwarding.value : fregister.rs2;
-   wire [31:0]        rs1 = forwarding.enabled && forwarding.key == instr.rs1? forwarding.value : register.rs1;
-   wire [31:0]        rs2 = forwarding.enabled && forwarding.key == instr.rs2? forwarding.value : register.rs2;
+   wire [31:0]        frs1 = (forwarding_from_exec.fenabled && forwarding_from_exec.key == instr.rs1)? forwarding_from_exec.value :
+                      (forwarding_from_mem.fenabled && forwarding_from_mem.key == instr.rs1)? forwarding_from_exec.value : 
+                      fregister.rs1;
+   wire [31:0]        frs2 = (forwarding_from_exec.fenabled && forwarding_from_exec.key == instr.rs2)? forwarding_from_exec.value :
+                      (forwarding_from_mem.fenabled && forwarding_from_mem.key == instr.rs2)? forwarding_from_exec.value : 
+                      fregister.rs2;
+   
+   wire [31:0]        rs1 = (forwarding_from_exec.enabled && forwarding_from_exec.key == instr.rs1)? forwarding_from_exec.value :
+                      (forwarding_from_mem.enabled && forwarding_from_mem.key == instr.rs1)? forwarding_from_exec.value : 
+                      register.rs1;
+   wire [31:0]        rs2 = (forwarding_from_exec.enabled && forwarding_from_exec.key == instr.rs2)? forwarding_from_exec.value :
+                      (forwarding_from_mem.enabled && forwarding_from_mem.key == instr.rs2)? forwarding_from_exec.value : 
+                      register.rs2;
+   
       
    // connection with modules
    ///////////////

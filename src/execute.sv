@@ -10,7 +10,8 @@ module execute
    input             regvpair register,
    input             regvpair fregister,
   
-   input             fwdregkv forwarding,
+   input             fwdregkv forwarding_from_exec,
+   input             fwdregkv forwarding_from_mem,
 
    output wire       completed,
    output            instructions instr_n,
@@ -31,7 +32,8 @@ module execute
       
             .instr(instr),
             .register(register),
-            .forwarding(forwarding),
+            .forwarding_from_exec(forwarding_from_exec),
+            .forwarding_from_mem(forwarding_from_mem),
       
             .completed(alu_completed),      
             .result(alu_result));
@@ -45,7 +47,8 @@ module execute
             .instr(instr),
             .register(register),
             .fregister(fregister),
-            .forwarding(forwarding),
+            .forwarding_from_exec(forwarding_from_exec),
+            .forwarding_from_mem(forwarding_from_mem),
 
             .completed(fpu_completed),
             .result(fpu_result));
@@ -62,7 +65,7 @@ module execute
             fregister_n <= fregister;
             _completed <= 0;            
          end else if ((instr.rv32f && fpu_completed) 
-                 || (!instr.rv32f && alu_completed)) begin            
+                      || (!instr.rv32f && alu_completed)) begin            
             result <= (instr.rv32f)? fpu_result:
                       alu_result;
             _completed <= 1;            
