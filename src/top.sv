@@ -89,8 +89,8 @@ module core
    // None
    
    // stage input
-   wire [31:0]        pc_fd_in;
-   wire [31:0]        instr_fd_in;
+   reg [31:0]        pc_fd_in;
+   reg [31:0]        instr_fd_in;
    task set_fd;      
       begin
          pc_fd_in <= pc_fd_out;
@@ -206,7 +206,7 @@ module core
    instructions instr_em_in;   
    regvpair register_em_in;
    regvpair fregister_em_in;
-   wire [31:0]        result_em_in;
+   reg [31:0]        result_em_in;
    task set_em;      
       begin
          instr_em_in <= instr_em_out;
@@ -270,7 +270,7 @@ module core
 
    // stage input
    instructions instr_mw_in;   
-   wire [31:0]        result_mw_in;
+   reg [31:0]        result_mw_in;
    task set_mw;      
       begin
          instr_mw_in <= instr_mw_out;
@@ -298,14 +298,14 @@ module core
 
    wire               are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset || is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
 
-   wire               reg_forwarding_required = (instr_de.uses_reg 
-                                                 && instr_em.writes_to_reg
-                                                 && ((instr_de.rs1 != 0 && instr_de.rs1 == instr_em.rd)
-                                                     || (instr_de.rs2 != 0 && instr_de.rs2 == instr_em.rd))) ;   
-   wire               freg_forwarding_required = (instr_de.uses_freg_as_rv32f 
-                                                  && instr_em.writes_to_freg_as_rv32f
-                                                  && (instr_de.rs1 == instr_em.rd 
-                                                      || instr_de.rs2 == instr_em.rd));
+   wire               reg_forwarding_required = (instr_de_out.uses_reg 
+                                                 && instr_em_out.writes_to_reg
+                                                 && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_em_out.rd)
+                                                     || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_em_out.rd))) ;   
+   wire               freg_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
+                                                  && instr_em_out.writes_to_freg_as_rv32f
+                                                  && (instr_de_out.rs1 == instr_em_out.rd 
+                                                      || instr_de_out.rs2 == instr_em_out.rd));
    wire               forwarding_required = reg_forwarding_required || freg_forwarding_required;
    
    
@@ -355,8 +355,8 @@ module core
             if (stalling_for_mem_forwarding) begin
                forwarding.enabled <= reg_forwarding_required;
                forwarding.enabled <= freg_forwarding_required;
-               forwarding.key <= instr_mw.rd;
-               forwarding.value <= result_mw;                              
+               forwarding.key <= instr_mw_out.rd;
+               forwarding.value <= result_mw_out;                              
                stalling_for_mem_forwarding <= 0;
 
                pc <= pc + 4;               
@@ -371,7 +371,7 @@ module core
                exec_enabled <= 1;            
                exec_reset <= 0;
                set_de();               
-            end else if (instr_em.is_load && forwarding_required) begin
+            end else if (instr_em_out.is_load && forwarding_required) begin
                // case 00                  
                stalling_for_mem_forwarding <= 1;
                
@@ -385,8 +385,9 @@ module core
                exec_enabled <= 0;               
                exec_reset <= 0;
                // no set_de();
-            end else if (is_jump_chosen_em) begin
-               pc <= jump_dest_em;
+            end else if (is_jump_chosen_em_out && !exec_reset) begin
+              // when the branch prediction failed
+               pc <= jump_dest_em_out;
                
                fetch_enabled <= 1;
                fetch_reset <= 0;
@@ -402,8 +403,8 @@ module core
                // case 01 & 02
                forwarding.enabled <= reg_forwarding_required;                  
                forwarding.fenabled <= freg_forwarding_required;                  
-               forwarding.key <= instr_em.rd;               
-               forwarding.value <= result_em;                  
+               forwarding.key <= instr_em_out.rd;               
+               forwarding.value <= result_em_out;                  
                stalling_for_mem_forwarding <= 0;
                
                pc <= pc + 4;               

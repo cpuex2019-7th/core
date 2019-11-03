@@ -30,8 +30,8 @@ module execute
             .enabled(enabled),
       
             .instr(instr),
-            .register(_register),
-            .forwarding(_forwarding),
+            .register(register),
+            .forwarding(forwarding),
       
             .completed(alu_completed),      
             .result(alu_result));
@@ -43,8 +43,8 @@ module execute
             .enabled(enabled),
       
             .instr(instr),
-            .register(_register),
-            .fregister(_fregister),
+            .register(register),
+            .fregister(fregister),
             .forwarding(forwarding),
 
             .completed(fpu_completed),

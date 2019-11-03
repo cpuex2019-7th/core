@@ -12,7 +12,7 @@ module fpu
    input              fwdregkv forwarding,
 
    output reg         completed,
-   output wire [31:0] result);
+   output reg [31:0] result);
 
    wire [31:0]        frs1 = forwarding.fenabled && forwarding.key == instr.rs1? forwarding.value : fregister.rs1;
    wire [31:0]        frs2 = forwarding.fenabled && forwarding.key == instr.rs2? forwarding.value : fregister.rs2;

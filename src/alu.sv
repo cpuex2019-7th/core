@@ -11,7 +11,7 @@ module alu
    input              fwdregkv forwarding,
   
    output reg         completed,
-   output wire [31:0] result);
+   output reg [31:0] result);
    
    wire [63:0]        mul_temp = $signed({{32{rs1[31]}}, rs1}) * $signed({{32{rs2[31]}}, rs2});
    wire [63:0]        mul_temp_hsu = $signed({{32{rs1[31]}}, rs1}) * $signed({32'b0, rs2});
