@@ -177,9 +177,9 @@ module core
                                 (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
                                 fregister_de_out.rs2;
       end
-   endtask // set_de_bothstep
+   endtask
    
-   task set_de_mw;      
+   task set_de_twostep;      
       begin
          instr_de_in <= instr_de_out;
          register_de_in.rs1 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
@@ -190,6 +190,20 @@ module core
                                 fregister_de_out.rs1;
          fregister_de_in.rs2 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
                                 fregister_de_out.rs2;
+      end
+   endtask
+   
+   task set_de_onestep;      
+      begin
+         instr_de_in <= instr_de_out;
+         register_de_in.rs1 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+                               register_de_in.rs1;
+         register_de_in.rs2 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+                               register_de_in.rs2;
+         fregister_de_in.rs1 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+                                fregister_de_in.rs1;
+         fregister_de_in.rs2 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+                                fregister_de_in.rs2;
       end
    endtask
    
@@ -397,7 +411,7 @@ module core
                
                exec_enabled <= 1;            
                exec_reset <= 0;
-               set_de_mw();
+               set_de_onestep();
             end else if (instr_em_out.is_load && onestep_forwarding_required && is_exec_available) begin
                // case 00
                stalling_for_mem_forwarding <= 1;
@@ -411,7 +425,7 @@ module core
                
                exec_enabled <= 0;               
                exec_reset <= 0;
-               set_de_mw();
+               set_de_twostep();
             end else if (is_jump_chosen_em_out && is_exec_available) begin
                // when the branch prediction failed
                pc <= jump_dest_em_out;
@@ -441,8 +455,8 @@ module core
                set_de_bothstep();              
             end
             
-            mem_enabled <= is_exec_done;
-            mem_reset <= !is_exec_done;
+            mem_enabled <= is_exec_available;            
+            mem_reset <= !is_exec_available;
             set_em();              
             
             write_enabled <= is_mem_done;
