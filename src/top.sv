@@ -156,8 +156,7 @@ module core
    wire               is_jump_chosen_em;
    wire [31:0]        jump_dest_em;   
 
-   fwdregkv forwarding_from_exec;
-   fwdregkv forwarding_from_mem;   
+   fwdregkv forwarding;
    execute _execute(.clk(clk), 
                     .rstn(rstn && !exec_reset),
       
@@ -165,7 +164,7 @@ module core
                     .instr(instr_de),
                     .register(register_de),
                     .fregister(fregister_de),
-                    .forwarding_from_exec(forwarding),
+                    .forwarding(forwarding),
       
                     .completed(is_exec_done),
                     .instr_n(instr_em),
