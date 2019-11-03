@@ -148,7 +148,6 @@ module core
       
                     .register(fregister_de_out));
    
-   
    // exec
    /////////
    // control flags
@@ -179,20 +178,6 @@ module core
       end
    endtask
    
-   task set_de_twostep;      
-      begin
-         instr_de_in <= instr_de_out;
-         register_de_in.rs1 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
-                               register_de_out.rs1;
-         register_de_in.rs2 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
-                               register_de_out.rs2;
-         fregister_de_in.rs1 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
-                                fregister_de_out.rs1;
-         fregister_de_in.rs2 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
-                                fregister_de_out.rs2;
-      end
-   endtask
-   
    task set_de_onestep;      
       begin
          instr_de_in <= instr_de_out;
@@ -204,6 +189,20 @@ module core
                                 fregister_de_in.rs1;
          fregister_de_in.rs2 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
                                 fregister_de_in.rs2;
+      end
+   endtask
+   
+   task set_de_twostep;      
+      begin
+         instr_de_in <= instr_de_out;
+         register_de_in.rs1 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+                               register_de_out.rs1;
+         register_de_in.rs2 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+                               register_de_out.rs2;
+         fregister_de_in.rs1 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+                                fregister_de_out.rs1;
+         fregister_de_in.rs2 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+                                fregister_de_out.rs2;
       end
    endtask
    
@@ -353,25 +352,32 @@ module core
                                                           && (instr_de_out.rs1 == instr_mw_out.rd 
                                                               || instr_de_out.rs2 == instr_mw_out.rd));
    wire               onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
-      
+   
    
    /////////////////////
    // main
    /////////////////////
-   initial begin
-      pc <= 0;
-      
-      fetch_enabled <= 1;      
-      decode_enabled <= 0;      
-      exec_enabled <= 0;      
-      mem_enabled <= 0;      
-      write_enabled <= 0;
+   task init;
+      begin
+         pc <= 0;
+         stalling_for_mem_forwarding <= 0;
+         
+         fetch_enabled <= 1;      
+         decode_enabled <= 0;      
+         exec_enabled <= 0;      
+         mem_enabled <= 0;      
+         write_enabled <= 0;
 
-      fetch_reset <= 0;
-      decode_reset <= 1;
-      exec_reset <= 1;
-      mem_reset <= 1;
-      write_reset <= 1;      
+         fetch_reset <= 0;
+         decode_reset <= 1;
+         exec_reset <= 1;
+         mem_reset <= 1;
+         write_reset <= 1;               
+      end
+   endtask; 
+   
+   initial begin
+      init();      
    end
 
    always @(posedge clk) begin
@@ -379,23 +385,6 @@ module core
          if (are_all_stages_completed) begin
             // Control stalls
             //////////////////
-
-            // case 00: 
-            // mem->exec forwarding occurs when ...
-            // 1. current instruction stored in instr_em is a load instruction
-            // 2. the instruction stored in instr_de uses instr_em.rd as rs1, rs2, frs1 or frs2.
-            // In the step 2, we have to care about the following point(s):
-            // - if instr_de uses rs1 and rs2, zero register should not be forwarded.
-            // In this case, we need to stall exec stage.
-
-            // case 01:
-            // exec->exec forwarding occurs when ...
-            // 1. instr_de uses instr_em.rd as rs1, rs2, frs1, or frs2.
-            // We have to make sure that zero register is not forwarded.
-
-            // case 02:
-            // If the situation does not match with case 00 and case 01, 
-            // we do not have to forward any register.
 
             if (stalling_for_mem_forwarding) begin               
                stalling_for_mem_forwarding <= 0;
@@ -427,7 +416,7 @@ module core
                exec_reset <= 0;
                set_de_twostep();
             end else if (is_jump_chosen_em_out && is_exec_available) begin
-               // when the branch prediction failed
+               // TODO: change here to handle only if it fails to predict jump destination
                pc <= jump_dest_em_out;
                
                fetch_enabled <= 1;
@@ -441,6 +430,7 @@ module core
                exec_reset <= 1;
                // no set_de();
             end else begin
+               // TODO: set pc what branch predictor says
                pc <= pc + 4;               
                
                fetch_enabled <= 1;
@@ -469,8 +459,8 @@ module core
             mem_enabled <= 0;
             write_enabled <= 0;
          end
-      end else begin
-         pc <= 0;
+      end else begin // if (rstn)
+         init();
       end
    end
 endmodule
