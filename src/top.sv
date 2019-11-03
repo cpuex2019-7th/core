@@ -366,7 +366,7 @@ module core
 
             if (stalling_for_mem_forwarding) begin               
                twostep_forwarding.enabled <= reg_twostep_forwarding_required;
-               twostep_forwarding.enabled <= freg_twostep_forwarding_required;
+               twostep_forwarding.fenabled <= freg_twostep_forwarding_required;
                twostep_forwarding.key <= instr_mw_out.rd;
                twostep_forwarding.value <= result_mw_out;                              
                stalling_for_mem_forwarding <= 0;

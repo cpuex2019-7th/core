@@ -18,7 +18,7 @@ module fpu
    wire [31:0]        frs1 = (onestep_forwarding.fenabled && onestep_forwarding.key == instr.rs1)? onestep_forwarding.value :
                       (twostep_forwarding.fenabled && twostep_forwarding.key == instr.rs1)? twostep_forwarding.value : 
                       fregister.rs1;
-   wire [31:0]        frs2 = (onestep_forwarding.fenabled && onestep_forwarding.key == instr.rs2)? step_forwarding.value :
+   wire [31:0]        frs2 = (onestep_forwarding.fenabled && onestep_forwarding.key == instr.rs2)? onestep_forwarding.value :
                       (twostep_forwarding.fenabled && twostep_forwarding.key == instr.rs2)? twostep_forwarding.value : 
                       fregister.rs2;
    
