@@ -5,7 +5,7 @@ main:
     
 write:
     li t0, 0x7F000000           ; base addr of uart
-    lb t1, t0, 8                ; read control reg
+    lbu t1, t0, 8                ; read control reg
     andi t1, t1, 8              ; get only "Tx FIFO Full"
     addi t2, zero, 8
     beq t1, t2, write           ; if tx fifo is full, we have to wait.
@@ -16,11 +16,11 @@ write_actual:
     
 read:
     li t0, 0x7F000000           ; base addr of uart
-    lb t1, t0, 8                ; read control reg
+    lbu t1, t0, 8                ; read control reg
     andi t1, t1, 1              ; get only "Rx FIFO Valid Data"
     addi t2, zero, 1
     beq t1, t2, read_actual
     j read                      ; if no data in uart rx fifo, we have to wait.
 read_actual:        
-    lb a0, t0, 0                ; read from rx fifo
+    lbu a0, t0, 0                ; read from rx fifo
     jalr zero, ra, 0            ; return to caller

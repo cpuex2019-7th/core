@@ -2,6 +2,7 @@ SRCS = $(wildcard *.S)
 OBJS = $(SRCS:.S=.o)
 COES = $(SRCS:.S=.coe)
 BINS = $(SRCS:.S=.bin)
+SYMBOLS = $(SRCS:.S=.bin.symbols)
 
 .PHONY: all
 
@@ -14,4 +15,4 @@ all: $(BINS) $(COES)
 	cpuex_asm $@ $^
 
 clean:
-	rm -rf $(BINS) $(COES) $(OBJS)
+	rm -rf $(BINS) $(COES) $(OBJS) $(SYMBOLS)
