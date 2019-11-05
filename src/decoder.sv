@@ -109,8 +109,7 @@ module decoder
    wire              _fcvtsw = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1101000) && (rs2 == 5'b00000);
    wire              _fmvwx = (opcode == 7'b1010011) && (funct3 == 3'b000) && (funct7 == 7'b1111000) && (rs2 == 5'b00000);
 
-   wire              _writes_to_freg_as_rv32f = (_fsw
-                                                 || _flw
+   wire              _writes_to_freg_as_rv32f = (_flw
                                                  || _fadd 
                                                  || _fsub
                                                  || _fmul
@@ -126,8 +125,9 @@ module decoder
                                                  || _fcvtsw
                                                  || _fmvxw);
 
-   wire              _uses_reg_as_rv32f = (_flw || _fsw || _fcvtsw || _fmvwx);
-   wire              _uses_freg_as_rv32f = (_fadd 
+   wire              _uses_reg_as_rv32f = (_flw ||  _fcvtsw || _fmvwx);
+   wire              _uses_freg_as_rv32f = (_fsw
+                                            ||_fadd 
                                             || _fsub
                                             || _fmul
                                             || _fdiv

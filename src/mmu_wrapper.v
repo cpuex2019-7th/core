@@ -90,11 +90,7 @@ module mmu_wrapper #
 	                         output wire [31:0]          uart_axi_wdata,
 	                         input wire                  uart_axi_wready,
 	                         output wire [3:0]           uart_axi_wstrb,
-	                         output wire                 uart_axi_wvalid,
-
-                             // for debug
-                             output wire [2:0]           reading_state,
-                             output wire [2:0]           writing_state);             
+	                         output wire                 uart_axi_wvalid);        
 
    mmu #(.MEM_WIDTH(MEM_WIDTH)) _mmu(.clk(clk), .rstn(rstn),
                                      

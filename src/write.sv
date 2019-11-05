@@ -14,10 +14,7 @@ module write(
 
              output wire        completed);
    
-   
-  
-   reg [1:0]                    state;
-      reg _completed;
+   reg _completed;
    assign completed = _completed & !enabled;
    
    assign reg_w_enable = enabled &&  instr.writes_to_reg;   
@@ -27,7 +24,6 @@ module write(
    assign reg_w_data = data;   
 
    initial begin
-      state <= 0;
       _completed <= 1;      
    end
    
@@ -37,7 +33,6 @@ module write(
             _completed <= 1;
          end
       end else begin
-         state <= 0;
          _completed <= 0;         
       end
    end

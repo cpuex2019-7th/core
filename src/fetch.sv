@@ -7,7 +7,7 @@ module fetch
    input wire        enabled,
    input wire [31:0] pc,
 
-   input wire [31:0] rom_addr,
+   output wire [31:0] rom_addr,
    input wire [31:0] rom_data,
   
    output wire        completed,

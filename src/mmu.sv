@@ -89,11 +89,11 @@ module mmu # (parameter MEM_WIDTH = 21)(
 	                                    output reg [31:0]          uart_axi_wdata,
 	                                    input wire                 uart_axi_wready,
 	                                    output reg [3:0]           uart_axi_wstrb,
-	                                    output reg                 uart_axi_wvalid,
+	                                    output reg                 uart_axi_wvalid);
 
                                         // for debug
-                                        output reg [2:0]           reading_state,
-                                        output reg [2:0]           writing_state);             
+                                         reg [2:0]           reading_state;
+                                         reg [2:0]           writing_state;             
 
    // 1 for UART, 0 for mem
    reg                                                             read_selector;
