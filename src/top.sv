@@ -54,9 +54,9 @@ module core
    // fetch
    /////////
    // controls
-   reg                fetch_enabled;
-   reg                fetch_reset;   
-   wire               is_fetch_done;
+   (* mark_debug = "true" *) reg                fetch_enabled;
+   (* mark_debug = "true" *) reg                fetch_reset;   
+   (* mark_debug = "true" *) wire               is_fetch_done;
 
    // pipeline regs
    // None
@@ -81,9 +81,9 @@ module core
    // decode & reg
    /////////
    // control flags
-   reg                decode_enabled;
-   reg                decode_reset;   
-   wire               is_decode_done;
+   (* mark_debug = "true" *) reg                decode_enabled;
+   (* mark_debug = "true" *) reg                decode_reset;   
+   (* mark_debug = "true" *) wire               is_decode_done;
    
    // pipeline regs
    // None
@@ -91,12 +91,6 @@ module core
    // stage input
    reg [31:0]         pc_fd_in;
    reg [31:0]         instr_fd_in;
-   task set_fd;      
-      begin
-         pc_fd_in <= pc_fd_out;
-         instr_fd_in <= instr_fd_out;         
-      end
-   endtask
    
    // stage outputs
    instructions instr_de_out;   
@@ -151,15 +145,176 @@ module core
    // exec
    /////////
    // control flags
-   reg                exec_enabled;
-   reg                exec_reset;   
-   wire               is_exec_done;
+   (* mark_debug = "true" *) reg                exec_enabled;
+   (* mark_debug = "true" *) reg                exec_reset;   
+   (* mark_debug = "true" *) wire               is_exec_done;
    wire               is_exec_available = is_exec_done && !exec_reset;   
    
    // stage input
-   instructions instr_de_in;   
-   regvpair register_de_in;
-   regvpair fregister_de_in;
+   (* mark_debug = "true" *) instructions instr_de_in;   
+   (* mark_debug = "true" *) regvpair register_de_in;
+   (* mark_debug = "true" *) regvpair fregister_de_in;
+   
+   // stage outputs
+   instructions instr_em_out;   
+   regvpair register_em_out;
+   regvpair fregister_em_out;
+   (* mark_debug = "true" *) wire [31:0]        result_em_out;
+   (* mark_debug = "true" *) wire               is_jump_chosen_em_out;
+   (* mark_debug = "true" *) wire [31:0]        jump_dest_em_out;   
+
+   execute _execute(.clk(clk), 
+                    .rstn(rstn && !exec_reset),
+      
+                    .enabled(exec_enabled),
+                    .instr(instr_de_in),
+                    .register(register_de_in),
+                    .fregister(fregister_de_in),                    
+      
+                    .completed(is_exec_done),
+      
+                    .instr_n(instr_em_out),
+                    .register_n(register_em_out), 
+                    .fregister_n(fregister_em_out),      
+                    .result(result_em_out), 
+                    .is_jump_chosen(is_jump_chosen_em_out), 
+                    .jump_dest(jump_dest_em_out));
+
+   // mem
+   /////////
+   // control flags
+   (* mark_debug = "true" *) reg                mem_enabled;
+   (* mark_debug = "true" *) reg                mem_reset;   
+   (* mark_debug = "true" *) wire               is_mem_done;
+
+   // stage inputs
+   instructions instr_em_in;   
+   regvpair register_em_in;
+   regvpair fregister_em_in;
+   reg [31:0]         result_em_in;
+   
+   // stage outputs
+   instructions instr_mw_out;   
+   wire [31:0]        result_mw_out;
+   
+   mem _mem(.clk(clk), 
+            .rstn(rstn && !mem_reset),
+      
+            .enabled(mem_enabled),
+            .instr(instr_em_in),
+            .register(register_em_in),
+            .fregister(fregister_em_in),
+            .addr(result_em_in),
+
+            .axi_araddr(axi_araddr), 
+            .axi_arready(axi_arready), 
+            .axi_arvalid(axi_arvalid), 
+            .axi_arprot(axi_arprot),
+      
+            .axi_bready(axi_bready), 
+            .axi_bresp(axi_bresp), 
+            .axi_bvalid(axi_bvalid),
+      
+            .axi_rdata(axi_rdata), 
+            .axi_rready(axi_rready),
+            .axi_rresp(axi_rresp), 
+            .axi_rvalid(axi_rvalid),
+      
+            .axi_awaddr(axi_awaddr), 
+            .axi_awready(axi_awready), 
+            .axi_awvalid(axi_awvalid), 
+            .axi_awprot(axi_awprot), 
+
+            .axi_wdata(axi_wdata), 
+            .axi_wready(axi_wready), 
+            .axi_wstrb(axi_wstrb), 
+            .axi_wvalid(axi_wvalid),
+
+            .completed(is_mem_done),
+      
+            .instr_n(instr_mw_out),
+            .result(result_mw_out));
+        
+   // write
+   /////////
+   // control flags
+   (* mark_debug = "true" *) reg                write_enabled;
+   (* mark_debug = "true" *) reg                write_reset;   
+   (* mark_debug = "true" *) wire               is_write_done;   
+
+   // stage input
+   instructions instr_mw_in;   
+   reg [31:0]         result_mw_in;
+
+   // there is no stage output
+   
+   write _write(.clk(clk), 
+                .rstn(rstn && !write_reset),
+      
+                .enabled(write_enabled), 
+                .instr(instr_mw_in),      
+                .data(result_mw_in),
+
+                .reg_w_enable(reg_w_enable),
+                .freg_w_enable(freg_w_enable),
+
+                .reg_w_dest(reg_w_dest),
+                .reg_w_data(reg_w_data),
+
+                .completed(is_write_done));
+   
+
+   wire               are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset || is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
+
+   wire               reg_onestep_forwarding_required = (instr_de_out.uses_reg 
+                                                         && instr_em_out.writes_to_reg
+                                                         && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_em_out.rd)
+                                                             || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_em_out.rd))) ;   
+   wire               freg_onestep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
+                                                          && instr_em_out.writes_to_freg_as_rv32f
+                                                          && (instr_de_out.rs1 == instr_em_out.rd 
+                                                              || instr_de_out.rs2 == instr_em_out.rd));
+   
+   wire               reg_twostep_forwarding_required = (instr_de_out.uses_reg 
+                                                         && instr_mw_out.writes_to_reg
+                                                         && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_mw_out.rd)
+                                                             || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_mw_out.rd))) ;   
+   wire               freg_twostep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
+                                                          && instr_mw_out.writes_to_freg_as_rv32f
+                                                          && (instr_de_out.rs1 == instr_mw_out.rd 
+                                                              || instr_de_out.rs2 == instr_mw_out.rd));
+   wire               onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
+   
+
+   /////////////////////
+   // tasks
+   /////////////////////
+   task init;
+      begin
+         pc <= 0;
+         stalling_for_mem_forwarding <= 0;
+         
+         fetch_enabled <= 1;      
+         decode_enabled <= 0;      
+         exec_enabled <= 0;      
+         mem_enabled <= 0;      
+         write_enabled <= 0;
+
+         fetch_reset <= 0;
+         decode_reset <= 1;
+         exec_reset <= 1;
+         mem_reset <= 1;
+         write_reset <= 1;               
+      end
+   endtask; 
+
+   task set_fd;      
+      begin
+         pc_fd_in <= pc_fd_out;
+         instr_fd_in <= instr_fd_out;         
+      end
+   endtask
+
    task set_de_bothstep;      
       begin
          instr_de_in <= instr_de_out;
@@ -205,44 +360,7 @@ module core
                                 fregister_de_out.rs2;
       end
    endtask
-   
-   // stage outputs
-   instructions instr_em_out;   
-   regvpair register_em_out;
-   regvpair fregister_em_out;
-   wire [31:0]        result_em_out;
-   wire               is_jump_chosen_em_out;
-   wire [31:0]        jump_dest_em_out;   
 
-   execute _execute(.clk(clk), 
-                    .rstn(rstn && !exec_reset),
-      
-                    .enabled(exec_enabled),
-                    .instr(instr_de_in),
-                    .register(register_de_in),
-                    .fregister(fregister_de_in),                    
-      
-                    .completed(is_exec_done),
-      
-                    .instr_n(instr_em_out),
-                    .register_n(register_em_out), 
-                    .fregister_n(fregister_em_out),      
-                    .result(result_em_out), 
-                    .is_jump_chosen(is_jump_chosen_em_out), 
-                    .jump_dest(jump_dest_em_out));
-
-   // mem
-   /////////
-   // control flags
-   reg                mem_enabled;
-   reg                mem_reset;   
-   wire               is_mem_done;
-
-   // stage inputs
-   instructions instr_em_in;   
-   regvpair register_em_in;
-   regvpair fregister_em_in;
-   reg [31:0]         result_em_in;
    task set_em;      
       begin
          instr_em_in <= instr_em_out;
@@ -252,61 +370,6 @@ module core
       end
    endtask
    
-   // stage outputs
-   instructions instr_mw_out;   
-   wire [31:0]        result_mw_out;
-   
-   mem _mem(.clk(clk), 
-            .rstn(rstn && !mem_reset),
-      
-            .enabled(mem_enabled),
-            .instr(instr_em_in),
-            .register(register_em_in),
-            .fregister(fregister_em_in),
-            .addr(result_em_in),
-
-            .axi_araddr(axi_araddr), 
-            .axi_arready(axi_arready), 
-            .axi_arvalid(axi_arvalid), 
-            .axi_arprot(axi_arprot),
-      
-            .axi_bready(axi_bready), 
-            .axi_bresp(axi_bresp), 
-            .axi_bvalid(axi_bvalid),
-      
-            .axi_rdata(axi_rdata), 
-            .axi_rready(axi_rready),
-            .axi_rresp(axi_rresp), 
-            .axi_rvalid(axi_rvalid),
-      
-            .axi_awaddr(axi_awaddr), 
-            .axi_awready(axi_awready), 
-            .axi_awvalid(axi_awvalid), 
-            .axi_awprot(axi_awprot), 
-
-            .axi_wdata(axi_wdata), 
-            .axi_wready(axi_wready), 
-            .axi_wstrb(axi_wstrb), 
-            .axi_wvalid(axi_wvalid),
-
-            .completed(is_mem_done),
-      
-            .instr_n(instr_mw_out),
-            .result(result_mw_out));
-   
-   
-   
-   // write
-   /////////
-   // control flags
-   reg                write_enabled;
-   reg                write_reset;
-   
-   wire               is_write_done;   
-
-   // stage input
-   instructions instr_mw_in;   
-   reg [31:0]         result_mw_in;
    task set_mw;      
       begin
          instr_mw_in <= instr_mw_out;
@@ -314,68 +377,9 @@ module core
       end
    endtask
 
-   // there is no stage output
-   
-   write _write(.clk(clk), 
-                .rstn(rstn && !write_reset),
-      
-                .enabled(write_enabled), 
-                .instr(instr_mw_in),      
-                .data(result_mw_in),
-
-                .reg_w_enable(reg_w_enable),
-                .freg_w_enable(freg_w_enable),
-
-                .reg_w_dest(reg_w_dest),
-                .reg_w_data(reg_w_data),
-
-                .completed(is_write_done));
-   
-
-   wire               are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset || is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
-
-   wire               reg_onestep_forwarding_required = (instr_de_out.uses_reg 
-                                                         && instr_em_out.writes_to_reg
-                                                         && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_em_out.rd)
-                                                             || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_em_out.rd))) ;   
-   wire               freg_onestep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
-                                                          && instr_em_out.writes_to_freg_as_rv32f
-                                                          && (instr_de_out.rs1 == instr_em_out.rd 
-                                                              || instr_de_out.rs2 == instr_em_out.rd));
-   
-   wire               reg_twostep_forwarding_required = (instr_de_out.uses_reg 
-                                                         && instr_mw_out.writes_to_reg
-                                                         && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_mw_out.rd)
-                                                             || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_mw_out.rd))) ;   
-   wire               freg_twostep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
-                                                          && instr_mw_out.writes_to_freg_as_rv32f
-                                                          && (instr_de_out.rs1 == instr_mw_out.rd 
-                                                              || instr_de_out.rs2 == instr_mw_out.rd));
-   wire               onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
-   
-   
    /////////////////////
    // main
-   /////////////////////
-   task init;
-      begin
-         pc <= 0;
-         stalling_for_mem_forwarding <= 0;
-         
-         fetch_enabled <= 1;      
-         decode_enabled <= 0;      
-         exec_enabled <= 0;      
-         mem_enabled <= 0;      
-         write_enabled <= 0;
-
-         fetch_reset <= 0;
-         decode_reset <= 1;
-         exec_reset <= 1;
-         mem_reset <= 1;
-         write_reset <= 1;               
-      end
-   endtask; 
-   
+   /////////////////////   
    initial begin
       init();      
    end

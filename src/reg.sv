@@ -16,7 +16,7 @@ module regf
    input wire [4:0]  w_addr,
    input wire [31:0] w_data);
    
-   reg [31:0]        regs[32];
+   (* mark_debug = "true" *) reg [31:0]        regs[32];
    
    // initialize
    integer           i;
