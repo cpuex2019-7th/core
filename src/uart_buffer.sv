@@ -123,7 +123,7 @@ module uart_buffer(
                uart_axi_arvalid <= 1;
                uart_axi_araddr <= 4'b0;
                uart_axi_arprot <= 3'b0;               
-               reading_state <= r_writing_uartlite_arready;
+               reading_state <= r_waiting_uartlite_arready;
             end
          end else if (reading_state == r_writing_ready) begin
                if(uart_axi_arready) begin
