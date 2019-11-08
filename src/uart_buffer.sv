@@ -92,12 +92,10 @@ module uart_buffer(
            
    initial begin
       mmu_axi_arready <= 1;
-      mmu_axi_bvalid <= 0;
       mmu_axi_rvalid <= 0;
       
       uart_axi_arvalid <= 0;
       uart_axi_rready <= 0;
-      uart_axi_bready <= 0;
 
       head_idx <= 0;
       tail_idx <= 0;
