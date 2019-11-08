@@ -6,9 +6,6 @@ typedef struct {
    reg [31:0]  rs2;
 } regvpair;
 
-parameter FORWARD_TARGET_INT = 0;
-parameter FORWARD_TARGET_FLOAT = 1;
-
 typedef struct {
    /////////
    // decoded metadata
