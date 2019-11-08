@@ -87,7 +87,8 @@ module uart_buffer(
    
    reg [7:0] buffer[2048];
    reg [10:0]   head_idx;
-   wire         is_buffer_empty = (head_idx == 0);
+   reg [10:0]   tail_idx;
+   wire         is_buffer_empty = (tail_idx - head_idx == 0);
            
    initial begin
       mmu_axi_arready <= 1;
@@ -99,13 +100,15 @@ module uart_buffer(
       uart_axi_bready <= 0;
 
       head_idx <= 0;
-            
+      tail_idx <= 0;
+      
       reading_state <= r_waiting_ready;      
    end // initial begin
 
    
    // Reply to MMU
-   /////////////      
+   /////////////
+   reg [3:0] addr_cache;      
    always @(posedge clk) begin
       if(rstn) begin
          if (reading_state == r_waiting_ready) begin
@@ -113,17 +116,19 @@ module uart_buffer(
                mmu_axi_arready <= 0;               
                if(mmu_axi_araddr[3:0] == 4'h0 && !is_buffer_empty) begin
                   mmu_axi_rvalid <= 1;
-                  head_idx <= head_idx - 1;                  
-                  mmu_axi_rdata <= {24'b0, buffer[head_idx-1]};
+                  head_idx <= head_idx + 1;                  
+                  mmu_axi_rdata <= {24'b0, buffer[head_idx]};
                   mmu_axi_rresp <= 2'b00;                  
                   reading_state <= r_writing_data;                  
                end else begin                              
                   uart_axi_arvalid <= 1;
                   uart_axi_araddr <= mmu_axi_araddr[3:0];
+                  addr_cache <= mmu_axi_araddr[3:0];
                   uart_axi_arprot <= mmu_axi_arprot;                                    
                   reading_state <= r_writing_ready;
                end               
             end else begin
+               mmu_axi_arready <= 0;
                uart_axi_arvalid <= 1;
                uart_axi_araddr <= 4'b0;
                uart_axi_arprot <= 3'b0;               
@@ -139,7 +144,11 @@ module uart_buffer(
                if (uart_axi_rvalid) begin
                   uart_axi_rready <= 0;
                   mmu_axi_rvalid <= 1;
-                  mmu_axi_rdata <= uart_axi_rdata;
+                  if (addr_cache == 4'h8) begin
+                    mmu_axi_rdata <= {uart_axi_rdata[31:1], !is_buffer_empty | uart_axi_rdata[0]};
+                  end else begin
+                    mmu_axi_rdata <= uart_axi_rdata;
+                  end
                   mmu_axi_rresp <= uart_axi_rresp;   
                   reading_state <= r_writing_data;            
                end
@@ -160,9 +169,10 @@ module uart_buffer(
                uart_axi_rready <= 0;
                if (uart_axi_rresp == 2'b00) begin
                   // if valid data exists
-                  buffer[head_idx] <= uart_axi_rdata;
-                  head_idx <= head_idx + 1;
+                  buffer[tail_idx] <= uart_axi_rdata;
+                  tail_idx <= tail_idx + 1;
                end
+               mmu_axi_arready <= 1;
                reading_state <= r_waiting_ready;            
             end
          end

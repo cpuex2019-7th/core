@@ -1,3 +1,6 @@
+`default_nettype none
+`include "def.sv"
+
 module write(
              input wire         clk,
              input wire         rstn,
@@ -36,5 +39,5 @@ module write(
          _completed <= 0;         
       end
    end
-   
-endmodule
+endmodule // execute
+`default_nettype none
