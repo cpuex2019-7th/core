@@ -12,8 +12,8 @@ module uart_buffer(
 	                input wire [2:0]  mmu_axi_arprot, 
 
 	                input wire        mmu_axi_bready,
-	                output reg [1:0]  mmu_axi_bresp,
-	                output reg        mmu_axi_bvalid,
+	                output wire [1:0]  mmu_axi_bresp,
+	                output wire        mmu_axi_bvalid,
 
 	                output reg [31:0] mmu_axi_rdata,
 	                input wire        mmu_axi_rready,
@@ -38,7 +38,7 @@ module uart_buffer(
 	                output reg [2:0]  uart_axi_arprot, 
 
                     // response channel
-	                output reg        uart_axi_bready,
+	                output wire        uart_axi_bready,
 	                input wire [1:0]  uart_axi_bresp,
 	                input wire        uart_axi_bvalid,
 
@@ -61,13 +61,17 @@ module uart_buffer(
 	                output wire        uart_axi_wvalid);
 
    // bypass wires related to uart tx
+   assign mmu_axi_bready = uart_axi_bready;
+   assign uart_axi_bresp = mmu_axi_bresp;
+   assign uart_axi_bvalid = mmu_axi_bvalid;
+   
    assign uart_axi_awaddr = mmu_axi_awaddr;
-   assign uart_axi_awready = mmu_axi_awready;
+   assign mmu_axi_awready = uart_axi_awready;
    assign  uart_axi_awvalid = mmu_axi_awvalid;
    assign uart_axi_awprot = mmu_axi_awprot;
 
    assign uart_axi_wdata = mmu_axi_wdata;
-   assign uart_axi_wready = mmu_axi_wready;
+   assign mmu_axi_wready = uart_axi_wready;
    assign uart_axi_wstrb = mmu_axi_wstrb;
    assign uart_axi_wvalid = mmu_axi_wvalid;
       
