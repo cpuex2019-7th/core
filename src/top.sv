@@ -284,8 +284,9 @@ module core
                                                           && (instr_de_out.rs1 == instr_mw_out.rd 
                                                               || instr_de_out.rs2 == instr_mw_out.rd));
    wire               onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
-   
 
+   reg [128:0]        total_executed_instrs;
+      
    /////////////////////
    // tasks
    /////////////////////
@@ -304,7 +305,9 @@ module core
          decode_reset <= 1;
          exec_reset <= 1;
          mem_reset <= 1;
-         write_reset <= 1;               
+         write_reset <= 1;
+
+         total_executed_instrs  <= 0;         
       end
    endtask; 
 
@@ -455,7 +458,11 @@ module core
             
             write_enabled <= is_mem_done;
             write_reset <= !is_mem_done;
-            set_mw();              
+            set_mw();
+
+            if(is_write_done && !write_reset) begin
+               total_executed_instrs <= total_executed_instrs + 1;               
+            end            
          end else begin
             fetch_enabled <= 0;
             decode_enabled <= 0;
