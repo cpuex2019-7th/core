@@ -1468,7 +1468,7 @@ module uart_buffer(
                uart_axi_rready <= 0;
                if (uart_axi_rresp == 2'b00) begin
                   // if valid data exists
-                  buffer[tail_idx] <= uart_axi_rdata;
+                  buffer[tail_idx] <= uart_axi_rdata[7:0];
                   tail_idx <= tail_idx + 1;
                end
                mmu_axi_arready <= 1;
