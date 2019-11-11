@@ -25,16 +25,16 @@ module decoder
    wire [6:0]        opcode = instr_raw[6:0];
    
    // r, i, s, b, u, j
-   // TODO: check here when you add new instructions
-   // TODO!!!!!!!!!!!!!!!!!!!
    wire              r_type = (opcode == 7'b0110011 | opcode == 7'b1010011); 
    wire              i_type = (opcode == 7'b1100111 | opcode == 7'b0000011 | opcode == 7'b0010011 | opcode == 7'b0000111); 
    wire              s_type = (opcode == 7'b0100011 | opcode == 7'b0100111); 
    wire              b_type = (opcode == 7'b1100011); 
    wire              u_type = (opcode == 7'b0110111 | opcode == 7'b0010111);   
    wire              j_type = (opcode == 7'b1101111); 
-   
+
+   // j and u do not require rs1
    assign rs1 = (r_type || i_type || s_type || b_type) ? _rs1 : 5'b00000;
+   // j, u, and i do not require rs2
    assign rs2 = (r_type || s_type || b_type) ? _rs2 : 5'b00000;
    
    wire              _lui = (opcode == 7'b0110111);
