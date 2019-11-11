@@ -61,10 +61,10 @@ module uart_buffer(
 	               output wire        uart_axi_wvalid);
 
    // bypass wires related to uart tx
-   assign mmu_axi_bready = uart_axi_bready;
-   assign uart_axi_bresp = mmu_axi_bresp;
-   assign uart_axi_bvalid = mmu_axi_bvalid;
-   
+   assign uart_axi_bready = mmu_axi_bready;
+   assign mmu_axi_bresp = uart_axi_bresp;
+   assign mmu_axi_bvalid = uart_axi_bvalid;
+    
    assign uart_axi_awaddr = mmu_axi_awaddr;
    assign mmu_axi_awready = uart_axi_awready;
    assign  uart_axi_awvalid = mmu_axi_awvalid;
