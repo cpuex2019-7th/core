@@ -1,13 +1,14 @@
 `default_nettype none
 
-module mmu_wrapper(
+module mmu_wrapper #
+(parameter MEM_WIDTH = 21)(
 	               input wire        clk,
 	               input wire        rstn,
 
 	               // Bus for RAM
                    ////////////
                    // address read channel
-	               output wire [11:0] mem_axi_araddr,
+	               output wire [MEM_WIDTH-1:0] mem_axi_araddr,
 	               input wire        mem_axi_arready,
 	               output wire        mem_axi_arvalid,
 	               output wire [2:0]  mem_axi_arprot, 
@@ -24,7 +25,7 @@ module mmu_wrapper(
 	               input wire        mem_axi_rvalid,
 
                    // address write channel
-	               output wire [11:0] mem_axi_awaddr,
+	               output wire [MEM_WIDTH-1:0] mem_axi_awaddr,
 	               input wire        mem_axi_awready,
 	               output wire        mem_axi_awvalid,
 	               output wire [2:0]  mem_axi_awprot,
@@ -95,7 +96,7 @@ module mmu_wrapper(
                    output wire [2:0]  reading_state,
                    output wire [2:0]  writing_state);             
 
-   mmu _mmu(.clk(clk), .rstn(rstn),
+   mmu #(.MEM_WIDTH(MEM_WIDTH)) _mmu(.clk(clk), .rstn(rstn),
       
             // mem
             .mem_axi_araddr(mem_axi_araddr), 

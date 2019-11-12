@@ -14,4 +14,4 @@ all: $(BINS) $(COES)
 	cpuex_asm $@ $^
 
 clean:
-	rm -rf $(BINS) $(COES)
+	rm -rf $(BINS) $(COES) $(OBJS)

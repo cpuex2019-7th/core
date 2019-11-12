@@ -1,13 +1,13 @@
 `default_nettype none
 
-module mmu(
+module mmu # (parameter MEM_WIDTH = 21)(
 	       input wire        clk,
 	       input wire        rstn,
 
 	       // Bus for RAM
            ////////////
            // address read channel
-	       output reg [11:0] mem_axi_araddr,
+	       output reg [MEM_WIDTH-1:0] mem_axi_araddr,
 	       input wire        mem_axi_arready,
 	       output reg        mem_axi_arvalid,
 	       output reg [2:0]  mem_axi_arprot, 
@@ -24,7 +24,7 @@ module mmu(
 	       input wire        mem_axi_rvalid,
 
            // address write channel
-	       output reg [11:0] mem_axi_awaddr,
+	       output reg [MEM_WIDTH-1:0] mem_axi_awaddr,
 	       input wire        mem_axi_awready,
 	       output reg        mem_axi_awvalid,
 	       output reg [2:0]  mem_axi_awprot,
@@ -95,16 +95,23 @@ module mmu(
            output reg [2:0]  reading_state,
            output reg [2:0]  writing_state);             
 
-   
-   // Read
-   /////////////
-   
    // 1 for UART, 0 for mem
-   (* mark_debug = "true" *) reg                       read_selector;
+   reg                       read_selector;
    localparam r_waiting_ready = 0;   
    localparam r_writing_ready = 1;   
    localparam r_waiting_data = 2;   
    localparam r_writing_data = 3;
+   
+   // 1 for UART, 0 for mem
+   reg                       write_selector;
+   
+   localparam w_waiting_valid = 0;   
+   localparam w_waiting_ready = 1;     
+   localparam w_waiting_bresp = 2;   
+   localparam w_writing_bresp = 3;  
+    
+   // Read
+   /////////////
    
    initial begin
       mem_axi_arvalid <= 0;
@@ -152,7 +159,7 @@ module mmu(
                end else begin
                   // Mem
                   mem_axi_arvalid <= 1;
-                  mem_axi_araddr <= core_axi_araddr[11:0];               
+                  mem_axi_araddr <= core_axi_araddr[MEM_WIDTH-1:0];               
                   mem_axi_arprot <= core_axi_arprot;                                    
                   read_selector <= 0;
                end
@@ -205,14 +212,6 @@ module mmu(
    
    // Write
    /////////////
-
-   // 1 for UART, 0 for mem
-   reg                       write_selector;
-   
-   localparam w_waiting_valid = 0;   
-   localparam w_waiting_ready = 1;     
-   localparam w_waiting_bresp = 2;   
-   localparam w_writing_bresp = 3;   
       
    always @(posedge clk) begin
       if(rstn) begin
@@ -228,7 +227,7 @@ module mmu(
                end else begin       
                   // Mem        
                   write_selector <= 0;
-                  mem_axi_awaddr <= core_axi_awaddr[11:0];               
+                  mem_axi_awaddr <= core_axi_awaddr[MEM_WIDTH-1:0];               
                   mem_axi_awprot <= core_axi_awprot;                  
                end
             end
