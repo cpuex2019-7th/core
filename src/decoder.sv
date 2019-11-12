@@ -122,10 +122,9 @@ module decoder
                                                  || _fmvwx);
    wire              _writes_to_reg_as_rv32f =  (_feq
                                                  || _fle
-                                                 || _fcvtsw
+                                                 || _fcvtws
                                                  || _fmvxw);
 
-   wire              _uses_reg_as_rv32f = (_flw ||  _fcvtsw || _fmvwx);
    wire              _uses_freg_as_rv32f = (_fsw
                                             ||_fadd 
                                             || _fsub
@@ -135,11 +134,13 @@ module decoder
                                             || _fsgnj
                                             || _fsgnjn
                                             || _fsgnjx
-                                            || _fcvtsw
+                                            || _fcvtws
                                             || _feq
                                             || _fle
                                             || _fmvxw);
-   
+                                            
+   wire              _uses_reg_as_rv32f = (_flw ||  _fcvtsw || _fmvwx);
+      
    wire              _rv32f = (_fsw
                                || _flw
                                || _fadd 
@@ -154,9 +155,8 @@ module decoder
                                || _fmvwx
                                || _feq
                                || _fle
-                               || _fcvtsw
+                               || _fcvtws
                                || _fmvxw);
-
    
    wire              _is_store = (_sb
                                   || _sh
