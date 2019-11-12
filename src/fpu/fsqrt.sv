@@ -257,15 +257,15 @@ module fsqrt
 
    wire [22:0] my = (mye[24:24]) ? 23'b0 : mye[22:0];
 
-   wire [7:0] eye = (x_out6[27:27]) ? 8'd255 - ea :
-                    (x_out6[26:26]) ? 8'd254 - ea :
-                    (x_out6[25:25]) ? 8'd253 - ea : 8'd252 - ea;
+   wire [7:0] eye = (x_out2[27:27]) ? 8'd255 - ea :
+                    (x_out2[26:26]) ? 8'd254 - ea :
+                    (x_out2[25:25]) ? 8'd253 - ea : 8'd252 - ea;
 
    wire [7:0] ey = (mye[24:24]) ? eye+8'b1 : eye;
 
    wire [31:0] y_mul;
    wire ovf;
-   fmul u9(x,{s,ey,my},y_mul,ovf);
+   fmul u3(x,{s,ey,my},y_mul,ovf);
 
    // nanかどうかの判定
    wire nzm = |m;
