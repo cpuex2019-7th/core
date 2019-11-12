@@ -35,28 +35,6 @@ module fsqrt
                    (m[7:7] || m[6:6]) ? 8'd56 : 
                    (m[5:5] || m[4:4]) ? 8'd55 : 
                    (m[3:3] || m[2:2]) ? 8'd54 : 8'd53;
-<<<<<<< Updated upstream
-   wire [27:0] x_out0 = {2'b1,26'b0};
-   wire [27:0] x_out1;
-   wire [27:0] x_out2;
-   wire [27:0] x_out3;
-   wire [27:0] x_out4;
-   wire [27:0] x_out5;
-   wire [27:0] x_out6;
-   wire [27:0] x_out7;
-   wire [27:0] x_out8;
-   newton u1(ma,x_out0,x_out1);
-   newton u2(ma,x_out1,x_out2);
-   newton u3(ma,x_out2,x_out3);
-   newton u4(ma,x_out3,x_out4);
-   newton u5(ma,x_out4,x_out5);
-   newton u6(ma,x_out5,x_out6);
-
-   wire [24:0] mye = (x_out6[27:27]) ? ((x_out6[3:3]) ? {1'b0,x_out6[27:4]}+25'b1 : {1'b0,x_out6[27:4]}) :
-                     (x_out6[26:26]) ? ((x_out6[2:2]) ? {1'b0,x_out6[26:3]}+25'b1 : {1'b0,x_out6[26:3]}) :
-                     (x_out6[25:25]) ? ((x_out6[1:1]) ? {1'b0,x_out6[25:2]}+25'b1 : {1'b0,x_out6[25:2]}) :
-                     (x_out6[0:0]) ? {1'b0,x_out6[24:1]}+25'b0 : {1'b0,x_out6[24:1]};
-=======
    wire [27:0] x_in = (ma[24:17] == 8'b1000000) ? {1'b0,27'b101101000101000011111100000} :
                         (ma[24:17] == 8'b1000001) ? {1'b0,27'b101100101110111101000001010} :
                         (ma[24:17] == 8'b1000010) ? {1'b0,27'b101100011001010110001001000} :
@@ -276,7 +254,6 @@ module fsqrt
                      (x_out2[26:26]) ? ((x_out2[2:2]) ? {1'b0,x_out2[26:3]}+25'b1 : {1'b0,x_out2[26:3]}) :
                      (x_out2[25:25]) ? ((x_out2[1:1]) ? {1'b0,x_out2[25:2]}+25'b1 : {1'b0,x_out2[25:2]}) :
                      (x_out2[0:0]) ? {1'b0,x_out2[24:1]}+25'b0 : {1'b0,x_out2[24:1]};
->>>>>>> Stashed changes
 
    wire [22:0] my = (mye[24:24]) ? 23'b0 : mye[22:0];
 
