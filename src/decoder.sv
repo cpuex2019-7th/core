@@ -139,7 +139,7 @@ module decoder
                                             || _fle
                                             || _fmvxw);
                                             
-   wire              _uses_reg_as_rv32f = (_flw ||  _fcvtsw || _fmvwx);
+   wire              _uses_reg_as_rv32f = (_fsw || _flw ||  _fcvtsw || _fmvwx);
       
    wire              _rv32f = (_fsw
                                || _flw
