@@ -6,7 +6,7 @@ module fsub
       output wire [31:0] y,
       output wire        ovf);
 
-   fadd_intl u1(x1,{~x2[31:31],x2[30:0]},y,ovf);
+   fadd u1(x1,{~x2[31:31],x2[30:0]},y,ovf);
 
 endmodule                                                                         
 `default_nettype wire
