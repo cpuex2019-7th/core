@@ -285,7 +285,7 @@ module core
                                                               || instr_de_out.rs2 == instr_mw_out.rd));
    wire               onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
 
-   reg [128:0]        total_executed_instrs;
+   (* mark_debug = "true" *) reg [128:0]        total_executed_instrs;
       
    /////////////////////
    // tasks
@@ -462,7 +462,9 @@ module core
 
             if(is_write_done && !write_reset) begin
                total_executed_instrs <= total_executed_instrs + 1;               
-            end            
+            end      
+            
+             total_executed_instrs <=  total_executed_instrs + 1;     
          end else begin
             fetch_enabled <= 0;
             decode_enabled <= 0;
