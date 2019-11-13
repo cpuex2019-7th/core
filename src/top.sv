@@ -323,17 +323,33 @@ module core
    task set_de;      
       begin
          instr_de_in <= instr_de_out;
-         register_de_in.rs1 <= (reg_onestep_forwarding_required  && is_exec_available && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
-                               (reg_twostep_forwarding_required && is_mem_available && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+         register_de_in.rs1 <= (reg_onestep_forwarding_required 
+                                && is_exec_available 
+                                && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
+                               (reg_twostep_forwarding_required 
+                                && is_mem_available 
+                                && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
                                register_de_out.rs1;
-         register_de_in.rs2 <= (reg_onestep_forwarding_required  && is_exec_available && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
-                               (reg_twostep_forwarding_required && is_mem_available && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+         register_de_in.rs2 <= (reg_onestep_forwarding_required  
+                                && is_exec_available 
+                                && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
+                               (reg_twostep_forwarding_required 
+                                && is_mem_available 
+                                && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
                                register_de_out.rs2;
-         fregister_de_in.rs1 <= (freg_onestep_forwarding_required  && is_exec_available && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
-                                (freg_twostep_forwarding_required && is_mem_available && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+         fregister_de_in.rs1 <= (freg_onestep_forwarding_required 
+                                 && is_exec_available 
+                                 && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
+                                (freg_twostep_forwarding_required 
+                                 && is_mem_available 
+                                 && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
                                 fregister_de_out.rs1;
-         fregister_de_in.rs2 <= (freg_onestep_forwarding_required  && is_exec_available && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
-                                (freg_twostep_forwarding_required && is_mem_available && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+         fregister_de_in.rs2 <= (freg_onestep_forwarding_required  
+                                 && is_exec_available
+                                 && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
+                                (freg_twostep_forwarding_required
+                                 && is_mem_available
+                                 && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
                                 fregister_de_out.rs2;
       end
    endtask
@@ -387,15 +403,15 @@ module core
                stalling_for_mem_forwarding <= 1;
                
                fetch_enabled <= 0;
-               fetch_reset <= 0;
+               fetch_reset <= 0; // this result will be used in next round
                
                decode_enabled <= 1;
                decode_reset <= 0;
                // no set_fd();
                
                exec_enabled <= 0;               
-               exec_reset <= 0;
-               // no set_de();            
+               exec_reset <= 1; // this result won't be used in the future anymore.
+               // no set_de(); because decode stage should be done once more before set_de
             end else if (is_jump_chosen_em_out && is_exec_available) begin
                // TODO: change here to handle only if it fails to predict jump destination
                pc <= jump_dest_em_out;
@@ -409,7 +425,7 @@ module core
                
                exec_enabled <= 0;               
                exec_reset <= 1;
-               // no set_de();
+               // no set_de(); because there's no need to move
             end else begin
                // TODO: set pc what branch predictor says
                pc <= pc + 4;               
@@ -423,7 +439,7 @@ module core
                
                exec_enabled <= is_decode_done;
                exec_reset <= !is_decode_done;
-               set_de();              
+               set_de();
             end
             
             mem_enabled <= is_exec_available;            
