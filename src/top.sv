@@ -235,7 +235,7 @@ module core
       
             .instr_n(instr_mw_out),
             .result(result_mw_out));
-        
+   
    // write
    /////////
    // control flags
@@ -284,11 +284,11 @@ module core
                                                           && instr_mw_out.writes_to_freg_as_rv32f
                                                           && (instr_de_out.rs1 == instr_mw_out.rd 
                                                               || instr_de_out.rs2 == instr_mw_out.rd));
-   o
+   
    wire               onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
 
    (* mark_debug = "true" *) reg [128:0]        total_executed_instrs;
-      
+   
    /////////////////////
    // tasks
    /////////////////////
@@ -438,7 +438,7 @@ module core
                total_executed_instrs <= total_executed_instrs + 1;               
             end      
             
-             total_executed_instrs <=  total_executed_instrs + 1;     
+            total_executed_instrs <=  total_executed_instrs + 1;     
          end else begin
             fetch_enabled <= 0;
             decode_enabled <= 0;
