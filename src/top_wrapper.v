@@ -4,8 +4,9 @@ module core_wrapper
   (input wire clk, 
    input wire         rstn,
      
-   output wire [31:0] pc,
-   input wire [31:0]  instr_raw_from_mem, 
+   // Bus for instr ROM
+   output wire [31:0] rom_addr,
+   input wire [31:0]  rom_data,
   
    // Bus for MMU
    // address read channel
@@ -35,16 +36,13 @@ module core_wrapper
    output wire [31:0] axi_wdata,
    input wire         axi_wready,
    output wire [3:0]  axi_wstrb,
-   output wire        axi_wvalid,
-
-   output wire [2:0]  debug_state,
-   output wire [2:0]  debug_mem_state);
+   output wire        axi_wvalid);
    
    core _core(.clk(clk), 
               .rstn(rstn),
-      
-              .pc(pc), 
-              .instr_raw_from_mem(instr_raw_from_mem),
+
+              .rom_addr(rom_addr),
+              .rom_data(rom_data),
       
               .axi_araddr(axi_araddr), 
               .axi_arready(axi_arready), 
@@ -68,10 +66,7 @@ module core_wrapper
               .axi_wdata(axi_wdata), 
               .axi_wready(axi_wready), 
               .axi_wstrb(axi_wstrb),
-              .axi_wvalid(axi_wvalid),
-
-              .debug_state(debug_state),
-              .debug_mem_state(debug_mem_state));   
+              .axi_wvalid(axi_wvalid));   
 endmodule
 
 `default_nettype wire

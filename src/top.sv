@@ -3,313 +3,468 @@
 
 module core
   (input wire clk, 
-   input wire        rstn,
-   output reg [31:0] pc,
-   input wire [31:0] instr_raw_from_mem,
+   input wire         rstn,
+
+   // Bus for instr ROM
+   output wire [31:0] rom_addr,
+   input wire [31:0]  rom_data,
   
    // Bus for MMU
    // address read channel
-   output reg [31:0] axi_araddr,
-   input wire        axi_arready,
-   output reg        axi_arvalid,
-   output reg [2:0]  axi_arprot, 
+   output reg [31:0]  axi_araddr,
+   input wire         axi_arready,
+   output reg         axi_arvalid,
+   output reg [2:0]   axi_arprot, 
 
    // response channel
-   output reg        axi_bready,
-   input wire [1:0]  axi_bresp,
-   input wire        axi_bvalid,
+   output reg         axi_bready,
+   input wire [1:0]   axi_bresp,
+   input wire         axi_bvalid,
 
    // read data channel
-   input wire [31:0] axi_rdata,
-   output reg        axi_rready,
-   input wire [1:0]  axi_rresp,
-   input wire        axi_rvalid,
+   input wire [31:0]  axi_rdata,
+   output reg         axi_rready,
+   input wire [1:0]   axi_rresp,
+   input wire         axi_rvalid,
 
    // address write channel
-   output reg [31:0] axi_awaddr,
-   input wire        axi_awready,
-   output reg        axi_awvalid,
-   output reg [2:0]  axi_awprot, 
+   output reg [31:0]  axi_awaddr,
+   input wire         axi_awready,
+   output reg         axi_awvalid,
+   output reg [2:0]   axi_awprot, 
 
    // data write channel
-   output reg [31:0] axi_wdata,
-   input wire        axi_wready,
-   output reg [3:0]  axi_wstrb,
-   output reg        axi_wvalid,
-  
-   // for debug
-   output wire [2:0] debug_state,
-   output wire [2:0] debug_mem_state);
+   output reg [31:0]  axi_wdata,
+   input wire         axi_wready,
+   output reg [3:0]   axi_wstrb,
+   output reg         axi_wvalid);
+   
    
    /////////////////////
-    // cpu internals
+  // internals
    /////////////////////
    // TODO: use interface (including csr)
-   (* mark_debug = "true" *) reg [2:0]         state;
-   assign debug_state = state;   
-
-   localparam mem_r_init = 0;   
-   localparam mem_r_waiting_ready = 1;
-   localparam mem_r_waiting_data = 2;
-
-   localparam mem_w_init = 0;
-   localparam mem_w_waiting_ready = 1;
-   localparam mem_w_waiting_data = 2;   
-   (* mark_debug = "true" *) reg [2:0]         mem_state;
-   assign debug_mem_state = mem_state;      
+   reg [31:0]         pc;
+   reg                stalling_for_mem_forwarding;
    
    /////////////////////
-   // components
+   // stages
    /////////////////////
-   (* mark_debug = "true" *) reg [31:0]        instr_raw;   
+   
+   // fetch
+   /////////
+   // controls
+   (* mark_debug = "true" *) reg                fetch_enabled;
+   (* mark_debug = "true" *) reg                fetch_reset;   
+   (* mark_debug = "true" *) wire               is_fetch_done;
 
-   wire [4:0]        rd_a;
-   wire [4:0]        rs1_a;
-   wire [4:0]        rs2_a;
-   wire [31:0]       imm;   
-   instructions instr;   
+   // pipeline regs
+   // None
+   
+   // stage outputs
+   wire [31:0]        pc_fd_out;
+   wire [31:0]        instr_fd_out;
+   
+   fetch _fetch(.clk(clk),
+                .rstn(rstn && !fetch_reset),
+      
+                .enabled(fetch_enabled),
+                .pc(pc),
+
+                .rom_addr(rom_addr),
+                .rom_data(rom_data),
+
+                .completed(is_fetch_done),
+                .pc_n(pc_fd_out),
+                .instr_raw(instr_fd_out));      
+
+   // decode & reg
+   /////////
+   // control flags
+   (* mark_debug = "true" *) reg                decode_enabled;
+   (* mark_debug = "true" *) reg                decode_reset;   
+   (* mark_debug = "true" *) wire               is_decode_done;
+   
+   // pipeline regs
+   // None
+   
+   // stage input
+   reg [31:0]         pc_fd_in;
+   reg [31:0]         instr_fd_in;
+   
+   // stage outputs
+   instructions instr_de_out;   
+   regvpair register_de_out;
+   regvpair fregister_de_out;
+   
+   wire [4:0]         rs1_a;
+   wire [4:0]         rs2_a;
    decoder _decoder(.clk(clk), 
-                    .rstn(rstn),
-                    .state(state),
-                    .instr_raw(instr_raw),
-                    .instr(instr),
-                    .rd(rd_a), .rs1(rs1_a), .rs2(rs2_a), .imm(imm));
+                    .rstn(rstn && !decode_reset),                    
+                    .enabled(decode_enabled),
+      
+                    .pc(pc_fd_in),      
+                    .instr_raw(instr_fd_in),                    
+      
+                    .completed(is_decode_done),
+                    .instr(instr_de_out),
+                    .rs1(rs1_a), .rs2(rs2_a));
 
-   // integer register   
-   wire [31:0]       rs1_v;
-   wire [31:0]       rs2_v;
+   // registers
+   wire [4:0]         reg_w_dest;
+   wire [31:0]        reg_w_data;
    
-   wire              reg_write_enabled;
-   wire [4:0]        reg_write_dest;
-   
-   reg               reg_write_enabled_delayed;
-   reg [4:0]         reg_write_dest_delayed;
-   reg [31:0]        reg_write_data_delayed;   
+   wire               reg_w_enable;   
    regf _registers(.clk(clk), 
                    .rstn(rstn),
-                   .rs1(rs1_a), .rs2(rs2_a), .rd1(rs1_v), .rd2(rs2_v), 
-                   .w_enable(reg_write_enabled_delayed),
-                   .w_addr(reg_write_dest_delayed),
-                   .w_data(reg_write_data_delayed));
+                   .r_enabled(decode_enabled),
+      
+                   .rs1(rs1_a),
+                   .rs2(rs2_a),
+      
+                   .w_enable(reg_w_enable),
+                   .w_addr(reg_w_dest),
+                   .w_data(reg_w_data),
+      
+                   .register(register_de_out));   
    
-   // floating-point register
-   wire [31:0]       frs1_v;
-   wire [31:0]       frs2_v;
-   
-   wire              freg_write_enabled;
-   wire [4:0]        freg_write_dest;
-   
-   reg               freg_write_enabled_delayed;
-   reg [4:0]         freg_write_dest_delayed;
-   reg [31:0]        freg_write_data_delayed;   
+   wire               freg_w_enable;   
    regf _fregisters(.clk(clk), 
                     .rstn(rstn),
-                    .rs1(rs1_a), .rs2(rs2_a), .rd1(frs1_v), .rd2(frs2_v), 
-                    .w_enable(freg_write_enabled_delayed),
-                    .w_addr(freg_write_dest_delayed),
-                    .w_data(freg_write_data_delayed));
-   
-   // memory   
-   wire              mem_write_enabled;
-   wire              mem_read_enabled;
-   wire [31:0]       mem_data;
-   
-   // pc
-   wire              is_jump_enabled;
-   wire [31:0]       jump_dest;
+                    .r_enabled(decode_enabled),
+      
+                    .w_enable(freg_w_enable),
+                    .w_addr(reg_w_dest),
+                    .w_data(reg_w_data),
 
-   // execution
-   reg [31:0]        pc_instr;
-   wire [31:0]       exec_result;
+                    .rs1(rs1_a),
+                    .rs2(rs2_a),
+      
+                    .register(fregister_de_out));
    
-   execute _execute(.clk(clk), .rstn(rstn), 
-                    .state(state),
-                    .pc(pc_instr), .instr(instr), 
-                    .rd(rd_a),
-                    .rs1(rs1_a), .rs1_v(rs1_v), .frs1_v(frs1_v), 
-                    .rs2(rs2_a), .rs2_v(rs2_v), .frs2_v(frs2_v), 
-                    .imm(imm), 
-                    .result(exec_result), 
-                    .mem_write_enabled(mem_write_enabled), .mem_read_enabled(mem_read_enabled),
-                    .reg_write_enabled(reg_write_enabled), .reg_write_dest(reg_write_dest), 
-                    .freg_write_enabled(freg_write_enabled), .freg_write_dest(freg_write_dest), 
-                    .is_jump_enabled(is_jump_enabled), .jump_dest(jump_dest));
+   // exec
+   /////////
+   // control flags
+   (* mark_debug = "true" *) reg                exec_enabled;
+   (* mark_debug = "true" *) reg                exec_reset;   
+   (* mark_debug = "true" *) wire               is_exec_done;
+   wire               is_exec_available = is_exec_done && !exec_reset;   
    
+   // stage input
+   (* mark_debug = "true" *) instructions instr_de_in;   
+   (* mark_debug = "true" *) regvpair register_de_in;
+   (* mark_debug = "true" *) regvpair fregister_de_in;
+   
+   // stage outputs
+   instructions instr_em_out;   
+   regvpair register_em_out;
+   regvpair fregister_em_out;
+   (* mark_debug = "true" *) wire [31:0]        result_em_out;
+   (* mark_debug = "true" *) wire               is_jump_chosen_em_out;
+   (* mark_debug = "true" *) wire [31:0]        jump_dest_em_out;   
+
+   execute _execute(.clk(clk), 
+                    .rstn(rstn && !exec_reset),
+      
+                    .enabled(exec_enabled),
+                    .instr(instr_de_in),
+                    .register(register_de_in),
+                    .fregister(fregister_de_in),                    
+      
+                    .completed(is_exec_done),
+      
+                    .instr_n(instr_em_out),
+                    .register_n(register_em_out), 
+                    .fregister_n(fregister_em_out),      
+                    .result(result_em_out), 
+                    .is_jump_chosen(is_jump_chosen_em_out), 
+                    .jump_dest(jump_dest_em_out));
+
+   // mem
+   /////////
+   // control flags
+   (* mark_debug = "true" *) reg                mem_enabled;
+   (* mark_debug = "true" *) reg                mem_reset;   
+   (* mark_debug = "true" *) wire               is_mem_done;
+
+   // stage inputs
+   instructions instr_em_in;   
+   regvpair register_em_in;
+   regvpair fregister_em_in;
+   reg [31:0]         result_em_in;
+   
+   // stage outputs
+   instructions instr_mw_out;   
+   wire [31:0]        result_mw_out;
+   
+   mem _mem(.clk(clk), 
+            .rstn(rstn && !mem_reset),
+      
+            .enabled(mem_enabled),
+            .instr(instr_em_in),
+            .register(register_em_in),
+            .fregister(fregister_em_in),
+            .addr(result_em_in),
+
+            .axi_araddr(axi_araddr), 
+            .axi_arready(axi_arready), 
+            .axi_arvalid(axi_arvalid), 
+            .axi_arprot(axi_arprot),
+      
+            .axi_bready(axi_bready), 
+            .axi_bresp(axi_bresp), 
+            .axi_bvalid(axi_bvalid),
+      
+            .axi_rdata(axi_rdata), 
+            .axi_rready(axi_rready),
+            .axi_rresp(axi_rresp), 
+            .axi_rvalid(axi_rvalid),
+      
+            .axi_awaddr(axi_awaddr), 
+            .axi_awready(axi_awready), 
+            .axi_awvalid(axi_awvalid), 
+            .axi_awprot(axi_awprot), 
+
+            .axi_wdata(axi_wdata), 
+            .axi_wready(axi_wready), 
+            .axi_wstrb(axi_wstrb), 
+            .axi_wvalid(axi_wvalid),
+
+            .completed(is_mem_done),
+      
+            .instr_n(instr_mw_out),
+            .result(result_mw_out));
+        
+   // write
+   /////////
+   // control flags
+   (* mark_debug = "true" *) reg                write_enabled;
+   (* mark_debug = "true" *) reg                write_reset;   
+   (* mark_debug = "true" *) wire               is_write_done;   
+
+   // stage input
+   instructions instr_mw_in;   
+   reg [31:0]         result_mw_in;
+
+   // there is no stage output
+   
+   write _write(.clk(clk), 
+                .rstn(rstn && !write_reset),
+      
+                .enabled(write_enabled), 
+                .instr(instr_mw_in),      
+                .data(result_mw_in),
+
+                .reg_w_enable(reg_w_enable),
+                .freg_w_enable(freg_w_enable),
+
+                .reg_w_dest(reg_w_dest),
+                .reg_w_data(reg_w_data),
+
+                .completed(is_write_done));
+   
+
+   wire               are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset || is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
+
+   wire               reg_onestep_forwarding_required = (instr_de_out.uses_reg 
+                                                         && instr_em_out.writes_to_reg
+                                                         && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_em_out.rd)
+                                                             || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_em_out.rd))) ;   
+   wire               freg_onestep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
+                                                          && instr_em_out.writes_to_freg_as_rv32f
+                                                          && (instr_de_out.rs1 == instr_em_out.rd 
+                                                              || instr_de_out.rs2 == instr_em_out.rd));
+   
+   wire               reg_twostep_forwarding_required = (instr_de_out.uses_reg 
+                                                         && instr_mw_out.writes_to_reg
+                                                         && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_mw_out.rd)
+                                                             || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_mw_out.rd))) ;   
+   wire               freg_twostep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
+                                                          && instr_mw_out.writes_to_freg_as_rv32f
+                                                          && (instr_de_out.rs1 == instr_mw_out.rd 
+                                                              || instr_de_out.rs2 == instr_mw_out.rd));
+   wire               onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
+   
+
+   /////////////////////
+   // tasks
+   /////////////////////
+   task init;
+      begin
+         pc <= 0;
+         stalling_for_mem_forwarding <= 0;
+         
+         fetch_enabled <= 1;      
+         decode_enabled <= 0;      
+         exec_enabled <= 0;      
+         mem_enabled <= 0;      
+         write_enabled <= 0;
+
+         fetch_reset <= 0;
+         decode_reset <= 1;
+         exec_reset <= 1;
+         mem_reset <= 1;
+         write_reset <= 1;               
+      end
+   endtask; 
+
+   task set_fd;      
+      begin
+         pc_fd_in <= pc_fd_out;
+         instr_fd_in <= instr_fd_out;         
+      end
+   endtask
+
+   task set_de_bothstep;      
+      begin
+         instr_de_in <= instr_de_out;
+         register_de_in.rs1 <= (reg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
+                               (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+                               register_de_out.rs1;
+         register_de_in.rs2 <= (reg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
+                               (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+                               register_de_out.rs2;
+         fregister_de_in.rs1 <= (freg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
+                                (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+                                fregister_de_out.rs1;
+         fregister_de_in.rs2 <= (freg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
+                                (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+                                fregister_de_out.rs2;
+      end
+   endtask
+   
+   task set_de_onestep;      
+      begin
+         instr_de_in <= instr_de_out;
+         register_de_in.rs1 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+                               register_de_in.rs1;
+         register_de_in.rs2 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+                               register_de_in.rs2;
+         fregister_de_in.rs1 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+                                fregister_de_in.rs1;
+         fregister_de_in.rs2 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+                                fregister_de_in.rs2;
+      end
+   endtask
+   
+   task set_de_twostep;      
+      begin
+         instr_de_in <= instr_de_out;
+         register_de_in.rs1 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+                               register_de_out.rs1;
+         register_de_in.rs2 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+                               register_de_out.rs2;
+         fregister_de_in.rs1 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+                                fregister_de_out.rs1;
+         fregister_de_in.rs2 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+                                fregister_de_out.rs2;
+      end
+   endtask
+
+   task set_em;      
+      begin
+         instr_em_in <= instr_em_out;
+         register_em_in <= register_em_out;
+         fregister_em_in <= fregister_em_out;
+         result_em_in <= result_em_out;         
+      end
+   endtask
+   
+   task set_mw;      
+      begin
+         instr_mw_in <= instr_mw_out;
+         result_mw_in <= result_mw_out;         
+      end
+   endtask
+
    /////////////////////
    // main
-   /////////////////////
+   /////////////////////   
    initial begin
-      pc <= 0;
-      state <= FETCH;
-      axi_wvalid <= 0;
-      axi_awvalid <= 0;
-      
-      axi_arvalid <= 0;
-      
-      axi_bready <= 0;
-      axi_rready <= 0;
+      init();      
    end
 
    always @(posedge clk) begin
       if(rstn) begin
-         if (state == FETCH) begin
-            instr_raw <= instr_raw_from_mem;
-            state <= DECODE;
-         end else if (state == DECODE) begin
-            pc_instr <= pc;      
-            state <= EXEC;
-         end else if (state == EXEC) begin
-            state <= MEM;
-            mem_state <= mem_r_init;
-         end else if (state == MEM) begin;
-            if (mem_read_enabled) begin
-               // if instr is for read from mem
-               if (mem_state == mem_r_init) begin               
-                  axi_araddr <= {exec_result[31:2], 2'b0}; // rs1+imm, 2'b0 is for alignment
-                  axi_arprot <= 3'b000;                  
-                  axi_arvalid <= 1;
-                  mem_state <= mem_r_waiting_ready;               
-               end else if (mem_state == mem_r_waiting_ready) begin
-                  if (axi_arready) begin
-                     axi_arvalid <= 0;
-                     axi_rready <= 1;                  
-                     mem_state <= mem_r_waiting_data;                  
-                  end
-               end else if (mem_state == mem_r_waiting_data) begin
-                  if (axi_rvalid) begin
-                     axi_rready <= 0;
-                     if (instr.lb) begin
-                        case(exec_result[1:0])
-                          2'b11: reg_write_data_delayed <= {{24{axi_rdata[31]}}, axi_rdata[31:24]};
-                          2'b10: reg_write_data_delayed <= {{24{axi_rdata[23]}}, axi_rdata[23:16]};
-                          2'b01: reg_write_data_delayed <= {{24{axi_rdata[15]}}, axi_rdata[15:8]};
-                          2'b00: reg_write_data_delayed <= {{24{axi_rdata[7]}}, axi_rdata[7:0]};
-                          default: reg_write_data_delayed <= 32'b0;                       
-                        endcase
-                     end else if (instr.lh) begin
-                        case(exec_result[1:0])
-                          2'b10 : reg_write_data_delayed <= {{16{axi_rdata[31]}}, axi_rdata[31:16]};
-                          2'b00 : reg_write_data_delayed <= {{16{axi_rdata[15]}}, axi_rdata[15:0]};
-                          default: reg_write_data_delayed <= 32'b0;                       
-                        endcase
-                     end else if (instr.lw) begin
-                        reg_write_data_delayed <= axi_rdata;       
-                     end else if (instr.flw) begin
-                        freg_write_data_delayed <= axi_rdata;                                           
-                     end else if (instr.lbu) begin                     
-                        case(exec_result[1:0])
-                          2'b11: reg_write_data_delayed <= {24'b0, axi_rdata[31:24]};
-                          2'b10: reg_write_data_delayed <= {24'b0, axi_rdata[23:16]};
-                          2'b01: reg_write_data_delayed <= {24'b0, axi_rdata[15:8]};
-                          2'b00: reg_write_data_delayed <= {24'b0, axi_rdata[7:0]};
-                          default: reg_write_data_delayed <= 32'b0;                       
-                        endcase
-                     end else if (instr.lhu) begin
-                        case(exec_result[1:0])
-                          2'b10 : reg_write_data_delayed <= {16'b0, axi_rdata[31:16]};
-                          2'b00 : reg_write_data_delayed <= {16'b0, axi_rdata[15:0]};
-                          default: reg_write_data_delayed <= 32'b0;                       
-                        endcase
-                     end
-                     state <= WRITE;
-                     
-                     reg_write_enabled_delayed <= reg_write_enabled;
-                     reg_write_dest_delayed <= reg_write_dest;   
-                     
-                     freg_write_enabled_delayed <= freg_write_enabled;               
-                     freg_write_dest_delayed <= freg_write_dest;               
-                  end               
-               end
-            end else if (mem_write_enabled) begin
-               // if instr is for write to memory
-               if (mem_state ==  mem_w_init) begin // assert mem_w_init == mem_r_init
-                  axi_awaddr <= {exec_result[31:2], 2'b0}; // rs1 + imm
-                  axi_awprot <= 3'b000;                  
-                  axi_awvalid <= 1;
-                  
-                  if(instr.sb) begin 
-                     case(exec_result[1:0])
-                       2'b11 : begin 
-                          axi_wstrb <= 4'b1000;
-                          axi_wdata <= {rs2_v[7:0], 24'b0};
-                       end
-                       2'b10 : begin
-                          axi_wstrb <= 4'b0100;
-                          axi_wdata <= {8'b0, rs2_v[7:0], 16'b0};
-                       end
-                       2'b01 : begin
-                          axi_wstrb <= 4'b0010;
-                          axi_wdata <= {16'b0, rs2_v[7:0], 8'b0};
-                       end
-                       2'b00 : begin
-                          axi_wstrb <= 4'b0001;
-                          axi_wdata <= {24'b0, rs2_v[7:0]};
-                       end
-                       default : begin
-                          state <= INVALID;                               
-                       end
-                     endcase	
-                  end else if (instr.sh) begin
-                     case(exec_result[1:0])
-                       2'b10 : begin
-                          axi_wstrb <= 4'b1100;
-                          axi_wdata <= {rs2_v[15:0], 16'b0};
-                       end
-                       2'b00 : begin
-                          axi_wstrb <= 4'b0011;
-                          axi_wdata <= {16'b0, rs2_v[15:0]};
-                       end
-                       default : begin
-                          state <= INVALID;                       
-                       end
-                     endcase
-                  end  else if (instr.sw) begin
-                     axi_wstrb <= 4'b1111;
-                     axi_wdata <= rs2_v;                  
-                  end else if (instr.fsw) begin
-                     axi_wstrb <= 4'b1111;
-                     axi_wdata <= frs2_v;  
-                  end else begin
-                      state <= INVALID;
-                  end
-                  axi_wvalid <= 1;
-                  mem_state <= mem_w_waiting_ready;
-               end else if (mem_state == mem_w_waiting_ready) begin
-                  if(axi_awready) begin
-                     axi_awvalid <= 0;
-                  end
-                  if(axi_wready) begin
-                     axi_wvalid <= 0;
-                  end
-                  if(!axi_awvalid && !axi_wvalid) begin
-                     axi_bready <= 1;
-                     mem_state <= mem_w_waiting_data;                  
-                  end               
-               end else if (mem_state == mem_w_waiting_data) begin
-                  if (axi_bvalid) begin
-                     axi_bready <= 0;                  
-                     state <= WRITE;
-                     reg_write_enabled_delayed <= reg_write_enabled;
-                     freg_write_enabled_delayed <= freg_write_enabled;               
-                  end
-               end
-            end else begin
-               reg_write_enabled_delayed <= reg_write_enabled;               
-               reg_write_dest_delayed <= reg_write_dest;            
-               reg_write_data_delayed <= exec_result;
+         if (are_all_stages_completed) begin
+            // Control stalls
+            //////////////////
+
+            if (stalling_for_mem_forwarding) begin               
+               stalling_for_mem_forwarding <= 0;
+
+               pc <= pc + 4;               
                
-               freg_write_enabled_delayed <= freg_write_enabled;               
-               freg_write_dest_delayed <= freg_write_dest;            
-               freg_write_data_delayed <= exec_result;
-               state <= WRITE;
-            end          
-         end else if (state == WRITE) begin         
-            pc <= is_jump_enabled? jump_dest : pc + 4;                       
-            state <= FETCH;
+               fetch_enabled <= 1;
+               fetch_reset <= 0;
+               
+               decode_enabled <= 1;
+               decode_reset <= 0;
+               set_fd();
+               
+               exec_enabled <= 1;            
+               exec_reset <= 0;
+               set_de_onestep();
+            end else if (instr_em_out.is_load && onestep_forwarding_required && is_exec_available) begin
+               // case 00
+               stalling_for_mem_forwarding <= 1;
+               
+               fetch_enabled <= 0;
+               fetch_reset <= 0;
+               
+               decode_enabled <= 0;
+               decode_reset <= 0;
+               // no set_fd();
+               
+               exec_enabled <= 0;               
+               exec_reset <= 0;
+               set_de_twostep();
+            end else if (is_jump_chosen_em_out && is_exec_available) begin
+               // TODO: change here to handle only if it fails to predict jump destination
+               pc <= jump_dest_em_out;
+               
+               fetch_enabled <= 1;
+               fetch_reset <= 0;
+               
+               decode_enabled <= 0;
+               decode_reset <= 1;
+               // no set_fd();
+               
+               exec_enabled <= 0;               
+               exec_reset <= 1;
+               // no set_de();
+            end else begin
+               // TODO: set pc what branch predictor says
+               pc <= pc + 4;               
+               
+               fetch_enabled <= 1;
+               fetch_reset <= 0;
+               
+               decode_enabled <= is_fetch_done;
+               decode_reset <= !is_fetch_done;
+               set_fd();              
+               
+               exec_enabled <= is_decode_done;
+               exec_reset <= !is_decode_done;
+               set_de_bothstep();              
+            end
+            
+            mem_enabled <= is_exec_available;            
+            mem_reset <= !is_exec_available;
+            set_em();              
+            
+            write_enabled <= is_mem_done;
+            write_reset <= !is_mem_done;
+            set_mw();              
+         end else begin
+            fetch_enabled <= 0;
+            decode_enabled <= 0;
+            exec_enabled <= 0;
+            mem_enabled <= 0;
+            write_enabled <= 0;
          end
-      end else begin
-        pc <= 0;
-        state <= FETCH;
+      end else begin // if (rstn)
+         init();
       end
    end
 endmodule
