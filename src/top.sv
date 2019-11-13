@@ -186,6 +186,7 @@ module core
    (* mark_debug = "true" *) reg                mem_enabled;
    (* mark_debug = "true" *) reg                mem_reset;   
    (* mark_debug = "true" *) wire               is_mem_done;
+   wire               is_mem_available = is_mem_done && !mem_reset;   
 
    // stage inputs
    instructions instr_em_in;   
@@ -283,6 +284,7 @@ module core
                                                           && instr_mw_out.writes_to_freg_as_rv32f
                                                           && (instr_de_out.rs1 == instr_mw_out.rd 
                                                               || instr_de_out.rs2 == instr_mw_out.rd));
+   o
    wire               onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
 
    (* mark_debug = "true" *) reg [128:0]        total_executed_instrs;
@@ -318,52 +320,24 @@ module core
       end
    endtask
 
-   task set_de_bothstep;      
+   task set_de;      
       begin
          instr_de_in <= instr_de_out;
-         register_de_in.rs1 <= (reg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
-                               (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+         register_de_in.rs1 <= (reg_onestep_forwarding_required  && is_exec_available && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
+                               (reg_twostep_forwarding_required && is_mem_available && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
                                register_de_out.rs1;
-         register_de_in.rs2 <= (reg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
-                               (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+         register_de_in.rs2 <= (reg_onestep_forwarding_required  && is_exec_available && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
+                               (reg_twostep_forwarding_required && is_mem_available && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
                                register_de_out.rs2;
-         fregister_de_in.rs1 <= (freg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
-                                (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+         fregister_de_in.rs1 <= (freg_onestep_forwarding_required  && is_exec_available && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
+                                (freg_twostep_forwarding_required && is_mem_available && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
                                 fregister_de_out.rs1;
-         fregister_de_in.rs2 <= (freg_onestep_forwarding_required  && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
-                                (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
+         fregister_de_in.rs2 <= (freg_onestep_forwarding_required  && is_exec_available && instr_em_out.rd == instr_de_out.rs2)? result_em_out:
+                                (freg_twostep_forwarding_required && is_mem_available && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
                                 fregister_de_out.rs2;
       end
    endtask
    
-   task set_de_onestep;      
-      begin
-         instr_de_in <= instr_de_out;
-         register_de_in.rs1 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
-                               register_de_in.rs1;
-         register_de_in.rs2 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
-                               register_de_in.rs2;
-         fregister_de_in.rs1 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
-                                fregister_de_in.rs1;
-         fregister_de_in.rs2 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
-                                fregister_de_in.rs2;
-      end
-   endtask
-   
-   task set_de_twostep;      
-      begin
-         instr_de_in <= instr_de_out;
-         register_de_in.rs1 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
-                               register_de_out.rs1;
-         register_de_in.rs2 <= (reg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
-                               register_de_out.rs2;
-         fregister_de_in.rs1 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
-                                fregister_de_out.rs1;
-         fregister_de_in.rs2 <= (freg_twostep_forwarding_required && instr_mw_out.rd == instr_de_out.rs2)? result_mw_out:
-                                fregister_de_out.rs2;
-      end
-   endtask
-
    task set_em;      
       begin
          instr_em_in <= instr_em_out;
@@ -407,7 +381,7 @@ module core
                
                exec_enabled <= 1;            
                exec_reset <= 0;
-               set_de_onestep();
+               set_de();            
             end else if (instr_em_out.is_load && onestep_forwarding_required && is_exec_available) begin
                // case 00
                stalling_for_mem_forwarding <= 1;
@@ -415,13 +389,13 @@ module core
                fetch_enabled <= 0;
                fetch_reset <= 0;
                
-               decode_enabled <= 0;
+               decode_enabled <= 1;
                decode_reset <= 0;
                // no set_fd();
                
                exec_enabled <= 0;               
                exec_reset <= 0;
-               set_de_twostep();
+               // no set_de();            
             end else if (is_jump_chosen_em_out && is_exec_available) begin
                // TODO: change here to handle only if it fails to predict jump destination
                pc <= jump_dest_em_out;
@@ -449,7 +423,7 @@ module core
                
                exec_enabled <= is_decode_done;
                exec_reset <= !is_decode_done;
-               set_de_bothstep();              
+               set_de();              
             end
             
             mem_enabled <= is_exec_available;            
