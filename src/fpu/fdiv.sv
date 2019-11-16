@@ -321,33 +321,23 @@ module finv
 	end
    wire [25:0] l2 = ~k21[49:24] + {26'b1};
    wire [49:0] p2 = {25'b0,l2[25:1]} * {25'b0,x_out11[25:1]};
-	logic [49:0] p21;
-	logic [31:0] x6;
-	logic s4;
-	logic [7:0] e4;
-	always @(posedge clk) begin
-		p21 <= p2;
-		x6 <= x5;
-		s4 <= s3;
-		e4 <= e3;
-	end
-   wire [25:0] x_out2 = (p21[22:22] && (|p21[21:0] || p21[23:23])) ? {p21[48:23]} + 26'b1 : {p21[48:23]};
+   wire [25:0] x_out2 = (p2[22:22] && (|p2[21:0] || p2[23:23])) ? {p2[48:23]} + 26'b1 : {p2[48:23]};
 
-   wire [22:0] my = (e4 == 8'd254) ? ((x_out2[3:3]) ? {1'b0,x_out2[25:4]} + 23'b1 : {1'b0,x_out2[25:4]}) :
-                    (e4 == 8'd253) ? ((x_out2[2:2]) ? x_out2[25:3] + 23'b1 : x_out2[25:3]) :
+   wire [22:0] my = (e3 == 8'd254) ? ((x_out2[3:3]) ? {1'b0,x_out2[25:4]} + 23'b1 : {1'b0,x_out2[25:4]}) :
+                    (e3 == 8'd253) ? ((x_out2[2:2]) ? x_out2[25:3] + 23'b1 : x_out2[25:3]) :
                     (x_out2[1:1]) ? x_out2[24:2] + 23'b1 : x_out2[24:2];
 
-   wire [7:0] ey = (e4 == 8'd254) ? 0 : 8'd253 - e4;
-   wire [7:0] ey2 = (e4 == 8'd253) ? 0 : ey + 8'b1;
+   wire [7:0] ey = (e3 == 8'd254) ? 0 : 8'd253 - e3;
+   wire [7:0] ey2 = (e3 == 8'd253) ? 0 : ey + 8'b1;
 
    // nanかどうかの判定
-   wire nzm = |x6[22:0];
-   assign y = (e4 == 8'd255 && nzm) ? {s4,8'd255,1'b1,x6[21:0]} : // 元がnanなら結果もnan
-              (e4 == 8'd255 && ~nzm) ? {s4,8'd0,23'b0} : // 元がinfなら結果は0
-              (~|x6) ? {s4,8'd255,23'b0} : // 元が+-0なら結果は+-inf
-              (~|x6[22:0]) ? ((e4 == 8'd254) ? {s4,8'b0,1'b1,22'b0} : (e4 == 8'd253) ? {s4,8'b1,23'b0} : {s4,ey2,23'b0}) : {s4,ey,my};
+   wire nzm = |x5[22:0];
+   assign y = (e3 == 8'd255 && nzm) ? {s3,8'd255,1'b1,x5[21:0]} : // 元がnanなら結果もnan
+              (e3 == 8'd255 && ~nzm) ? {s3,8'd0,23'b0} : // 元がinfなら結果は0
+              (~|x5) ? {s3,8'd255,23'b0} : // 元が+-0なら結果は+-inf
+              (~|x5[22:0]) ? ((e3 == 8'd254) ? {s3,8'b0,1'b1,22'b0} : (e3 == 8'd253) ? {s3,8'b1,23'b0} : {s3,ey2,23'b0}) : {s3,ey,my};
 
-   assign exception = (e4 == 8'd255 && nzm) ? 1'b1 : 1'b0;
+   assign exception = (e3 == 8'd255 && nzm) ? 1'b1 : 1'b0;
 
 endmodule
 
@@ -367,34 +357,45 @@ module fdiv
    wire [31:0] x2i;
    finv u1({x2[31:31],8'd127,x2[22:0]},clk,x2i,exception);
 	logic [31:0] x11;
-	logic [9:0] e5;
+	logic [9:0] e4;
+	logic enable_in1;
 	always @(posedge clk) begin
 		x11 <= x1;
-		e5 <= e;
+		e4 <= e;
+		enable_in1 <= enable_in;
 	end
 	logic [31:0] x12;
-	logic [9:0] e6;
+	logic [9:0] e5;
+	logic enable_in2;
 	always @(posedge clk) begin
 		x12 <= x11;
-		e6 <= e5;
+		e5 <= e4;
+		enable_in2 <= enable_in1;
 	end
 	logic [31:0] x13;
-	logic [9:0] e7;
+	logic [9:0] e6;
+	logic enable_in3;
 	always @(posedge clk) begin
 		x13 <= x12;
-		e7 <= e6;
+		e6 <= e5;
+		enable_in3 <= enable_in2;
 	end
 	logic [31:0] x14;
-	logic [9:0] e8;
+	logic [9:0] e7;
+	logic enable_in4;
+   logic [31:0] x2i1;
 	always @(posedge clk) begin
 		x14 <= x13;
-		e8 <= e7;
+		e7 <= e6;
+		enable_in4 <= enable_in3;
+      x2i1 <= x2i;
 	end
    wire [31:0] my;
-   fmul u2(x2i,{x14[31:31],8'd127,x14[22:0]},my,ovf);
-   wire [9:0] ey = e8 + {2'b0,my[30:23]};
+   fmul u2(x2i1,{x14[31:31],8'd127,x14[22:0]},my,ovf);
+   wire [9:0] ey = e7 + {2'b0,my[30:23]};
    assign y = (ey[9:9]) ? {my[31:31],31'b0} :
               (ey[8:8]) ? {my[31:31],8'd255,23'b0} : {my[31:31],ey[7:0],my[22:0]};
 
+	assign enable_out = enable_in4;
 endmodule                                                                         
 `default_nettype wire

@@ -224,6 +224,7 @@ module fsqrt
 	logic [50:0] k11;
 	logic [31:0] x1;
 	logic [7:0] e1;
+	logic enable_in1;
 	always @(posedge clk) begin
 		ma1 <= ma;
 		m3 <= m;
@@ -233,6 +234,7 @@ module fsqrt
 		k11 <= k1;
 		x1 <= x;
 		e1 <= e;
+		enable_in1 <= enable_in;
 	end
    // すべて小数部 0.0625 - 0.9999
    wire [49:0] l1 = {25'b0,x_in1[26:2]} * {25'b0,x_in1[26:2]};
@@ -246,6 +248,7 @@ module fsqrt
 	logic [49:0] m11;
 	logic [31:0] x2;
 	logic [7:0] e2;
+	logic enable_in2;
 	always @(posedge clk) begin
 		ma2 <= ma1;
 		m4 <= m3;
@@ -255,6 +258,7 @@ module fsqrt
 		m11 <= m1;
 		x2 <= x1;
 		e2 <= e1;
+		enable_in2 <= enable_in1;
 	end
    // 上2桁が整数部 0.75 - 2.9999
    wire [29:0] n1 = {1'b0,x_in2,1'b0} + {2'b0,x_in2};
@@ -274,6 +278,7 @@ module fsqrt
 	logic s3;
 	logic [49:0] l21;
 	logic [31:0] x3;
+	logic enable_in3;
 	always @(posedge clk) begin
 		e3 <= e2;
 		x_out11 <= x_out1;
@@ -283,6 +288,7 @@ module fsqrt
 		s3 <= s2;
 		l21 <= l2;
 		x3 <= x2;
+		enable_in3 <= enable_in2;
 	end
    wire [49:0] m2 = {25'b0,k21[50:26]} * {25'b0,l21[49:25]};
    wire [29:0] n2 = {1'b0,x_out11,1'b0} + {2'b0,x_out11};
@@ -304,6 +310,7 @@ module fsqrt
 	logic [7:0] ey1;
 	logic [31:0] x4;
 	logic [22:0] my1;
+	logic enable_in4;
 	always @(posedge clk) begin
 		e4 <= e3;
 		m6 <= m5;
@@ -311,6 +318,7 @@ module fsqrt
 		ey1 <= ey;
 		x4 <= x3;
 		my1 <= my;
+		enable_in4 <= enable_in3;
 	end
 
    wire [31:0] y_mul;
@@ -327,5 +335,6 @@ module fsqrt
               (x4[31:0] == 32'b111111100111011101011) ? {32'b11111011111110011101101100000} : y_mul; // 何故かこれだけ2ずれちゃう 
    assign exception = ((e4 == 8'd255 && nzm) || s4 == 1'b1 || ovf) ? 1'b1 : 1'b0;
 
+	assign enable_out = enable_in4;
 endmodule                                                                         
 `default_nettype wire
