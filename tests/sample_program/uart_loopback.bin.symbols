@@ -1,0 +1,5 @@
+main 0
+write 12
+write_actual 36
+read 44
+read_actual 72
