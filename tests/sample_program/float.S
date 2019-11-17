@@ -2,7 +2,7 @@ main:
     li a0, 1084227584
     fmvwx ft1, a0               ; 5.0
 
-    li a0, 1073741824
+    li a0, 1082130432
     fmvwx ft2, a0               ; 4.0
 
     fdiv ft3, ft1, ft2          ; 1.25
