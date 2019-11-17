@@ -61,10 +61,10 @@ module uart_buffer(
 	               output wire        uart_axi_wvalid);
 
    // bypass wires related to uart tx
-   assign mmu_axi_bready = uart_axi_bready;
-   assign uart_axi_bresp = mmu_axi_bresp;
-   assign uart_axi_bvalid = mmu_axi_bvalid;
-   
+   assign uart_axi_bready = mmu_axi_bready;
+   assign mmu_axi_bresp = uart_axi_bresp;
+   assign mmu_axi_bvalid = uart_axi_bvalid;
+    
    assign uart_axi_awaddr = mmu_axi_awaddr;
    assign mmu_axi_awready = uart_axi_awready;
    assign  uart_axi_awvalid = mmu_axi_awvalid;
@@ -76,7 +76,7 @@ module uart_buffer(
    assign uart_axi_wvalid = mmu_axi_wvalid;
    
 
-   reg [3:0]                          reading_state;
+   (* mark_debug = "true" *)  reg [3:0]                          state;
    localparam r_waiting_ready = 0;   
    localparam r_writing_ready = 1;   
    localparam r_waiting_data = 2;   
@@ -88,28 +88,34 @@ module uart_buffer(
    reg [7:0]                          buffer[2048];
    (* mark_debug = "true" *) reg [10:0]   head_idx;
    (* mark_debug = "true" *) reg [10:0]   tail_idx;
-   (* mark_debug = "true" *)  wire         is_buffer_empty = (tail_idx - head_idx == 0);
+   (* mark_debug = "true" *) wire         is_buffer_empty = (tail_idx - head_idx == 0);
+   reg [3:0]                          addr_cache;   
+   
+   task init;
+      begin
+         mmu_axi_arready <= 1;
+         mmu_axi_rvalid <= 0;
+         
+         uart_axi_arvalid <= 0;
+         uart_axi_rready <= 0;
+
+         head_idx <= 0;
+         tail_idx <= 0;
+         
+         addr_cache <= 0;
+         
+         state <= r_waiting_ready;      
+      end   endtask; // init
    
    initial begin
-      mmu_axi_arready <= 1;
-      mmu_axi_rvalid <= 0;
-      
-      uart_axi_arvalid <= 0;
-      uart_axi_rready <= 0;
-
-      head_idx <= 0;
-      tail_idx <= 0;
-      
-      reading_state <= r_waiting_ready;      
-   end // initial begin
-
+      init();      
+   end
    
    // Reply to MMU
    /////////////
-   reg [3:0] addr_cache;      
    always @(posedge clk) begin
       if(rstn) begin
-         if (reading_state == r_waiting_ready) begin
+         if (state == r_waiting_ready) begin
             if (mmu_axi_arvalid) begin
                mmu_axi_arready <= 0;               
                if(mmu_axi_araddr[3:0] == 4'h0 && !is_buffer_empty) begin
@@ -117,28 +123,28 @@ module uart_buffer(
                   head_idx <= head_idx + 1;                  
                   mmu_axi_rdata <= {24'b0, buffer[head_idx]};
                   mmu_axi_rresp <= 2'b00;                  
-                  reading_state <= r_writing_data;                  
+                  state <= r_writing_data;                  
                end else begin                              
                   uart_axi_arvalid <= 1;
                   uart_axi_araddr <= mmu_axi_araddr[3:0];
                   addr_cache <= mmu_axi_araddr[3:0];
                   uart_axi_arprot <= mmu_axi_arprot;                                    
-                  reading_state <= r_writing_ready;
+                  state <= r_writing_ready;
                end               
             end else begin
                mmu_axi_arready <= 0;
                uart_axi_arvalid <= 1;
                uart_axi_araddr <= 4'b0;
                uart_axi_arprot <= 3'b0;               
-               reading_state <= r_waiting_uartlite_arready;
+               state <= r_waiting_uartlite_arready;
             end
-         end else if (reading_state == r_writing_ready) begin
+         end else if (state == r_writing_ready) begin
             if(uart_axi_arready) begin
                uart_axi_arvalid <= 0;            
                uart_axi_rready <= 1;            
-               reading_state <= r_waiting_data;
+               state <= r_waiting_data;
             end
-         end if (reading_state == r_waiting_data) begin
+         end if (state == r_waiting_data) begin
             if (uart_axi_rvalid) begin
                uart_axi_rready <= 0;
                mmu_axi_rvalid <= 1;
@@ -148,32 +154,34 @@ module uart_buffer(
                   mmu_axi_rdata <= uart_axi_rdata;
                end
                mmu_axi_rresp <= uart_axi_rresp;   
-               reading_state <= r_writing_data;            
+               state <= r_writing_data;            
             end
-         end if (reading_state == r_writing_data) begin
+         end if (state == r_writing_data) begin
             if(mmu_axi_rready) begin
                mmu_axi_rvalid <= 0;
                mmu_axi_arready <= 1;
-               reading_state <= r_waiting_ready;
+               state <= r_waiting_ready;
             end
-         end if (reading_state == r_waiting_uartlite_arready) begin
+         end if (state == r_waiting_uartlite_arready) begin
             if(uart_axi_arready) begin
                uart_axi_arvalid <= 0;            
                uart_axi_rready <= 1;            
-               reading_state <= r_waiting_uartlite_rvalid;               
+               state <= r_waiting_uartlite_rvalid;               
             end
-         end if (reading_state == r_waiting_uartlite_rvalid) begin
+         end if (state == r_waiting_uartlite_rvalid) begin
             if (uart_axi_rvalid) begin
                uart_axi_rready <= 0;
                if (uart_axi_rresp == 2'b00) begin
                   // if valid data exists
-                  buffer[tail_idx] <= uart_axi_rdata;
+                  buffer[tail_idx] <= uart_axi_rdata[7:0];
                   tail_idx <= tail_idx + 1;
                end
                mmu_axi_arready <= 1;
-               reading_state <= r_waiting_ready;            
+               state <= r_waiting_ready;            
             end
          end
+      end else begin // if (rstn)
+         init();         
       end
    end      
 endmodule
