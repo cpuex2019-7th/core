@@ -39,9 +39,8 @@ module fpu
    wire              fdiv_completed;
    fdiv _fdiv(.clk(clk), .rstn(rstn),
               .x1(fregister.rs1), .x2(fregister.rs2),
-              .enable_in(enabled),
-              .enable_out(completed),
-              .enable_out(fdiv_completed),                .
+              .enable_in(enabled  && instr.fdiv),
+              .enable_out(fdiv_completed),                
               .y(fdiv_result), .ovf(fdiv_ovf));
    
    wire [31:0]       fsqrt_result;
@@ -49,8 +48,8 @@ module fpu
    wire              fsqrt_completed;
    fsqrt _fsqrt(.clk(clk), .rstn(rstn),
                 .x(fregister.rs1),
-                .enable_in(enabled),
-                .enable_out(fsqrt_completed),                .
+                .enable_in(enabled && instr.fsqrt),
+                .enable_out(fsqrt_completed),                
                 .y(fsqrt_result), .exception(fsqrt_ovf));
    
    wire [31:0]       fsgnj_result;
@@ -70,7 +69,7 @@ module fpu
 
    wire [31:0]       fcvtws_result;
    wire              fcvtws_exception;
-   wire              fsgnws_completed = enabled;
+   wire              fcvtws_completed = enabled;
    fcvtws _fcvtws(.x(fregister.rs1), .y(fcvtws_result), .exception(fcvtws_exception));
 
    wire              feq_result;
