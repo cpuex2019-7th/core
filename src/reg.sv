@@ -1,21 +1,23 @@
 `default_nettype none
+`include "def.sv"
 
 module regf
   (input wire         clk,
    input wire        rstn,
-     
+   input wire [31:0] pc,
+   input wire        r_enabled,
+  
    input wire [4:0]  rs1,
    input wire [4:0]  rs2,
 
-   output reg [31:0] rd1,
-   output reg [31:0] rd2,
+   output            regvpair register,
 
    input wire        w_enable,
    input wire [4:0]  w_addr,
-   input wire [31:0] w_data,
-
-   output reg [31:0] regs[32]);
-
+   input wire [31:0] w_data);
+   
+   (* mark_debug = "true" *) reg [31:0]        regs[32];
+   
    // initialize
    integer           i;
    initial begin
@@ -24,21 +26,25 @@ module regf
       end
    end
 
-   // main
+   // read
    always @(posedge clk) begin
       if(rstn) begin
-         // update rd1 and rd2 
-         rd1 <= regs[rs1];
-         rd2 <= regs[rs2];         
-
-         // write w_data to w_addr
+         if (r_enabled) begin
+            // update rd1 and rd2
+            register.rs1 <= w_enable && w_addr != 0 && w_addr == rs1? w_data : regs[rs1];         
+            register.rs2 <= w_enable && w_addr != 0 && w_addr == rs2? w_data : regs[rs2];         
+         end
          if(w_enable) begin
             if(w_addr != 0) begin
                regs[w_addr] <= w_data;  
             end       
          end
+      end else begin // if (rstn)
+         register.rs1 <= 0;
+         register.rs2 <= 0;         
       end
-   end
+   end // always @ (posedge clk)
+   
 endmodule
 
 `default_nettype wire
