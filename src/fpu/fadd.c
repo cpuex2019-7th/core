@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include "default.h"
-
-int main(){
-    long long int a1,a2;
-    scanf("%lld",&a1);
-    scanf("%lld",&a2);
-    wire x1 = init(32,a1);
-    wire x2 = init(32,a2);
+ 
+void fadd(wire x1,wire x2){
+   //  long long int a1,a2;
+   //  scanf("%lld",&&a1);
+   //  scanf("%lld",&&a2);
+   //  wire x1 = init(32,a1);
+   //  wire x2 = init(32,a2);
     // 1
+    printf("x1 = ");
     print_wire(x1,"\n");
+    printf("x2 = ");
     print_wire(x2,"\n");
     wire s1 = extract(x1,31,31);
     wire e1 = extract(x1,30,23);
@@ -53,7 +55,7 @@ int main(){
     // 15
     wire eyd = (bitnot(extract(mye,26,26)).val) ? es : eq(esi,init(8,255)) ? init(8,255) : esi;
     wire myd = (bitnot(extract(mye,26,26)).val) ? mye : eq(esi,init(8,255)) ? concat(init(2,1),init(25,0)) : init(mye.len,mye.val >> 1);
-    wire stck = bitnot(extract(mye,26,26)).val ? tstck : eq(esi,init(8,255)) ? init(1,0) : init(1,tstck.val | extract(mye,0,0).val);
+    wire stck = bitnot(extract(mye,26,26)).val ? tstck : eq(esi,init(8,255)) ? init(1,0) : init(1,tstck.val || extract(mye,0,0).val);
     // 16
     wire se = (extract(myd,25,25)).val ? init(5,0) :
               (extract(myd,24,24)).val ? init(5,1) :
@@ -84,28 +86,105 @@ int main(){
     // 17
     wire eyf = sub(eyd,concat(init(3,0),se),1);
     // 18
-    wire eyr = (bitnot(extract(eyf,8,8)).val) & gt(eyf,init(9,0)) ? extract(eyf,7,0) : init(8,0);
-    wire myf = (bitnot(extract(eyf,8,8)).val) & gt(eyf,init(9,0)) ? init(myd.len,myd.val << se.val) : init(myd.len,myd.val << (extract(eyd,4,0).val - 1));
+    wire eyr = (bitnot(extract(eyf,8,8)).val) && gt(eyf,init(9,0)) ? extract(eyf,7,0) : init(8,0);
+    wire myf = (bitnot(extract(eyf,8,8)).val) && gt(eyf,init(9,0)) ? init(myd.len,myd.val << se.val) : init(myd.len,myd.val << (extract(eyd,4,0).val - 1));
     // 19
-    wire myr = ((extract(myf,1,1).val & (bitnot(extract(myf,0,0)).val) & bitnot(stck).val & extract(myf,2,2).val) | (extract(myf,1,1).val & bitnot(extract(myf,0,0)).val & eq(s1,s2) & stck.val) | (extract(myf,1,1).val & extract(myf,0,0).val)) ? add(extract(myf,26,2),init(25,1),0) : extract(myf,26,2);
+    wire myr = ((extract(myf,1,1).val && (bitnot(extract(myf,0,0)).val) && bitnot(stck).val && extract(myf,2,2).val) || (extract(myf,1,1).val && bitnot(extract(myf,0,0)).val && eq(s1,s2) && stck.val) || (extract(myf,1,1).val && extract(myf,0,0).val)) ? add(extract(myf,26,2),init(25,1),0) : extract(myf,26,2);
     // 20
     wire eyri = add(eyr,init(8,1),0);
     // 21
     wire ey = extract(myr,24,24).val ? eyri : bitor(extract(myr,23,0)) == 0 ? init(8,0) : eyr;
     wire my = extract(myr,24,24).val ? init(23,0) : bitor(extract(myr,23,0)) == 0 ? init(23,0) : extract(myr,22,0);
     // 22
-    wire sy = (bitor(ey) == 0 & bitor(my) == 0) ? init(1,s1.val & s2.val) : ss;
+    wire sy = (bitor(ey) == 0 && bitor(my) == 0) ? init(1,s1.val && s2.val) : ss;
     // 23
     wire nzm1 = init(1,bitor(m1));
     wire nzm2 = init(1,bitor(m2));
-    wire y = (bitand(e1) & bitand(e2) == 0) ? concat(concat(s1,init(8,255)),concat(nzm1,extract(m1,21,0))) :
-             (bitand(e2) & bitand(e1) == 0) ? concat(concat(s2,init(8,255)),concat(nzm2,extract(m2,21,0))) :
-             (bitand(e1) & bitand(e2) & nzm2.val) ? concat(concat(s2,init(8,255)),concat(init(1,1),extract(m2,21,0))) :
-             (bitand(e1) & bitand(e2) & nzm1.val) ? concat(concat(s1,init(8,255)),concat(init(1,1),extract(m1,21,0))) :
-             (bitand(e1) & bitand(e2) & eq(s1,s2)) ? concat(concat(s1,init(8,255)),init(23,0)) :
-             (bitand(e1) & bitand(e2)) ? concat(concat(init(1,1),init(8,255)),concat(init(1,1),init(22,0))) : concat(concat(sy,ey),my);
-    wire ovf = (lt(e1,init(8,255)) & lt(e2,init(8,255)) & ((extract(mye,26,26).val & bitand(esi)) || (extract(myr,24,24).val & bitand(eyri)))) ? init(1,1) : init(1,0);
+    wire y = (bitand(e1) && bitand(e2) == 0) ? concat(concat(s1,init(8,255)),concat(nzm1,extract(m1,21,0))) :
+             (bitand(e2) && bitand(e1) == 0) ? concat(concat(s2,init(8,255)),concat(nzm2,extract(m2,21,0))) :
+             (bitand(e1) && bitand(e2) && nzm2.val) ? concat(concat(s2,init(8,255)),concat(init(1,1),extract(m2,21,0))) :
+             (bitand(e1) && bitand(e2) && nzm1.val) ? concat(concat(s1,init(8,255)),concat(init(1,1),extract(m1,21,0))) :
+             (bitand(e1) && bitand(e2) && eq(s1,s2)) ? concat(concat(s1,init(8,255)),init(23,0)) :
+             (bitand(e1) && bitand(e2)) ? concat(concat(init(1,1),init(8,255)),concat(init(1,1),init(22,0))) : concat(concat(sy,ey),my);
+    wire ovf = (lt(e1,init(8,255)) && lt(e2,init(8,255)) && ((extract(mye,26,26).val && bitand(esi)) || (extract(myr,24,24).val && bitand(eyri)))) ? init(1,1) : init(1,0);
 
-    print_wire(y,"\n");
-    return 0;
+    print_wire(y," ");
+    print_wire(ovf,"\n");
+}
+
+int main(){
+   int i,j,s1,s2,it,jt;
+   wire m1,m2;
+   for (i=1; i<255; i++) {
+      for (j=1; j<255; j++) {
+         for (s1=0; s1<2; s1++) {
+            for (s2=0; s2<2; s2++) {
+               for (it=0; it<7; it++) {
+                  for (jt=0; jt<7; jt++) {
+                     switch(it) {
+                        case 0:
+                           m1 = init(23,0);
+                           break;
+                        case 1:
+                           m1 = init(23,1);
+                           break;
+                        case 2:
+                           m1 = init(23,2);
+                           break;
+                        case 3:
+                           m1 = concat(init(4,7),init(19,0));
+                           break;
+                        case 4:
+                           m1 = concat(init(1,1),init(22,0));
+                           break;
+                        case 5:
+                           m1 = bitnot(concat(init(2,1),init(21,0)));
+                           break;
+                        case 6:
+                           m1 = bitnot(init(23,0));
+                           break;
+                        // default:
+                        //    if(i==256){
+                        //       m1 = init(23,0);
+                        //    }else{
+                        //       m1 = init(23,rand() >> 9);
+                        //    }
+                     }
+                     switch(jt) {
+                        case 0:
+                           m2 = init(23,0);
+                           break;
+                        case 1:
+                           m2 = init(23,1);
+                           break;
+                        case 2:
+                           m2 = init(23,2);
+                           break;
+                        case 3:
+                           m2 = concat(init(4,7),init(19,0));
+                           break;
+                        case 4:
+                           m2 = concat(init(1,1),init(22,0));
+                           break;
+                        case 5:
+                           m2 = bitnot(concat(init(2,1),init(21,0)));
+                           break;
+                        case 6:
+                           m2 = bitnot(init(23,0));
+                           break;
+                        // default:
+                        //    if(i==256){
+                        //       m2 = init(23,0);
+                        //    }else{
+                        //       m2 = init(23,rand() >> 9);
+                        //    }
+                     }
+                     fadd(concat(concat(init(1,s1),init(8,i)),m1),concat(concat(init(1,s2),init(8,j)),m2));
+                  }
+               }
+            }
+         }
+      }
+   }
+   return 0;
 }
