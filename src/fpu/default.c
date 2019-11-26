@@ -42,13 +42,21 @@ wire extract(wire w, int s, int t){
     return w;
 }
 
-void print_wire(wire w){
+void print_wire(wire w,char* s){
     // printf("%3d ", w.len);
     int binary[64];
     dec2bin(w,binary);
-    for(int i=w.len-1;i>=0;i--){
-        printf("%d", binary[i]);
+    if(w.len==32){
+        for(int i=w.len-1;i>=0;i--){
+            if(i==w.len-2 || i == w.len-10) printf(" ");
+            printf("%d", binary[i]);
+        }
+    }else{
+        for(int i=w.len-1;i>=0;i--){
+            printf("%d", binary[i]);
+        }
     }
+    printf("%s",s);
 }
 
 int check_len(wire a,wire b){
@@ -127,8 +135,18 @@ int le(wire a,wire b){
     }
 }
 
-wire not(wire w){
-    w.val = ~w.val;
+wire bitnot(wire w){
+    int binary[64];
+    dec2bin(w,binary);
+    for(int i=0;i<w.len;i++){
+        binary[i] = 1 - binary[i];
+    }
+    w.val = binary[0];
+    int p = 1;
+    for(int i=1;i<w.len;i++){
+        p*=2;
+        w.val += p*binary[i];
+    }
     return w;
 }
 
