@@ -3,6 +3,10 @@
 module fadd
    (  input wire [31:0]  x1,
       input wire [31:0]  x2,
+		input wire         clk,
+		input wire         rstn,
+		input wire         enable_in,
+		output wire        enable_out,
       output wire [31:0] y,
       output wire        ovf);
    // 1
@@ -31,20 +35,48 @@ module fadd
    wire [4:0] de = (|(tde[7:5])) ? 5'd31 : tde[4:0];
    // 8
    wire sel = (de[4:0] > 5'b0) ? ce : (m1a > m2a) ? 1'b0 : 1'b1;
+	logic [24:0] m1a1;
+	logic s21;
+	logic s11;
+	logic [4:0] de1;
+	logic [22:0] m11;
+	logic [7:0] e2a1;
+	logic [22:0] m21;
+	logic [7:0] e1a1;
+	logic sel1;
+	logic [7:0] e11;
+	logic [24:0] m2a1;
+	logic [7:0] e21;
+	logic enable_in1;
+	always @(posedge clk) begin
+		m1a1 <= m1a;
+		s21 <= s2;
+		s11 <= s1;
+		de1 <= de;
+		m11 <= m1;
+		e2a1 <= e2a;
+		m21 <= m2;
+		e1a1 <= e1a;
+		sel1 <= sel;
+		e11 <= e1;
+		m2a1 <= m2a;
+		e21 <= e2;
+		enable_in1 <= enable_in;
+	end
    // 9
-   wire [24:0] ms = (sel == 1'b0) ? m1a : m2a;
-   wire [24:0] mi = (sel == 1'b0) ? m2a : m1a;
-   wire [7:0] es = (sel == 1'b0) ? e1a : e2a;
-   // wire [7:0] ei = (sel == 1'b0) ? e2a : e1a;
-   wire ss = (sel == 1'b0) ? s1 : s2;
+   wire [24:0] ms = (sel1 == 1'b0) ? m1a1 : m2a1;
+   wire [24:0] mi = (sel1 == 1'b0) ? m2a1 : m1a1;
+   wire [7:0] es = (sel1 == 1'b0) ? e1a1 : e2a1;
+   // wire [7:0] ei = (sel1 == 1'b0) ? e2a1 : e1a1;
+   wire ss = (sel1 == 1'b0) ? s11 : s21;
    // 10
    wire [55:0] mie = {mi,31'b0};
    // 11
-   wire [55:0] mia = mie >> de;
+   wire [55:0] mia = mie >> de1;
    // 12
    wire tstck = |(mia[28:0]);
    // 13
-   wire [26:0] mye = (s1 == s2) ? {ms,2'b0} + mia[55:29] : {ms,2'b0} - mia[55:29];
+   wire [26:0] mye = (s11 == s21) ? {ms,2'b0} + mia[55:29] : {ms,2'b0} - mia[55:29];
    // 14
    wire [7:0] esi = es + 8'b1;
    // 15
@@ -78,13 +110,43 @@ module fadd
                    (myd[2:2]) ? 5'd23 :
                    (myd[1:1]) ? 5'd24 :
                    (myd[0:0]) ? 5'd25 : 5'd27;
+	logic stck1;
+	logic [7:0] eyd1;
+	logic ss1;
+	logic s22;
+	logic s12;
+	logic [26:0] mye1;
+	logic [22:0] m12;
+	logic [7:0] esi1;
+	logic [22:0] m22;
+	logic [7:0] e12;
+	logic [26:0] myd1;
+	logic [4:0] se1;
+	logic [7:0] e22;
+	logic enable_in2;
+	always @(posedge clk) begin
+		stck1 <= stck;
+		eyd1 <= eyd;
+		ss1 <= ss;
+		s22 <= s21;
+		s12 <= s11;
+		mye1 <= mye;
+		m12 <= m11;
+		esi1 <= esi;
+		m22 <= m21;
+		e12 <= e11;
+		myd1 <= myd;
+		se1 <= se;
+		e22 <= e21;
+		enable_in2 <= enable_in1;
+	end
    // 17
-   wire [8:0] eyf = {1'b0,eyd} - {4'b0,se};
+   wire [8:0] eyf = {1'b0,eyd1} - {4'b0,se1};
    // 18
    wire [7:0] eyr = (eyf[8:8] == 1'b0 && eyf > 1'b0) ? eyf[7:0] : 8'b0;
-   wire [26:0] myf = (eyf[8:8] == 1'b0 && eyf > 1'b0) ? myd << se : myd << (eyd[4:0] - 5'b1);
+   wire [26:0] myf = (eyf[8:8] == 1'b0 && eyf > 1'b0) ? myd1 << se1 : myd1 << (eyd1[4:0] - 5'b1);
    // 19
-   wire [24:0] myr = ((myf[1:1] == 1'b1 && myf[0:0] == 1'b0 && stck == 1'b0 && myf[2:2] == 1'b1) || (myf[1:1] == 1'b1 && myf[0:0] == 1'b0 && s1 == s2 && stck == 1'b1) || (myf[1:1] == 1'b1 && myf[0:0] == 1'b1)) ? myf[26:2] + 25'b1 : myf[26:2];
+   wire [24:0] myr = ((myf[1:1] == 1'b1 && myf[0:0] == 1'b0 && stck1 == 1'b0 && myf[2:2] == 1'b1) || (myf[1:1] == 1'b1 && myf[0:0] == 1'b0 && s12 == s22 && stck1 == 1'b1) || (myf[1:1] == 1'b1 && myf[0:0] == 1'b1)) ? myf[26:2] + 25'b1 : myf[26:2];
    // 20
    wire [7:0] eyri = eyr + 8'b1;
    // 21
@@ -92,17 +154,18 @@ module fadd
    wire [22:0] my = (myr[24:24] == 1'b1) ? 23'b0 : (|myr[23:0] == 1'b0) ? 23'b0 : myr[22:0];
    // wire [22:0] my = (myr[24:24] == 1'b1 | (|myr == 1'b0)) ? 23'b0 : myr[22:0];
    // 22
-   wire sy = (ey == 8'b0 && my == 23'b0) ? s1 & s2 : ss;
+   wire sy = (ey == 8'b0 && my == 23'b0) ? s12 & s22 : ss1;
    // 23
-   wire nzm1 = |m1;
-   wire nzm2 = |m2;
-   assign y = (e1 == 8'd255 && e2 != 8'd255) ? {s1,8'd255,nzm1,m1[21:0]} :
-              (e2 == 8'd255 && e1 != 8'd255) ? {s2,8'd255,nzm2,m2[21:0]} :
-              (e1 == 8'd255 && e2 == 8'd255 && nzm2) ? {s2,8'd255,1'b1,m2[21:0]} :
-              (e1 == 8'd255 && e2 == 8'd255 && nzm1) ? {s1,8'd255,1'b1,m1[21:0]} :
-              (e1 == 8'd255 && e2 == 8'd255 && s1 == s2) ? {s1,8'd255,23'b0} :
-              (e1 == 8'd255 && e2 == 8'd255) ? {1'b1,8'd255,1'b1,22'b0} : {sy,ey,my};
-   assign ovf = (e1 < 8'd255 && e2 < 8'd255 && ((mye[26:26] == 1'b1 && esi == 8'd255) || (myr[24:24] == 1'b1 && eyri == 8'd255))) ? 1'b1 : 1'b0;
+   wire nzm1 = |m12;
+   wire nzm2 = |m22;
+   assign y = (e12 == 8'd255 && e22 != 8'd255) ? {s12,8'd255,nzm1,m12[21:0]} :
+              (e22 == 8'd255 && e12 != 8'd255) ? {s22,8'd255,nzm2,m22[21:0]} :
+              (e12 == 8'd255 && e22 == 8'd255 && nzm2) ? {s22,8'd255,1'b1,m22[21:0]} :
+              (e12 == 8'd255 && e22 == 8'd255 && nzm1) ? {s12,8'd255,1'b1,m12[21:0]} :
+              (e12 == 8'd255 && e22 == 8'd255 && s12 == s22) ? {s12,8'd255,23'b0} :
+              (e12 == 8'd255 && e22 == 8'd255) ? {1'b1,8'd255,1'b1,22'b0} : {sy,ey,my};
+   assign ovf = (e12 < 8'd255 && e22 < 8'd255 && ((mye1[26:26] == 1'b1 && esi1 == 8'd255) || (myr[24:24] == 1'b1 && eyri == 8'd255))) ? 1'b1 : 1'b0;
 
+	assign enable_out = enable_in2;
 endmodule                                                                         
 `default_nettype wire
