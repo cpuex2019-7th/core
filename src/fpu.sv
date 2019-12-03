@@ -21,13 +21,21 @@ module fpu
    
    wire [31:0]       fadd_result;
    wire              fadd_ovf;
-   wire              fadd_completed = enabled;
-   fadd _fadd(.x1(fregister.rs1), .x2(fregister.rs2), .y(fadd_result), .ovf(fadd_ovf));   
+   wire              fadd_completed;
+   fadd _fadd(.clk(clk), .rstn(rstn),
+              .x1(fregister.rs1), .x2(fregister.rs2),
+              .enable_in(enabled  && instr.fadd),
+              .enable_out(fadd_completed),                
+              .y(fadd_result), .ovf(fadd_ovf));
    
    wire [31:0]       fsub_result;
    wire              fsub_ovf;
-   wire              fsub_completed = enabled;
-   fsub _fsub(.x1(fregister.rs1), .x2(fregister.rs2), .y(fsub_result), .ovf(fsub_ovf));
+   wire              fsub_completed;
+   fsub _fsub(.clk(clk), .rstn(rstn),
+              .x1(fregister.rs1), .x2(fregister.rs2),
+              .enable_in(enabled  && instr.fsub),
+              .enable_out(fsub_completed),                
+              .y(fsub_result), .ovf(fsub_ovf));
    
    wire [31:0]       fmul_result;
    wire              fmul_ovf;
