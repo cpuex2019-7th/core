@@ -16,13 +16,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="259800000001fs"></ZoomEndTime>
-      <Cursor1Time time="33536380000000fs"></Cursor1Time>
+      <ZoomStartTime time="2431666666fs"></ZoomStartTime>
+      <ZoomEndTime time="3113666667fs"></ZoomEndTime>
+      <Cursor1Time time="3000000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="206"></NameColumnWidth>
-      <ValueColumnWidth column_width="91"></ValueColumnWidth>
+      <ValueColumnWidth column_width="87"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="62" />
    <wave_markers>
@@ -159,7 +159,7 @@
    <wvobject fp_name="/onboard_design_wrapper/onboard_design_i/cpu/inst/_core/result_em_out" type="array">
       <obj_property name="ElementShortName">result_em_out[31:0]</obj_property>
       <obj_property name="ObjectShortName">result_em_out[31:0]</obj_property>
-      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
       <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
       <obj_property name="radix_fractionWidth">24</obj_property>
       <obj_property name="radix_otherWidth">8</obj_property>
