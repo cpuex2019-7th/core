@@ -3,6 +3,7 @@
 module mmu_wrapper #
   (parameter MEM_WIDTH = 21)(
 	                         input wire                  clk,
+	                         input wire                  clk_core,
 	                         input wire                  rstn,
 
 	                         // Bus for RAM
@@ -92,7 +93,7 @@ module mmu_wrapper #
 	                         output wire [3:0]           uart_axi_wstrb,
 	                         output wire                 uart_axi_wvalid);        
 
-   mmu #(.MEM_WIDTH(MEM_WIDTH)) _mmu(.clk(clk), .rstn(rstn),
+   mmu #(.MEM_WIDTH(MEM_WIDTH)) _mmu(.clk(clk), .clk_core(clk_core), .rstn(rstn),
                                      
                                      // mem
                                      .mem_axi_araddr(mem_axi_araddr), 

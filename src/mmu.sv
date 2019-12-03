@@ -2,6 +2,7 @@
 
 module mmu # (parameter MEM_WIDTH = 21)(
 	                                    input wire                 clk,
+	                                    input wire                 clk_core,
 	                                    input wire                 rstn,
 
 	                                    // Bus for RAM
@@ -143,7 +144,7 @@ module mmu # (parameter MEM_WIDTH = 21)(
       reading_state <= r_waiting_ready;      
    end
    
-   always @(posedge clk) begin
+   always @(posedge clk_core) begin
       if(rstn) begin
          if (reading_state == r_waiting_ready) begin
             if (core_axi_arvalid) begin
@@ -166,7 +167,13 @@ module mmu # (parameter MEM_WIDTH = 21)(
                
                reading_state <= r_writing_ready;
             end
-         end else if (reading_state == r_writing_ready) begin
+         end   
+       end     
+   end
+   
+   always @(posedge clk) begin
+       if(rstn) begin
+         if (reading_state == r_writing_ready) begin
             if (read_selector) begin
                if(uart_axi_arready) begin
                   uart_axi_arvalid <= 0;            
@@ -206,14 +213,12 @@ module mmu # (parameter MEM_WIDTH = 21)(
                reading_state <= r_waiting_ready;
             end
          end
-      end
+      end   
    end
-   
-   
    // Write
    /////////////
    
-   always @(posedge clk) begin
+   always @(posedge clk_core) begin
       if(rstn) begin
          if (writing_state == w_waiting_valid) begin       
             if(core_axi_awvalid) begin
@@ -252,7 +257,13 @@ module mmu # (parameter MEM_WIDTH = 21)(
                
                writing_state <= w_waiting_ready;            
             end
-         end if (writing_state == w_waiting_ready) begin
+         end
+      end      
+   end
+   
+   always @(posedge clk) begin
+      if(rstn) begin
+         if (writing_state == w_waiting_ready) begin
             if (write_selector) begin               
                if (uart_axi_awready) begin
                   uart_axi_awvalid <= 0;
@@ -305,8 +316,9 @@ module mmu # (parameter MEM_WIDTH = 21)(
                
                writing_state <= w_waiting_valid;
             end
-         end
-      end        
+         end 
+      end
    end
 endmodule
+
 `default_nettype wire

@@ -2,6 +2,7 @@
 
 module core_wrapper
   (input wire clk, 
+   input wire clk_real,
    input wire         rstn,
      
    // Bus for instr ROM
@@ -38,7 +39,7 @@ module core_wrapper
    output wire [3:0]  axi_wstrb,
    output wire        axi_wvalid);
    
-   core _core(.clk(clk), 
+   core _core(.clk(clk_real), 
               .rstn(rstn),
 
               .rom_addr(rom_addr),
