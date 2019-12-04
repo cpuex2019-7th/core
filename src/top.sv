@@ -63,7 +63,9 @@ module core
    
    // stage outputs
    wire [31:0]        pc_fd_out;
+   wire [31:0]        next_pc_fd_out;
    wire [31:0]        instr_fd_out;
+   wire [31:0]        is_jump_predicted_fd_out;   
    
    fetch _fetch(.clk(clk),
                 .rstn(rstn && !fetch_reset),
@@ -76,7 +78,9 @@ module core
 
                 .completed(is_fetch_done),
                 .pc_n(pc_fd_out),
-                .instr_raw(instr_fd_out));      
+                .instr_raw(instr_fd_out),
+                .is_jump_predicted(is_jump_predicted_fd_out),
+                .next_pc(next_pc_fd_out));      
 
    // decode & reg
    /////////
@@ -91,6 +95,7 @@ module core
    // stage input
    reg [31:0]         pc_fd_in;
    reg [31:0]         instr_fd_in;
+   reg [31:0]         is_jump_predicted_fd_in;   
    
    // stage outputs
    instructions instr_de_out;   
@@ -104,7 +109,8 @@ module core
                     .enabled(decode_enabled),
       
                     .pc(pc_fd_in),      
-                    .instr_raw(instr_fd_in),                    
+                    .instr_raw(instr_fd_in),
+                    .is_jump_predicted(is_jump_predicted_fd_in),
       
                     .completed(is_decode_done),
                     .instr(instr_de_out),
@@ -316,7 +322,8 @@ module core
    task set_fd;      
       begin
          pc_fd_in <= pc_fd_out;
-         instr_fd_in <= instr_fd_out;         
+         instr_fd_in <= instr_fd_out;
+         is_jump_predicted_fd_in <= is_jump_predicted_fd_out;         
       end
    endtask
 
@@ -386,7 +393,7 @@ module core
             if (stalling_for_mem_forwarding) begin               
                stalling_for_mem_forwarding <= 0;
 
-               pc <= pc + 4;               
+               pc <= next_pc_fd_out;               
                
                fetch_enabled <= 1;
                fetch_reset <= 0;
@@ -412,9 +419,9 @@ module core
                exec_enabled <= 0;               
                exec_reset <= 1; // this result won't be used in the future anymore.
                // no set_de(); because decode stage should be done once more before set_de
-            end else if (is_jump_chosen_em_out && is_exec_available) begin
-               // TODO: change here to handle only if it fails to predict jump destination
-               pc <= jump_dest_em_out;
+            end else if ((instr_em_out.is_jump_predicted ^ is_jump_chosen_em_out) && is_exec_available) begin
+               // when branch prediction fails ...
+               pc <= is_jump_chosen_em_out? jump_dest_em_out : instr_em_out.pc + 4;
                
                fetch_enabled <= 1;
                fetch_reset <= 0;
@@ -428,7 +435,7 @@ module core
                // no set_de(); because there's no need to move
             end else begin
                // TODO: set pc what branch predictor says
-               pc <= pc + 4;               
+               pc <= next_pc_fd_out;               
                
                fetch_enabled <= 1;
                fetch_reset <= 0;

@@ -116,9 +116,11 @@ typedef struct {
    reg         uses_freg_as_rv32f;
    reg         uses_reg_as_rv32f;
    reg         uses_reg; // uses_reg_as_rv32f + rv32im instrs
-      
+   
    reg         is_store;   
    reg         is_load;   
    reg         is_conditional_jump;
+
+   reg         is_jump_predicted;
 } instructions;
 `endif

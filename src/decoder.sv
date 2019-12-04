@@ -8,8 +8,9 @@ module decoder
    input wire        enabled,
   
    input wire [31:0] instr_raw,
+   input wire        is_jump_predicted,
 
-   output wire        completed,
+   output wire       completed,
    output            instructions instr,
    output wire [4:0] rs1,
    output wire [4:0] rs2);
@@ -138,9 +139,9 @@ module decoder
                                             || _feq
                                             || _fle
                                             || _fmvxw);
-                                            
+   
    wire              _uses_reg_as_rv32f = (_fsw || _flw ||  _fcvtsw || _fmvwx);
-      
+   
    wire              _rv32f = (_fsw
                                || _flw
                                || _fadd 
@@ -177,7 +178,7 @@ module decoder
                                              || _bgeu);
    
 
-      reg _completed;
+   reg               _completed;
    assign completed = _completed & !enabled;
    
    always @(posedge clk) begin
@@ -292,7 +293,9 @@ module decoder
             
             instr.is_store <= _is_store;                        
             instr.is_load <= _is_load;               
-            instr.is_conditional_jump <=  _is_conditional_jump;            
+            instr.is_conditional_jump <=  _is_conditional_jump;
+
+            instr.is_jump_predicted <= is_jump_predicted;
             
             instr.rd <= (r_type || i_type || u_type || j_type) ? _rd : 5'b00000;
             instr.rs1 <= (r_type || i_type || s_type || b_type) ? _rs1 : 5'b00000;

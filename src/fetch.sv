@@ -3,22 +3,31 @@
 
 module fetch
   (input wire         clk,
-   input wire        rstn,
-   input wire        enabled,
-   input wire [31:0] pc,
+   input wire         rstn,
+   input wire         enabled,
+   input wire [31:0]  pc,
 
    output wire [31:0] rom_addr,
-   input wire [31:0] rom_data,
+   input wire [31:0]  rom_data,
   
    output wire        completed,
-   output reg [31:0] pc_n,
-   output reg [31:0] instr_raw);
+   output reg [31:0]  pc_n,
+   output reg [31:0]  instr_raw,
+   output reg         is_jump_predicted,
+   output reg [31:0]  next_pc);
 
    reg               state;
    reg _completed;
    assign completed = _completed & !enabled;
    
-   assign rom_addr = pc;     
+   assign rom_addr = pc;
+
+   wire _is_jump_predicted;   
+   wire [31:0] _next_pc;   
+   predictor _predictor(.instr_raw(rom_data),
+                        .current_pc(pc),
+                        .is_jump_predicted(_is_jump_predicted),
+                        .next_pc(_next_pc))
 
    // initialize
    initial begin
@@ -38,7 +47,9 @@ module fetch
             state <= 0;
             
             _completed <= 1;
-            instr_raw <= rom_data;            
+            instr_raw <= rom_data;
+            is_jump_predicted <= _is_jump_predicted;
+            next_pc <= _next_pc;            
          end
       end else begin
          state <= 0;
