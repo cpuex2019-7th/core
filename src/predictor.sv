@@ -6,6 +6,7 @@ module predictor(
                  output [31:0] next_pc);
    
    wire [6:0]                  opcode = instr_raw[6:0];
+   wire [2:0]                  funct3 = instr_raw[14:12];   
    wire                        b_type = (opcode == 7'b1100011); 
    wire                        j_type = (opcode == 7'b1101111); 
    

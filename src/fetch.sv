@@ -27,7 +27,7 @@ module fetch
    predictor _predictor(.instr_raw(rom_data),
                         .current_pc(pc),
                         .is_jump_predicted(_is_jump_predicted),
-                        .next_pc(_next_pc))
+                        .next_pc(_next_pc));
 
    // initialize
    initial begin
