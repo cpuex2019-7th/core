@@ -116,7 +116,7 @@ module mem(
                   uart_axi_arprot <= 3'b000;                  
                end else begin
                   // MEM (lw or flw)
-                  state <= PROCESSING_MEM;
+                  state <= PROCESSING_MEM1;
                   ram_ena <= 1'b1;
                   ram_addr <= addr[19-1+2:2];            
                end
@@ -134,7 +134,7 @@ module mem(
                   uart_axi_wstrb <= 4'b0001;
                end else begin
                   // MEM (sw or fsw)
-                  state <= PROCESSING_MEM;                  
+                  state <= PROCESSING_MEM2;                  
                   ram_addr <= addr[19-1+2:2];                  
                   ram_wea <= 4'b1111;
                   ram_ena <= 1'b1;                  
@@ -182,7 +182,7 @@ module mem(
                end
             end
          end else if (state == PROCESSING_MEM1) begin
-            state <= PROCESSING_MEM1;
+            state <= PROCESSING_MEM2;
          end else if (state == PROCESSING_MEM2) begin
             state <= WAITING_REQ;
             _completed <= 1'b1;
