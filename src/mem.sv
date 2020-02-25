@@ -116,7 +116,7 @@ module mem(
                   // MEM (lw or flw)
                   state <= PROCESSING_MEM;
                   ram_ena <= 1'b1;
-                  ram_addr <= addr[19-1+4:4];            
+                  ram_addr <= addr[19-1+2:2];            
                end
             end else if (instr.is_store) begin
                _completed <= 0;
@@ -133,7 +133,7 @@ module mem(
                end else begin
                   // MEM (sw or fsw)
                   state <= PROCESSING_MEM;                  
-                  ram_addr <= addr[19-1+4:4];                  
+                  ram_addr <= addr[19-1+2:2];                  
                   ram_wea <= 4'b1111;
                   ram_ena <= 1'b1;                  
                   ram_dina <= instr.sw? register.rs2:
