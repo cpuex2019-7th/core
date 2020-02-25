@@ -3,59 +3,59 @@
 
 module core
   (input wire clk, 
-   input wire         rstn,
+   input wire           rstn,
 
    // Bus for instr ROM
-   output wire [31:0] rom_addr,
-   input wire [31:0]  rom_data,
+   output wire [31:0]   rom_addr,
+   input wire [31:0]    rom_data,
   
    // Bus for RAM
    ////////////
    output wire [19-1:0] ram_addr,
-   output wire                 ram_clka,
-   output wire [31:0]          ram_dina,
-   input wire [31:0]           ram_douta,
-   output wire                 ram_ena,
-   output wire                 ram_rsta,
-   output wire [3:0]           ram_wea,
+   output wire          ram_clka,
+   output wire [31:0]   ram_dina,
+   input wire [31:0]    ram_douta,
+   output wire          ram_ena,
+   output wire          ram_rsta,
+   output wire [3:0]    ram_wea,
   
    // Bus for UART buffer
    // address read channel
-   output wire [31:0]          uart_axi_araddr,
-   input wire                  uart_axi_arready,
-   output wire                 uart_axi_arvalid,
-   output wire [2:0]           uart_axi_arprot, 
+   output wire [31:0]   uart_axi_araddr,
+   input wire           uart_axi_arready,
+   output wire          uart_axi_arvalid,
+   output wire [2:0]    uart_axi_arprot, 
 
    // response channel
-   output wire                 uart_axi_bready,
-   input wire [1:0]            uart_axi_bresp,
-   input wire                  uart_axi_bvalid,
+   output wire          uart_axi_bready,
+   input wire [1:0]     uart_axi_bresp,
+   input wire           uart_axi_bvalid,
 
    // read data channel
-   input wire [31:0]           uart_axi_rdata,
-   output wire                 uart_axi_rready,
-   input wire [1:0]            uart_axi_rresp,
-   input wire                  uart_axi_rvalid,
+   input wire [31:0]    uart_axi_rdata,
+   output wire          uart_axi_rready,
+   input wire [1:0]     uart_axi_rresp,
+   input wire           uart_axi_rvalid,
 
    // address write channel
-   output wire [31:0]          uart_axi_awaddr,
-   input wire                  uart_axi_awready,
-   output wire                 uart_axi_awvalid,
-   output wire [2:0]           uart_axi_awprot, 
+   output wire [31:0]   uart_axi_awaddr,
+   input wire           uart_axi_awready,
+   output wire          uart_axi_awvalid,
+   output wire [2:0]    uart_axi_awprot, 
 
    // data write channel
-   output wire [31:0]          uart_axi_wdata,
-   input wire                  uart_axi_wready,
-   output wire [3:0]           uart_axi_wstrb,
-   output wire                 uart_axi_wvalid);
+   output wire [31:0]   uart_axi_wdata,
+   input wire           uart_axi_wready,
+   output wire [3:0]    uart_axi_wstrb,
+   output wire          uart_axi_wvalid);
    
    
    /////////////////////
   // internals
    /////////////////////
    // TODO: use interface (including csr)
-   reg [31:0]         pc;
-   reg                stalling_for_mem_forwarding;
+   reg [31:0]           pc;
+   reg                  stalling_for_mem_forwarding;
    
    /////////////////////
    // stages
@@ -64,16 +64,16 @@ module core
    // fetch
    /////////
    // controls
-   (* mark_debug = "true" *) reg                fetch_enabled;
-   (* mark_debug = "true" *) reg                fetch_reset;   
-   (* mark_debug = "true" *) wire               is_fetch_done;
+   reg                  fetch_enabled;
+   reg                  fetch_reset;   
+   wire                 is_fetch_done;
 
    // pipeline regs
    // None
    
    // stage outputs
-   wire [31:0]        pc_fd_out;
-   wire [31:0]        instr_fd_out;
+   wire [31:0]          pc_fd_out;
+   wire [31:0]          instr_fd_out;
    
    fetch _fetch(.clk(clk),
                 .rstn(rstn && !fetch_reset),
@@ -91,24 +91,24 @@ module core
    // decode & reg
    /////////
    // control flags
-   (* mark_debug = "true" *) reg                decode_enabled;
-   (* mark_debug = "true" *) reg                decode_reset;   
-   (* mark_debug = "true" *) wire               is_decode_done;
+   reg                  decode_enabled;
+   reg                  decode_reset;   
+   wire                 is_decode_done;
    
    // pipeline regs
    // None
    
    // stage input
-   reg [31:0]         pc_fd_in;
-   reg [31:0]         instr_fd_in;
+   reg [31:0]           pc_fd_in;
+   reg [31:0]           instr_fd_in;
    
    // stage outputs
    instructions instr_de_out;   
    regvpair register_de_out;
    regvpair fregister_de_out;
    
-   wire [4:0]         rs1_a;
-   wire [4:0]         rs2_a;
+   wire [4:0]           rs1_a;
+   wire [4:0]           rs2_a;
    decoder _decoder(.clk(clk), 
                     .rstn(rstn && !decode_reset),                    
                     .enabled(decode_enabled),
@@ -121,10 +121,10 @@ module core
                     .rs1(rs1_a), .rs2(rs2_a));
 
    // registers
-   wire [4:0]         reg_w_dest;
-   wire [31:0]        reg_w_data;
+   wire [4:0]           reg_w_dest;
+   wire [31:0]          reg_w_data;
    
-   wire               reg_w_enable;   
+   wire                 reg_w_enable;   
    regf _registers(.clk(clk), 
                    .rstn(rstn),
                    .r_enabled(decode_enabled),
@@ -138,7 +138,7 @@ module core
       
                    .register(register_de_out));   
    
-   wire               freg_w_enable;   
+   wire                 freg_w_enable;   
    regf _fregisters(.clk(clk), 
                     .rstn(rstn),
                     .r_enabled(decode_enabled),
@@ -155,23 +155,23 @@ module core
    // exec
    /////////
    // control flags
-   (* mark_debug = "true" *) reg                exec_enabled;
-   (* mark_debug = "true" *) reg                exec_reset;   
-   (* mark_debug = "true" *) wire               is_exec_done;
-   wire               is_exec_available = is_exec_done && !exec_reset;   
+   reg                  exec_enabled;
+   reg                  exec_reset;   
+   wire                 is_exec_done;
+   wire                 is_exec_available = is_exec_done && !exec_reset;   
    
    // stage input
-   (* mark_debug = "true" *) instructions instr_de_in;   
-   (* mark_debug = "true" *) regvpair register_de_in;
-   (* mark_debug = "true" *) regvpair fregister_de_in;
+   instructions instr_de_in;   
+   regvpair register_de_in;
+   regvpair fregister_de_in;
    
    // stage outputs
    instructions instr_em_out;   
    regvpair register_em_out;
    regvpair fregister_em_out;
-   (* mark_debug = "true" *) wire [31:0]        result_em_out;
-   (* mark_debug = "true" *) wire               is_jump_chosen_em_out;
-   (* mark_debug = "true" *) wire [31:0]        jump_dest_em_out;   
+   wire [31:0]          result_em_out;
+   wire                 is_jump_chosen_em_out;
+   wire [31:0]          jump_dest_em_out;   
 
    execute _execute(.clk(clk), 
                     .rstn(rstn && !exec_reset),
@@ -193,20 +193,20 @@ module core
    // mem
    /////////
    // control flags
-   (* mark_debug = "true" *) reg                mem_enabled;
-   (* mark_debug = "true" *) reg                mem_reset;   
-   (* mark_debug = "true" *) wire               is_mem_done;
-   wire               is_mem_available = is_mem_done && !mem_reset;   
+   reg                  mem_enabled;
+   reg                  mem_reset;   
+   wire                 is_mem_done;
+   wire                 is_mem_available = is_mem_done && !mem_reset;   
 
    // stage inputs
    instructions instr_em_in;   
    regvpair register_em_in;
    regvpair fregister_em_in;
-   reg [31:0]         result_em_in;
+   reg [31:0]           result_em_in;
    
    // stage outputs
    instructions instr_mw_out;   
-   wire [31:0]        result_mw_out;
+   wire [31:0]          result_mw_out;
    
    mem _mem(.clk(clk), 
             .rstn(rstn && !mem_reset),
@@ -257,13 +257,13 @@ module core
    // write
    /////////
    // control flags
-   (* mark_debug = "true" *) reg                write_enabled;
-   (* mark_debug = "true" *) reg                write_reset;   
-   (* mark_debug = "true" *) wire               is_write_done;   
+   reg                  write_enabled;
+   reg                  write_reset;   
+   wire                 is_write_done;   
 
    // stage input
    instructions instr_mw_in;   
-   reg [31:0]         result_mw_in;
+   reg [31:0]           result_mw_in;
 
    // there is no stage output
    
@@ -285,35 +285,35 @@ module core
 
    // forwarding flags
    /////////
-   wire               are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset || is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
+   wire                 are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset || is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
 
-   wire               reg_onestep_forwarding_required = (instr_de_out.uses_reg 
-                                                         && instr_em_out.writes_to_reg
-                                                         && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_em_out.rd)
-                                                             || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_em_out.rd))) ;   
-   wire               freg_onestep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
-                                                          && instr_em_out.writes_to_freg_as_rv32f
-                                                          && (instr_de_out.rs1 == instr_em_out.rd 
-                                                              || instr_de_out.rs2 == instr_em_out.rd));
+   wire                 reg_onestep_forwarding_required = (instr_de_out.uses_reg 
+                                                           && instr_em_out.writes_to_reg
+                                                           && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_em_out.rd)
+                                                               || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_em_out.rd))) ;   
+   wire                 freg_onestep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
+                                                            && instr_em_out.writes_to_freg_as_rv32f
+                                                            && (instr_de_out.rs1 == instr_em_out.rd 
+                                                                || instr_de_out.rs2 == instr_em_out.rd));
    
-   wire               reg_twostep_forwarding_required = (instr_de_out.uses_reg 
-                                                         && instr_mw_out.writes_to_reg
-                                                         && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_mw_out.rd)
-                                                             || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_mw_out.rd))) ;   
-   wire               freg_twostep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
-                                                          && instr_mw_out.writes_to_freg_as_rv32f
-                                                          && (instr_de_out.rs1 == instr_mw_out.rd 
-                                                              || instr_de_out.rs2 == instr_mw_out.rd));
+   wire                 reg_twostep_forwarding_required = (instr_de_out.uses_reg 
+                                                           && instr_mw_out.writes_to_reg
+                                                           && ((instr_de_out.rs1 != 0 && instr_de_out.rs1 == instr_mw_out.rd)
+                                                               || (instr_de_out.rs2 != 0 && instr_de_out.rs2 == instr_mw_out.rd))) ;   
+   wire                 freg_twostep_forwarding_required = (instr_de_out.uses_freg_as_rv32f 
+                                                            && instr_mw_out.writes_to_freg_as_rv32f
+                                                            && (instr_de_out.rs1 == instr_mw_out.rd 
+                                                                || instr_de_out.rs2 == instr_mw_out.rd));
    
-   wire               onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
+   wire                 onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
 
-   (* mark_debug = "true" *) reg [128:0]        total_executed_instrs;
+   reg [128:0]          total_executed_instrs;
    
    // branch prediction   
    /////////
    // TODO   
-   wire               branch_prediction_succeeded = (instr_em_out.jalr
-                                                     || instr_em_out.jal);   
+   wire                 branch_prediction_succeeded = (instr_em_out.jalr
+                                                       || instr_em_out.jal);   
    
    /////////////////////
    // tasks

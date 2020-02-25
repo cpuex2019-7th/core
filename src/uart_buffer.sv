@@ -76,7 +76,7 @@ module uart_buffer(
    assign uart_axi_wvalid = mmu_axi_wvalid;
    
 
-   (* mark_debug = "true" *)  reg [3:0]                          state;
+   reg [3:0]                          state;
    localparam r_waiting_ready = 0;   
    localparam r_writing_ready = 1;   
    localparam r_waiting_data = 2;   
@@ -86,9 +86,9 @@ module uart_buffer(
    
    
    reg [7:0]                          buffer[2048];
-   (* mark_debug = "true" *) reg [10:0]   head_idx;
-   (* mark_debug = "true" *) reg [10:0]   tail_idx;
-   (* mark_debug = "true" *) wire         is_buffer_empty = (tail_idx - head_idx == 0);
+   reg [10:0]   head_idx;
+   reg [10:0]   tail_idx;
+   wire         is_buffer_empty = (tail_idx - head_idx == 0);
    reg [3:0]                          addr_cache;   
    
    task init;
