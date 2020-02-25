@@ -57,12 +57,14 @@ module mem(
    assign completed = _completed & !enabled;
    
    assign ram_clka = clk;
+   
    assign ram_rsta = ~rstn;
 
    enum reg [4:0]                                            {
                                                               WAITING_REQ,
                                                               PROCESSING_UART,
-                                                              PROCESSING_MEM
+                                                              PROCESSING_MEM1,
+                                                              PROCESSING_MEM2
                                                               } state;
    
    task init_ram;
@@ -137,8 +139,8 @@ module mem(
                   ram_wea <= 4'b1111;
                   ram_ena <= 1'b1;                  
                   ram_dina <= instr.sw? register.rs2:
-                        instr.fsw? fregister.rs1:
-                        32'b0;                  
+                              instr.fsw? fregister.rs2:
+                              32'b0;                  
                end
             end else begin
                _completed <= 1;               
@@ -179,7 +181,9 @@ module mem(
                   init_uart_axi();       
                end
             end
-         end else if (state == PROCESSING_MEM) begin             
+         end else if (state == PROCESSING_MEM1) begin
+            state <= PROCESSING_MEM1;
+         end else if (state == PROCESSING_MEM2) begin
             state <= WAITING_REQ;
             _completed <= 1'b1;
         

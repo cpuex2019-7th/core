@@ -480,7 +480,7 @@ module core
             mem_enabled <= 0;
             write_enabled <= 0;
          end
-      end else begin // if (rstn)
+      end else begin
          init();
       end
    end
