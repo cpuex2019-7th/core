@@ -283,6 +283,8 @@ module core
                 .completed(is_write_done));
    
 
+   // forwarding flags
+   /////////
    wire               are_all_stages_completed = (fetch_reset || is_fetch_done) && (decode_reset || is_decode_done) && (exec_reset || is_exec_done) && (mem_reset || is_mem_done) && (write_reset || is_write_done);
 
    wire               reg_onestep_forwarding_required = (instr_de_out.uses_reg 
@@ -306,6 +308,12 @@ module core
    wire               onestep_forwarding_required = reg_onestep_forwarding_required || freg_onestep_forwarding_required;
 
    (* mark_debug = "true" *) reg [128:0]        total_executed_instrs;
+   
+   // branch prediction   
+   /////////
+   // TODO   
+   wire               branch_prediction_succeeded = (instr_em_out.jalr
+                                                     || instr_em_out.jal);   
    
    /////////////////////
    // tasks
@@ -403,7 +411,7 @@ module core
 
             if (stalling_for_mem_forwarding) begin               
                stalling_for_mem_forwarding <= 0;
-
+               
                pc <= pc + 4;               
                
                fetch_enabled <= 1;
@@ -430,7 +438,9 @@ module core
                exec_enabled <= 0;               
                exec_reset <= 1; // this result won't be used in the future anymore.
                // no set_de(); because decode stage should be done once more before set_de
-            end else if (is_jump_chosen_em_out && is_exec_available) begin
+            end else if (is_jump_chosen_em_out 
+                         && is_exec_available
+                         && !branch_prediction_succeeded) begin
                // TODO: change here to handle only if it fails to predict jump destination
                pc <= jump_dest_em_out;
                
@@ -445,8 +455,15 @@ module core
                exec_reset <= 1;
                // no set_de(); because there's no need to move
             end else begin
-               // TODO: set pc what branch predictor says
-               pc <= pc + 4;               
+               // branch prediction
+               if (instr_de_out.jal) begin
+                  pc <= pc + $signed(instr_de_out.imm);
+                  
+               end else if (instr_de_out.jalr) begin
+                  pc <= register_de_out.rs1 + $signed(instr_de_out.imm);                  
+               end else begin
+                  pc <= pc + 4;
+               end
                
                fetch_enabled <= 1;
                fetch_reset <= 0;
@@ -454,7 +471,7 @@ module core
                decode_enabled <= is_fetch_done;
                decode_reset <= !is_fetch_done;
                set_fd();              
-               
+               `
                exec_enabled <= is_decode_done;
                exec_reset <= !is_decode_done;
                set_de();
