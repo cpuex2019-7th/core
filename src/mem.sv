@@ -63,7 +63,7 @@ module mem(
                                                               WAITING_REQ,
                                                               PROCESSING_UART,
                                                               PROCESSING_MEM
-                                                              } mem_state;
+                                                              } state;
    
    task init_ram;
       begin
@@ -80,7 +80,10 @@ module mem(
          uart_axi_rready <= 0;
          
          uart_axi_awvalid <= 0;
+         uart_axi_awaddr <= 32'b0;
          uart_axi_wvalid <= 0;
+         uart_axi_wdata <= 32'b0;
+         uart_axi_wstrb <= 4'b0;
          uart_axi_bready <= 0;         
          
          uart_axi_arprot <= 3'b000;         
@@ -92,6 +95,8 @@ module mem(
       begin
          init_ram();
          init_uart_axi();         
+         state <= WAITING_REQ;
+         _completed <= 0;
       end
    endtask
    
@@ -99,10 +104,10 @@ module mem(
       if(rstn) begin
          if (state == WAITING_REQ && enabled) begin
             instr_n <= instr;
-            result <= addr;            
-            _completed <= 0;            
+            result <= addr;                        
             
             if (instr.is_load) begin
+               _completed <= 0;
                if (addr[31:24] == 8'h7F) begin
                   // UART (lbu)
                   state <= PROCESSING_UART;                  
@@ -113,15 +118,15 @@ module mem(
                   // MEM (lw or flw)
                   state <= PROCESSING_MEM;
                   ram_ena <= 1'b1;
-                  ram_addr <= addr[19-1+4:4];
-                  is_mem_write <= 1'b0;                  
+                  ram_addr <= addr[19-1+4:4];            
                end
             end else if (instr.is_store) begin
+               _completed <= 0;
                if (addr[31:24] == 8'h7F) begin
                   // UART (sb)
                   state <= PROCESSING_UART;
                   uart_axi_awvalid <= 1;
-                  uart_axi_awaddr <= addr;
+                  uart_axi_awaddr <= addr[3:0];
                   
                   uart_axi_wvalid <= 1;                  
                   uart_axi_wdata <= {24'b0, register.rs2[7:0]};
@@ -140,7 +145,7 @@ module mem(
             end else begin
                _completed <= 1;               
             end
-         end else if (mem_state == PROCESSING_UART) begin
+         end else if (state == PROCESSING_UART) begin
             if (instr_n.is_store) begin // sb
                if (uart_axi_awvalid && uart_axi_awready) begin
                   uart_axi_awvalid <= 1'b0;              
@@ -157,29 +162,36 @@ module mem(
 
                   // we have to go back to normal state.
                   state <= WAITING_REQ;
+                  _completed <= 1'b1;
                   init_uart_axi();                  
                end
             end else begin // lbu
+               if (uart_axi_arvalid && uart_axi_arready) begin
+                  uart_axi_arvalid <= 1'b0;
+                  uart_axi_rready <= 1'b1;
+               end 
+               
                if (uart_axi_rvalid && uart_axi_rready) begin
                   uart_axi_rready <= 1'b0;
 
                   // we have to go back to normal state.
-                  state <= WAITING_REQ;                  
-                  result <= uart_axi_rdata;
+                  state <= WAITING_REQ;    
+                  _completed <= 1'b1;              
+                  result <= {24'b0, uart_axi_rdata[7:0]};
                   init_uart_axi();       
                end
             end
-         end else if (mem_state == PROCESSING_MEM) begin             
+         end else if (state == PROCESSING_MEM) begin             
             state <= WAITING_REQ;
             _completed <= 1'b1;
         
             init_ram();            
-            if (instr_n.is_load) begin
+            if (instr_n.is_load) begin // lw or flw
                result <= ram_douta;       
             end
          end
       end else begin 
-         _completed <= 0;         
+         init();         
       end // else: !if(enabled)
    end
 endmodule
