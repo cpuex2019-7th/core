@@ -11,7 +11,7 @@ module mem(
 
 	       // Bus for RAM
            ////////////
-           output reg [MEM_WIDTH-1:0] ram_addr,
+           output reg [19-1:0] ram_addr,
            output wire                ram_clka,
            output reg [31:0]          ram_dina,
            input wire [31:0]          ram_douta,
@@ -113,7 +113,7 @@ module mem(
                   // MEM (lw or flw)
                   state <= PROCESSING_MEM;
                   ram_ena <= 1'b1;
-                  ram_addr <= addr[MEM_WIDTH-1+4:4];
+                  ram_addr <= addr[19-1+4:4];
                   is_mem_write <= 1'b0;                  
                end
             end else if (instr.is_store) begin
@@ -130,7 +130,7 @@ module mem(
                end else begin
                   // MEM (sw or fsw)
                   state <= PROCESSING_MEM;                  
-                  ram_addr <= addr[MEM_WIDTH-1+4:4];                  
+                  ram_addr <= addr[19-1+4:4];                  
                   ram_wea <= 4'b1111;
                   ram_ena <= 1'b1;                  
                   ram_dina <= instr.sw? register.rs2:
