@@ -15,7 +15,6 @@ module core_wrapper
    output wire [31:0]          ram_dina,
    input wire [31:0]           ram_douta,
    output wire                 ram_ena,
-   output wire                 ram_rsta,
    output wire [3:0]           ram_wea,
   
    // Bus for UART buffer
@@ -60,7 +59,6 @@ module core_wrapper
               .ram_dina(ram_dina),
               .ram_douta(ram_douta),
               .ram_ena(ram_ena),
-              .ram_rsta(ram_rsta),
               .ram_wea(ram_wea),
       
               .uart_axi_araddr(uart_axi_araddr), 
