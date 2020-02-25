@@ -91,14 +91,12 @@ module mem(
       end
    endtask
    
-   task init;
-      begin
-         init_ram();
-         init_uart_axi();         
-         state <= WAITING_REQ;
-         _completed <= 0;
-      end
-   endtask
+   initial begin
+      init_ram();
+      init_uart_axi();         
+      state <= WAITING_REQ;
+      _completed <= 0;
+   end
    
    always @(posedge clk) begin
       if(rstn) begin
@@ -191,7 +189,7 @@ module mem(
             end
          end
       end else begin 
-         init();         
+         _completed <= 0;
       end // else: !if(enabled)
    end
 endmodule
