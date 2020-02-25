@@ -19,7 +19,7 @@ module fetch
    assign completed = _completed & !enabled;
    
    assign rom_addr = pc;     
-   assign insr_raw = rom_data;
+   assign instr_raw = rom_data;
    
    // initialize
    initial begin
