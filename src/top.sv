@@ -94,6 +94,7 @@ module core
    reg                  decode_enabled;
    reg                  decode_reset;   
    wire                 is_decode_done;
+   wire                 is_decode_available = is_decode_done && !decode_reset;   
    
    // pipeline regs
    // None
@@ -311,7 +312,7 @@ module core
    
    // branch prediction   
    /////////
-   // TODO   
+   // TODO: this is conservative!
    wire                 branch_prediction_succeeded = (instr_em_out.jalr
                                                        || instr_em_out.jal);   
    
@@ -438,6 +439,21 @@ module core
                exec_enabled <= 0;               
                exec_reset <= 1; // this result won't be used in the future anymore.
                // no set_de(); because decode stage should be done once more before set_de
+            end else if (is_decode_available &&
+                         (instr_de_out.jal | instr_de_out.jalr)) begin
+               pc <= instr_de_out.jal ? instr_de_out.pc + $signed(instr_de_out.imm):
+                     register_de_out.rs1 + $signed(instr_de_out.imm);
+
+               fetch_enabled <= 1;
+               fetch_reset <= 0;
+               
+               decode_enabled <= 0;               
+               decode_reset <= 1;               
+               // no set_fd(); fetch result will not used.
+               
+               exec_enabled <= 1;               
+               exec_reset <= 0;               
+               set_de();
             end else if (is_jump_chosen_em_out 
                          && is_exec_available
                          && !branch_prediction_succeeded) begin
@@ -455,15 +471,7 @@ module core
                exec_reset <= 1;
                // no set_de(); because there's no need to move
             end else begin
-               // branch prediction
-               if (instr_de_out.jal) begin
-                  pc <= pc + $signed(instr_de_out.imm);
-                  
-               end else if (instr_de_out.jalr) begin
-                  pc <= register_de_out.rs1 + $signed(instr_de_out.imm);                  
-               end else begin
-                  pc <= pc + 4;
-               end
+               pc <= pc + 4;
                
                fetch_enabled <= 1;
                fetch_reset <= 0;
