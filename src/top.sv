@@ -9,35 +9,45 @@ module core
    output wire [31:0] rom_addr,
    input wire [31:0]  rom_data,
   
-   // Bus for MMU
+   // Bus for RAM
+   ////////////
+   output wire [MEM_WIDTH-1:0] ram_addr,
+   output wire                 ram_clka,
+   output wire [31:0]          ram_dina,
+   input wire [31:0]           ram_douta,
+   output wire                 ram_ena,
+   output wire                 ram_rsta,
+   output wire [3:0]           ram_wea,
+  
+   // Bus for UART buffer
    // address read channel
-   output reg [31:0]  axi_araddr,
-   input wire         axi_arready,
-   output reg         axi_arvalid,
-   output reg [2:0]   axi_arprot, 
+   output wire [31:0]          uart_axi_araddr,
+   input wire                  uart_axi_arready,
+   output wire                 uart_axi_arvalid,
+   output wire [2:0]           uart_axi_arprot, 
 
    // response channel
-   output reg         axi_bready,
-   input wire [1:0]   axi_bresp,
-   input wire         axi_bvalid,
+   output wire                 uart_axi_bready,
+   input wire [1:0]            uart_axi_bresp,
+   input wire                  uart_axi_bvalid,
 
    // read data channel
-   input wire [31:0]  axi_rdata,
-   output reg         axi_rready,
-   input wire [1:0]   axi_rresp,
-   input wire         axi_rvalid,
+   input wire [31:0]           uart_axi_rdata,
+   output wire                 uart_axi_rready,
+   input wire [1:0]            uart_axi_rresp,
+   input wire                  uart_axi_rvalid,
 
    // address write channel
-   output reg [31:0]  axi_awaddr,
-   input wire         axi_awready,
-   output reg         axi_awvalid,
-   output reg [2:0]   axi_awprot, 
+   output wire [31:0]          uart_axi_awaddr,
+   input wire                  uart_axi_awready,
+   output wire                 uart_axi_awvalid,
+   output wire [2:0]           uart_axi_awprot, 
 
    // data write channel
-   output reg [31:0]  axi_wdata,
-   input wire         axi_wready,
-   output reg [3:0]   axi_wstrb,
-   output reg         axi_wvalid);
+   output wire [31:0]          uart_axi_wdata,
+   input wire                  uart_axi_wready,
+   output wire [3:0]           uart_axi_wstrb,
+   output wire                 uart_axi_wvalid);
    
    
    /////////////////////
@@ -207,29 +217,37 @@ module core
             .fregister(fregister_em_in),
             .addr(result_em_in),
 
-            .axi_araddr(axi_araddr), 
-            .axi_arready(axi_arready), 
-            .axi_arvalid(axi_arvalid), 
-            .axi_arprot(axi_arprot),
+            .ram_addr(ram_addr),
+            .ram_clka(ram_clka),
+            .ram_dina(ram_dina),
+            .ram_douta(ram_douta),
+            .ram_ena(ram_ena),
+            .ram_rsta(ram_rsta),
+            .ram_wea(ram_wea),
       
-            .axi_bready(axi_bready), 
-            .axi_bresp(axi_bresp), 
-            .axi_bvalid(axi_bvalid),
+            .uart_axi_araddr(uart_axi_araddr), 
+            .uart_axi_arready(uart_axi_arready), 
+            .uart_axi_arvalid(uart_axi_arvalid),
+            .uart_axi_arprot(uart_axi_arprot),
       
-            .axi_rdata(axi_rdata), 
-            .axi_rready(axi_rready),
-            .axi_rresp(axi_rresp), 
-            .axi_rvalid(axi_rvalid),
+            .uart_axi_bready(uart_axi_bready),
+            .uart_axi_bresp(uart_axi_bresp), 
+            .uart_axi_bvalid(uart_axi_bvalid),
       
-            .axi_awaddr(axi_awaddr), 
-            .axi_awready(axi_awready), 
-            .axi_awvalid(axi_awvalid), 
-            .axi_awprot(axi_awprot), 
+            .uart_axi_rdata(uart_axi_rdata), 
+            .uart_axi_rready(uart_axi_rready), 
+            .uart_axi_rresp(uart_axi_rresp),
+            .uart_axi_rvalid(uart_axi_rvalid), 
 
-            .axi_wdata(axi_wdata), 
-            .axi_wready(axi_wready), 
-            .axi_wstrb(axi_wstrb), 
-            .axi_wvalid(axi_wvalid),
+            .uart_axi_awaddr(uart_axi_awaddr), 
+            .uart_axi_awready(uart_axi_awready), 
+            .uart_axi_awvalid(uart_axi_awvalid),
+            .uart_axi_awprot(uart_axi_awprot),
+      
+            .uart_axi_wdata(uart_axi_wdata), 
+            .uart_axi_wready(uart_axi_wready), 
+            .uart_axi_wstrb(uart_axi_wstrb),
+            .uart_axi_wvalid(uart_axi_wvalid),
 
             .completed(is_mem_done),
       

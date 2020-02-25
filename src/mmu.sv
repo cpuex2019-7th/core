@@ -6,34 +6,13 @@ module mmu # (parameter MEM_WIDTH = 21)(
 
 	                                    // Bus for RAM
                                         ////////////
-                                        // address read channel
-	                                    output reg [MEM_WIDTH-1:0] mem_axi_araddr,
-	                                    input wire                 mem_axi_arready,
-	                                    output reg                 mem_axi_arvalid,
-	                                    output reg [2:0]           mem_axi_arprot, 
-
-                                        // response channel
-	                                    output reg                 mem_axi_bready,
-	                                    input wire [1:0]           mem_axi_bresp,
-	                                    input wire                 mem_axi_bvalid,
-
-                                        // read data channel
-	                                    input wire [31:0]          mem_axi_rdata,
-	                                    output reg                 mem_axi_rready,
-	                                    input wire [1:0]           mem_axi_rresp,
-	                                    input wire                 mem_axi_rvalid,
-
-                                        // address write channel
-	                                    output reg [MEM_WIDTH-1:0] mem_axi_awaddr,
-	                                    input wire                 mem_axi_awready,
-	                                    output reg                 mem_axi_awvalid,
-	                                    output reg [2:0]           mem_axi_awprot,
-
-                                        // data write channel
-	                                    output reg [31:0]          mem_axi_wdata,
-	                                    input wire                 mem_axi_wready,
-	                                    output reg [3:0]           mem_axi_wstrb,
-	                                    output reg                 mem_axi_wvalid,
+                                        output reg [MEM_WIDTH-1:0] ram_addr,
+                                        output wire                ram_clka,
+                                        output reg [31:0]          ram_dina,
+                                        input wire [31:0]          ram_douta,
+                                        output reg                 ram_ena,
+                                        output wire                ram_rsta,
+                                        output reg [3:0]           ram_wea,
 
 	                                    // Bus for Core
                                         ////////////
@@ -93,220 +72,140 @@ module mmu # (parameter MEM_WIDTH = 21)(
 
                                         // for debug
                                          reg [2:0]           reading_state;
-                                         reg [2:0]           writing_state;             
+                                         reg [2:0]           writing_state;
 
-   // 1 for UART, 0 for mem
-   reg                                                             read_selector;
-   localparam r_waiting_ready = 0;   
-   localparam r_writing_ready = 1;   
-   localparam r_waiting_data = 2;   
-   localparam r_writing_data = 3;
-   
-   // 1 for UART, 0 for mem
-   reg                                                             write_selector;
-   
-   localparam w_waiting_valid = 0;   
-   localparam w_waiting_ready = 1;     
-   localparam w_waiting_bresp = 2;   
-   localparam w_writing_bresp = 3;  
-   
-   // Read
-   /////////////
-   
-   initial begin
-      mem_axi_arvalid <= 0;
-      mem_axi_rready <= 0;
-      mem_axi_bready <= 0;
-      mem_axi_awvalid <= 0;
-      mem_axi_wvalid <= 0;            
-      mem_axi_arprot <= 3'b000;         
-      mem_axi_awprot <= 3'b000;
-      
-      core_axi_arready <= 1;
-      core_axi_bvalid <= 0;
-      core_axi_rvalid <= 0;
-      core_axi_awready <= 1;
-      core_axi_wready <= 1;   
-      
-      uart_axi_arvalid <= 0;
-      uart_axi_rready <= 0;
-      uart_axi_bready <= 0;
-      uart_axi_awvalid <= 0;
-      uart_axi_wvalid <= 0;
-      uart_axi_arprot <= 3'b000;         
-      uart_axi_awprot <= 3'b000;
-      
-      read_selector <= 1;
-      write_selector <= 1;
+   assign ram_clka = clk;
+   assign ram_rsta = ~rstn;
 
-      writing_state <= w_waiting_valid;      
-      reading_state <= r_waiting_ready;      
-   end
+   enum reg [4:0]                                            {
+                                                              WAITING_REQ,
+                                                              PROCESSING_UART,
+                                                              PROCESSING_MEM
+                                                              } state;
+   
+   reg [31:0]                                                req_waddr;
+   reg [31:0]                                                req_wdata;   
+   reg [31:0]                                                req_wstrb;   
+
+   task init_ram;
+      begin
+         ram_addr <= 32'b0;
+         ram_dina <= 32'b0;
+         ram_ena <= 1'b0;
+         ram_wea <= 4'b0;               
+      end
+   endtask // init_ram
+
+   task init_core_axi;
+      begin
+         core_axi_arready <= 1;
+         core_axi_bvalid <= 0;
+         core_axi_rvalid <= 0;
+         core_axi_awready <= 1;
+         core_axi_wready <= 1;   
+      end
+   endtask // init_core_axi
+
+   task init_uart_axi;
+      begin
+         uart_axi_arvalid <= 0;
+         uart_axi_rready <= 0;
+         uart_axi_bready <= 0;
+         uart_axi_awvalid <= 0;
+         uart_axi_wvalid <= 0;
+         uart_axi_arprot <= 3'b000;         
+         uart_axi_awprot <= 3'b000;      
+      end
+   endtask
+   
+   task init;
+      begin
+         init_ram();
+         init_core_axi();
+         init_uart_axi();         
+      end
+   endtask
    
    always @(posedge clk) begin
       if(rstn) begin
-         if (reading_state == r_waiting_ready) begin
-            if (core_axi_arvalid) begin
+         if (state == WAITING_REQ) begin
+            if (core_axi_arvalid && core_axi_arready) begin
                core_axi_arready <= 0;
                
                if (core_axi_araddr[31:24] == 8'h7F) begin
                   // UART
+                  state <= PROCESSING_UART;                  
                   uart_axi_arvalid <= 1;
-                  // should be 4'h0 or 4'h8h
                   uart_axi_araddr <= core_axi_araddr[3:0];
-                  uart_axi_arprot <= core_axi_arprot;                                    
-                  read_selector <= 1;               
+                  uart_axi_arprot <= core_axi_arprot;
                end else begin
-                  // Mem
-                  mem_axi_arvalid <= 1;
-                  mem_axi_araddr <= core_axi_araddr[MEM_WIDTH-1:0];               
-                  mem_axi_arprot <= core_axi_arprot;                                    
-                  read_selector <= 0;
-               end
-               
-               reading_state <= r_writing_ready;
+                  // MEM
+                  state <= PROCESSING_MEM;
+                  ram_ena <= 1'b1;
+                  ram_addr <= core_axi_araddr[MEM_WIDTH-1:0];                  
+               end               
+            end 
+
+            if (core_axi_awvalid && core_axi_awready) begin
+               core_axi_awready <= 1'b0;               
+               req_waddr <= core_axi_waddr;               
+            end            
+
+            if (core_axi_wvalid && core_axi_wready) begin
+               core_axi_wready <= 1'b0;
+               req_wdata <= core_axi_wdata;               
+               req_wstrb <= core_axi_wstrb;               
             end
-         end else if (reading_state == r_writing_ready) begin
-            if (read_selector) begin
-               if(uart_axi_arready) begin
-                  uart_axi_arvalid <= 0;            
-                  uart_axi_rready <= 1;            
-                  reading_state <= r_waiting_data;
-               end
-            end else begin         
-               if(mem_axi_arready) begin
-                  mem_axi_arvalid <= 0;            
-                  mem_axi_rready <= 1;            
-                  reading_state <= r_waiting_data;
-               end
-            end
-         end if (reading_state == r_waiting_data) begin
-            if (read_selector) begin
-               if (uart_axi_rvalid) begin
-                  uart_axi_rready <= 0;
-                  core_axi_rvalid <= 1;
-                  core_axi_rdata <= uart_axi_rdata;
-                  core_axi_rresp <= uart_axi_rresp;   
-                  reading_state <= r_writing_data;            
-               end
-            end else begin
-               if (mem_axi_rvalid) begin
-                  mem_axi_rready <= 0;
-                  core_axi_rvalid <= 1;
-                  core_axi_rdata <= mem_axi_rdata;
-                  core_axi_rresp <= mem_axi_rresp;
-                  reading_state <= r_writing_data;            
-               end
-            end
-         end if (reading_state == r_writing_data) begin
-            if(core_axi_rready) begin
-               core_axi_rvalid <= 0;
-               // for next loop
-               core_axi_arready <= 1;
-               reading_state <= r_waiting_ready;
-            end
-         end
-      end
-   end
-   
-   
-   // Write
-   /////////////
-   
-   always @(posedge clk) begin
-      if(rstn) begin
-         if (writing_state == w_waiting_valid) begin       
-            if(core_axi_awvalid) begin
-               core_axi_awready <= 0;
-               if (core_axi_awaddr[31:24] == 8'h7F) begin               
-                  // UART
-                  write_selector <= 1;
-                  // should be 4'h4 or 4'hCh
-                  uart_axi_awaddr <= core_axi_awaddr[3:0];
-                  uart_axi_awprot <= core_axi_awprot;                  
-               end else begin       
-                  // Mem        
-                  write_selector <= 0;
-                  mem_axi_awaddr <= core_axi_awaddr[MEM_WIDTH-1:0];               
-                  mem_axi_awprot <= core_axi_awprot;                  
-               end
-            end
-            
-            if(core_axi_wvalid) begin
-               core_axi_wready <= 0;
-               mem_axi_wdata <= core_axi_wdata;
-               mem_axi_wstrb <= core_axi_wstrb;
-               uart_axi_wdata <= core_axi_wdata;
-               uart_axi_wstrb <= core_axi_wstrb;          
-            end
-            
-            // here write_selector should be already set!
+
             if (!core_axi_awready && !core_axi_wready) begin
-               if (write_selector) begin               
+               if (req_waddr[31:24] == 8'h7F) begin
+                  // UART
+                  state <= PROCESSING_UART;
                   uart_axi_awvalid <= 1;
-                  uart_axi_wvalid <= 1;
+                  uart_axi_awaddr <= req_waddr;                  
+                  uart_axi_wvalid <= 1;                  
+                  uart_axi_wdata <= req_wdata;
+                  uart_axi_wstrb <= req_wstrb;
                end else begin
-                  mem_axi_awvalid <= 1;
-                  mem_axi_wvalid <= 1;
-               end
-               
-               writing_state <= w_waiting_ready;            
-            end
-         end if (writing_state == w_waiting_ready) begin
-            if (write_selector) begin               
-               if (uart_axi_awready) begin
-                  uart_axi_awvalid <= 0;
-               end
-               if (uart_axi_wready) begin
-                  uart_axi_wvalid <= 0;
-               end
-               
-               if (!uart_axi_awvalid && !uart_axi_wvalid) begin
-                  uart_axi_bready <= 1;            
-                  writing_state <= w_waiting_bresp;            
-               end
-            end else begin
-               if (mem_axi_awready) begin
-                  mem_axi_awvalid <= 0;
-               end
-               if (mem_axi_wready) begin
-                  mem_axi_wvalid <= 0;
-               end
-               
-               if (!mem_axi_awvalid && !mem_axi_wvalid) begin
-                  mem_axi_bready <= 1;            
-                  writing_state <= w_waiting_bresp;            
+                  // MEM
+                  state <= WAITING_MEM;
+                  ram_addr <= req_waddr[MEM_WIDTH-1:0];                  
+                  ram_dina <= req_wdata;
+                  ram_wea <= req_wstrb;
+                  ram_ena <= 1'b1;                  
                end
             end
-         end if (writing_state == w_waiting_bresp) begin
-            if (write_selector) begin            
-               if (uart_axi_bvalid) begin
-                  uart_axi_bready <= 0;
-                  
-                  core_axi_bresp <= uart_axi_bresp;
-                  core_axi_bvalid <= 1;
-                  writing_state <= w_writing_bresp;            
-               end
-            end else begin
-               if (mem_axi_bvalid) begin
-                  mem_axi_bready <= 0;
-                  
-                  core_axi_bresp <= mem_axi_bresp;
-                  core_axi_bvalid <= 1;
-                  writing_state <= w_writing_bresp;            
-               end
+         end else if (state == PROCESSING_UART) begin
+            if (uart_axi_awvalid && uart_axi_awready) begin
+               uart_axi_awvalid <= 1'b0;              
             end
-         end if (writing_state == w_writing_bresp) begin
-            if(core_axi_bready) begin
-               core_axi_bvalid <= 0;
-               
-               core_axi_awready <= 1;
-               core_axi_wready <= 1;
-               
-               writing_state <= w_waiting_valid;
+            if (uart_axi_wvalid && uart_axi_wready) begin
+               uart_axi_wvalid <= 1'b0;              
             end
+            if (!uart_axi_awvalid && !uart_axi_wvalid) begin
+               uart_axi_bready <= 1'b1;               
+            end
+            if (uart_axi_bready && uart_axi_bvalid) begin
+               uart_axi_bready <= 1'b0;
+               
+               core_axi_bvalid <= 1'b1;
+               core_axi_bresp <= uart_axi_bresp;
+            end
+            if (core_axi_bvalid && core_axi_bready) begin
+               core_axi_bvalid <= 1'b0;
+
+               // back to normal state
+               state <= WAITING_REQ;
+               init_core_axi();               
+            end
+         end else if (state == WAITING_MEM) begin 
+            // bram do all operation in 1 clock
+            state <= PROCESSING_MEM;            
+            init_ram();            
          end
-      end        
-   end
+      end else begin
+         init();         
+      end      
+   end    
 endmodule
 `default_nettype wire

@@ -1,197 +1,181 @@
 module mem(
-           input wire        clk,
-           input wire        rstn,
+           input wire                 clk,
+           input wire                 rstn,
 
-           input wire        enabled,
-           input             instructions instr,
-           input             regvpair register,
-           input             regvpair fregister,
+           input wire                 enabled,
+           input                      instructions instr,
+           input                      regvpair register,
+           input                      regvpair fregister,
 
-           input wire [31:0] addr,
+           input wire [31:0]          addr,
 
-           // Bus for MMU
+	       // Bus for RAM
+           ////////////
+           output reg [MEM_WIDTH-1:0] ram_addr,
+           output wire                ram_clka,
+           output reg [31:0]          ram_dina,
+           input wire [31:0]          ram_douta,
+           output reg                 ram_ena,
+           output wire                ram_rsta,
+           output reg [3:0]           ram_wea,
+           
+           // Bus for UART buffer
            // address read channel
-           output reg [31:0] axi_araddr,
-           input wire        axi_arready,
-           output reg        axi_arvalid,
-           output reg [2:0]  axi_arprot, 
+           output reg [31:0]          uart_axi_araddr,
+           input wire                 uart_axi_arready,
+           output reg                 uart_axi_arvalid,
+           output reg [2:0]           uart_axi_arprot, 
 
            // response channel
-           output reg        axi_bready,
-           input wire [1:0]  axi_bresp,
-           input wire        axi_bvalid,
+           output reg                 uart_axi_bready,
+           input wire [1:0]           uart_axi_bresp,
+           input wire                 uart_axi_bvalid,
 
            // read data channel
-           input wire [31:0] axi_rdata,
-           output reg        axi_rready,
-           input wire [1:0]  axi_rresp,
-           input wire        axi_rvalid,
+           input wire [31:0]          uart_axi_rdata,
+           output reg                 uart_axi_rready,
+           input wire [1:0]           uart_axi_rresp,
+           input wire                 uart_axi_rvalid,
 
            // address write channel
-           output reg [31:0] axi_awaddr,
-           input wire        axi_awready,
-           output reg        axi_awvalid,
-           output reg [2:0]  axi_awprot, 
+           output reg [31:0]          uart_axi_awaddr,
+           input wire                 uart_axi_awready,
+           output reg                 uart_axi_awvalid,
+           output reg [2:0]           uart_axi_awprot, 
 
            // data write channel
-           output reg [31:0] axi_wdata,
-           input wire        axi_wready,
-           output reg [3:0]  axi_wstrb,
-           output reg        axi_wvalid,
+           output reg [31:0]          uart_axi_wdata,
+           input wire                 uart_axi_wready,
+           output reg [3:0]           uart_axi_wstrb,
+           output reg                 uart_axi_wvalid,
 
-           output wire        completed,
-           output            instructions instr_n,
-           output reg [31:0] result);
+           output wire                completed,
+           output                     instructions instr_n,
+           output reg [31:0]          result);
    
-   reg                       _completed;
-   
+   reg                       _completed;   
    assign completed = _completed & !enabled;
    
-   reg [3:0]                 mem_state;
-   localparam mem_r_waiting_ready = 1;
-   localparam mem_r_waiting_data = 2;
+   assign ram_clka = clk;
+   assign ram_rsta = ~rstn;
 
+   enum reg [4:0]                                            {
+                                                              WAITING_REQ,
+                                                              PROCESSING_UART,
+                                                              PROCESSING_MEM
+                                                              } mem_state;
    
-   localparam mem_w_waiting_ready = 3;
-   localparam mem_w_waiting_data = 4;   
+   task init_ram;
+      begin
+         ram_addr <= 32'b0;
+         ram_dina <= 32'b0;
+         ram_ena <= 1'b0;
+         ram_wea <= 4'b0;               
+      end
+   endtask
 
-   initial begin
-      axi_wvalid <= 0;
-      axi_awvalid <= 0;
-      
-      axi_arvalid <= 0;
-      
-      axi_bready <= 0;
-      axi_rready <= 0;      
-   end
+   task init_uart_axi;
+      begin
+         uart_axi_arvalid <= 0;         
+         uart_axi_rready <= 0;
+         
+         uart_axi_awvalid <= 0;
+         uart_axi_wvalid <= 0;
+         uart_axi_bready <= 0;         
+         
+         uart_axi_arprot <= 3'b000;         
+         uart_axi_awprot <= 3'b000;      
+      end
+   endtask
+   
+   task init;
+      begin
+         init_ram();
+         init_uart_axi();         
+      end
+   endtask
    
    always @(posedge clk) begin
       if(rstn) begin
-         if (enabled) begin
+         if (state == WAITING_REQ && enabled) begin
             instr_n <= instr;
             result <= addr;            
+            _completed <= 0;            
             
             if (instr.is_load) begin
-               _completed <= 0;            
-               axi_araddr <= {addr[31:2], 2'b0};
-               axi_arprot <= 3'b000;                  
-               axi_arvalid <= 1;
-               mem_state <= mem_r_waiting_ready;               
-            end else if (instr.is_store) begin
-               _completed <= 0;            
-               axi_awaddr <= {addr[31:2], 2'b0}; // rs1 + imm
-               axi_awprot <= 3'b000;                  
-               axi_awvalid <= 1;
-               
-               if(instr.sb) begin 
-                  case(addr[1:0])
-                    2'b11 : begin 
-                       axi_wstrb <= 4'b1000;
-                       axi_wdata <= {register.rs2[7:0], 24'b0};
-                    end
-                    2'b10 : begin
-                       axi_wstrb <= 4'b0100;
-                       axi_wdata <= {8'b0, register.rs2[7:0], 16'b0};
-                    end
-                    2'b01 : begin
-                       axi_wstrb <= 4'b0010;
-                       axi_wdata <= {16'b0, register.rs2[7:0], 8'b0};
-                    end
-                    2'b00 : begin
-                       axi_wstrb <= 4'b0001;
-                       axi_wdata <= {24'b0, register.rs2[7:0]};
-                    end
-                    default : begin    
-                       // TODO                         
-                    end
-                  endcase	
-               end else if (instr.sh) begin
-                  case(addr[1:0])
-                    2'b10 : begin
-                       axi_wstrb <= 4'b1100;
-                       axi_wdata <= {register.rs2[15:0], 16'b0};
-                    end
-                    2'b00 : begin
-                       axi_wstrb <= 4'b0011;
-                       axi_wdata <= {16'b0, register.rs2[15:0]};
-                    end
-                    default : begin
-                       // TODO                          
-                    end
-                  endcase
-               end  else if (instr.sw) begin
-                  axi_wstrb <= 4'b1111;
-                  axi_wdata <= register.rs2;                  
-               end else if (instr.fsw) begin
-                  axi_wstrb <= 4'b1111;
-                  axi_wdata <= fregister.rs2;  
+               if (addr[31:24] == 8'h7F) begin
+                  // UART (lbu)
+                  state <= PROCESSING_UART;                  
+                  uart_axi_arvalid <= 1;
+                  uart_axi_araddr <= addr[3:0];
+                  uart_axi_arprot <= 3'b000;                  
                end else begin
-                  // TODO    
+                  // MEM (lw or flw)
+                  state <= PROCESSING_MEM;
+                  ram_ena <= 1'b1;
+                  ram_addr <= addr[MEM_WIDTH-1+4:4];
+                  is_mem_write <= 1'b0;                  
                end
-               axi_wvalid <= 1;
-               mem_state <= mem_w_waiting_ready;
+            end else if (instr.is_store) begin
+               if (addr[31:24] == 8'h7F) begin
+                  // UART (sb)
+                  state <= PROCESSING_UART;
+                  uart_axi_awvalid <= 1;
+                  uart_axi_awaddr <= addr;
+                  
+                  uart_axi_wvalid <= 1;                  
+                  uart_axi_wdata <= {24'b0, register.rs2[7:0]};
+                  
+                  uart_axi_wstrb <= 4'b0001;
+               end else begin
+                  // MEM (sw or fsw)
+                  state <= PROCESSING_MEM;                  
+                  ram_addr <= addr[MEM_WIDTH-1+4:4];                  
+                  ram_wea <= 4'b1111;
+                  ram_ena <= 1'b1;                  
+                  ram_dina <= instr.sw? register.rs2:
+                        instr.fsw? fregister.rs1:
+                        32'b0;                  
+               end
             end else begin
                _completed <= 1;               
             end
-         end else if (mem_state == mem_r_waiting_ready) begin
-            if (axi_arready) begin
-               axi_arvalid <= 0;
-               axi_rready <= 1;                  
-               mem_state <= mem_r_waiting_data;                  
-            end
-         end else if (mem_state == mem_r_waiting_data) begin
-            if (axi_rvalid) begin
-               axi_rready <= 0;
-               if (instr_n.lb) begin
-                  case(addr[1:0])
-                    2'b11: result <= {{24{axi_rdata[31]}}, axi_rdata[31:24]};
-                    2'b10: result <= {{24{axi_rdata[23]}}, axi_rdata[23:16]};
-                    2'b01: result <= {{24{axi_rdata[15]}}, axi_rdata[15:8]};
-                    2'b00: result <= {{24{axi_rdata[7]}}, axi_rdata[7:0]};
-                    default: result <= 32'b0;                       
-                  endcase
-               end else if (instr_n.lh) begin
-                  case(addr[1:0])
-                    2'b10 : result <= {{16{axi_rdata[31]}}, axi_rdata[31:16]};
-                    2'b00 : result <= {{16{axi_rdata[15]}}, axi_rdata[15:0]};
-                    default: result <=  32'b0;                       
-                  endcase
-               end else if (instr_n.lw) begin
-                  result <= axi_rdata;       
-               end else if (instr_n.flw) begin
-                  result <= axi_rdata;                                           
-               end else if (instr_n.lbu) begin                     
-                  case(addr[1:0])
-                    2'b11: result = {24'b0, axi_rdata[31:24]};
-                    2'b10: result <= {24'b0, axi_rdata[23:16]};
-                    2'b01: result <= {24'b0, axi_rdata[15:8]};
-                    2'b00: result <= {24'b0, axi_rdata[7:0]};
-                    default: result <= 32'b0;                       
-                  endcase
-               end else if (instr_n.lhu) begin
-                  case(addr[1:0])
-                    2'b10 : result <= {16'b0, axi_rdata[31:16]};
-                    2'b00 : result <= {16'b0, axi_rdata[15:0]};
-                    default: result <= 32'b0;                       
-                  endcase
+         end else if (mem_state == PROCESSING_UART) begin
+            if (instr_n.is_store) begin // sb
+               if (uart_axi_awvalid && uart_axi_awready) begin
+                  uart_axi_awvalid <= 1'b0;              
                end
-               _completed <= 1;                  
-            end               
-         end else if (mem_state == mem_w_waiting_ready) begin
-            if(axi_awready) begin
-               axi_awvalid <= 0;
+               if (uart_axi_wvalid && uart_axi_wready) begin
+                  uart_axi_wvalid <= 1'b0;              
+               end            
+               if (!uart_axi_awvalid && !uart_axi_wvalid) begin
+                  uart_axi_bready <= 1'b1;               
+               end
+               
+               if (uart_axi_bready && uart_axi_bvalid) begin
+                  uart_axi_bready <= 1'b0;
+
+                  // we have to go back to normal state.
+                  state <= WAITING_REQ;
+                  init_uart_axi();                  
+               end
+            end else begin // lbu
+               if (uart_axi_rvalid && uart_axi_rready) begin
+                  uart_axi_rready <= 1'b0;
+
+                  // we have to go back to normal state.
+                  state <= WAITING_REQ;                  
+                  result <= uart_axi_rdata;
+                  init_uart_axi();       
+               end
             end
-            if(axi_wready) begin
-               axi_wvalid <= 0;
-            end
-            if(!axi_awvalid && !axi_wvalid) begin
-               axi_bready <= 1;
-               mem_state <= mem_w_waiting_data;                  
-            end               
-         end else if (mem_state == mem_w_waiting_data) begin
-            if (axi_bvalid) begin
-               axi_bready <= 0;                  
-               _completed <= 1;
+         end else if (mem_state == PROCESSING_MEM) begin             
+            state <= WAITING_REQ;
+            _completed <= 1'b1;
+        
+            init_ram();            
+            if (instr_n.is_load) begin
+               result <= ram_douta;       
             end
          end
       end else begin 

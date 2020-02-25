@@ -47,13 +47,9 @@ module decoder
    wire              _bge = (opcode == 7'b1100011) && (funct3 == 3'b101);
    wire              _bltu = (opcode == 7'b1100011) && (funct3 == 3'b110);
    wire              _bgeu =  (opcode == 7'b1100011) && (funct3 == 3'b111);  
-   wire              _lb =  (opcode == 7'b0000011) && (funct3 == 3'b000);
-   wire              _lh =  (opcode == 7'b0000011) && (funct3 == 3'b001); 
    wire              _lw =  (opcode == 7'b0000011) && (funct3 == 3'b010);  
    wire              _lbu = (opcode == 7'b0000011) && (funct3 == 3'b100);  
-   wire              _lhu =  (opcode == 7'b0000011) && (funct3 == 3'b101);      
    wire              _sb =  (opcode == 7'b0100011) && (funct3 == 3'b000);     
-   wire              _sh =  (opcode == 7'b0100011) && (funct3 == 3'b001);
    wire              _sw = (opcode == 7'b0100011) && (funct3 == 3'b010);
    wire              _addi =  (opcode == 7'b0010011) && (funct3 == 3'b000);
    wire              _slti =  (opcode == 7'b0010011) && (funct3 == 3'b010);
@@ -159,14 +155,10 @@ module decoder
                                || _fmvxw);
    
    wire              _is_store = (_sb
-                                  || _sh
                                   || _sw
                                   || _fsw);
-   wire              _is_load = (_lb
-                                 || _lh
-                                 || _lw
+   wire              _is_load = (_lw
                                  || _lbu
-                                 || _lhu
                                  || _flw);
    
    wire              _is_conditional_jump = (_beq 
@@ -202,15 +194,11 @@ module decoder
             instr.bltu <= _bltu;         
             instr.bgeu <= _bgeu;       
             // memory control
-            instr.lb = _lb;         
-            instr.lh = _lh;        
             instr.lw = _lw;       
             instr.lbu = _lbu;       
-            instr.lhu = _lhu; 
             instr.sb = _sb;    
-            instr.sh = _sh;         
             instr.sw = _sw;         
-
+            
             // arith imm
             instr.addi <= _addi;
             instr.slti <= _slti;
