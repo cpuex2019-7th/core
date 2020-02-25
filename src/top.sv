@@ -11,7 +11,7 @@ module core
   
    // Bus for RAM
    ////////////
-   output wire [MEM_WIDTH-1:0] ram_addr,
+   output wire [19-1:0] ram_addr,
    output wire                 ram_clka,
    output wire [31:0]          ram_dina,
    input wire [31:0]           ram_douta,
