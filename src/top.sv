@@ -471,7 +471,7 @@ module core
                decode_enabled <= is_fetch_done;
                decode_reset <= !is_fetch_done;
                set_fd();              
-               `
+               
                exec_enabled <= is_decode_done;
                exec_reset <= !is_decode_done;
                set_de();
