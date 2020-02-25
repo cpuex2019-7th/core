@@ -39,7 +39,6 @@ module fetch
          
          _completed <= 0;
          pc_n <= 0;
-         instr_raw <= 0;         
       end
    end
 endmodule
