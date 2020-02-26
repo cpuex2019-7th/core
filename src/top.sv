@@ -313,10 +313,15 @@ module core
    // branch prediction   
    /////////
    // TODO: this is conservative!
-   wire                 branch_prediction_succeeded = (instr_em_out.jalr
-                                                       || instr_em_out.jal);
+   reg [1:0]            branch_predict_buffer;
+   wire                 latest_predict_result = branch_predict_buffer[1];   
+   
+   wire                 branch_prediction_succeeded = (is_exec_available && (instr_em_out.jalr
+                                                                             || instr_em_out.jal
+                                                                             || (instr_em_out.is_conditional_jump && latest_predict_result == is_jump_chosen_em_out)));
+   
    wire                 is_branch_prediction_available = (is_decode_available &&
-                                                          (instr_de_out.jal | instr_de_out.jalr));
+                                                          (instr_de_out.jal | instr_de_out.jalr || instr_de_out.is_conditional_jump));
    
 
    wire [31:0]          predicted_pc = (instr_de_out.jal ? instr_de_out.pc + $signed(instr_de_out.imm):
@@ -327,6 +332,8 @@ module core
                                                              && is_mem_available 
                                                              && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
                                                             register_de_out.rs1) + $signed(instr_de_out.imm):
+                                        instr_de_out.is_conditional_jump? (branch_predict_buffer[1]? instr_de_out.pc + $signed(instr_de_out.imm):
+                                                                           instr_de_out.pc + 4):
                                         32'b0);   
 
    
@@ -337,6 +344,7 @@ module core
       begin
          pc <= 0;
          stalling_for_mem_forwarding <= 0;
+         branch_predict_buffer <= 2'b00;
          
          fetch_enabled <= 1;      
          decode_enabled <= 0;      
@@ -423,6 +431,37 @@ module core
          if (are_all_stages_completed) begin
             // Control stalls
             //////////////////
+            
+            // update branch predict buffer
+            // if (is_exec_available 
+            //     && (instr_em_out.jalr || instr_em_out.jal || instr_em_out.is_conditional_jump)) begin
+            //    case(branch_predict_buffer)
+            //      2'b00: begin
+            //         if (is_jump_chosen_em_out) begin
+            //            branch_predict_buffer <= 2'b01;                                              
+            //         end
+            //      end
+            //      2'b01: begin
+            //         if (is_jump_chosen_em_out) begin
+            //            branch_predict_buffer <= 2'b10;                                              
+            //         end else begin
+            //            branch_predict_buffer <= 2'b00;                                              
+            //         end
+            //      end
+            //      2'b10: begin
+            //         if (is_jump_chosen_em_out) begin
+            //            branch_predict_buffer <= 2'b11;                                              
+            //         end else begin
+            //            branch_predict_buffer <= 2'b01;                                              
+            //         end
+            //      end
+            //      2'b11: begin
+            //         if (!is_jump_chosen_em_out) begin
+            //            branch_predict_buffer <= 2'b10;                                              
+            //         end
+            //      end
+            //    endcase
+            // end
 
             if (stalling_for_mem_forwarding) begin               
                stalling_for_mem_forwarding <= 0;
@@ -455,7 +494,6 @@ module core
                   set_de();     
                end
             end else if (instr_em_out.is_load && onestep_forwarding_required && is_exec_available) begin
-               // case 00
                stalling_for_mem_forwarding <= 1;
                
                fetch_enabled <= 0;
@@ -468,10 +506,10 @@ module core
                exec_enabled <= 0;               
                exec_reset <= 1; // this result won't be used in the future anymore.
                // no set_de(); because decode stage should be done once more before set_de
-            end else if (is_jump_chosen_em_out 
+            end else if ((instr_em_out.jalr || instr_em_out.jal || instr_em_out.is_conditional_jump)
                          && is_exec_available
                          && !branch_prediction_succeeded) begin
-               // TODO: change here to handle only if it fails to predict jump destination
+               // failed to predict branch!
                pc <= jump_dest_em_out;
                
                fetch_enabled <= 1;
@@ -485,7 +523,7 @@ module core
                exec_reset <= 1;
                // no set_de(); because there's no need to move
             end else if (is_branch_prediction_available) begin
-               pc <= predicted_pc;               
+               pc <= predicted_pc;
 
                fetch_enabled <= 1;
                fetch_reset <= 0;

@@ -60,7 +60,7 @@ module execute
    assign jump_dest = instr_n.jal? instr_n.pc + $signed(instr_n.imm):
                       instr.jalr? (register_n.rs1 + $signed(instr_n.imm)):// & ~(32b'0):
                       (instr_n.is_conditional_jump && alu_result == 32'd1)? instr_n.pc + $signed(instr_n.imm):
-                      0;
+                      instr_n.pc + 4;
    
    
    // set flags
