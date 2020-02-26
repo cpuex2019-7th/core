@@ -469,7 +469,7 @@ module core
                exec_reset <= 1; // this result won't be used in the future anymore.
                // no set_de(); because decode stage should be done once more before set_de
             end else if (is_jump_chosen_em_out 
-                         && is_exec_available1
+                         && is_exec_available
                          && !branch_prediction_succeeded) begin
                // TODO: change here to handle only if it fails to predict jump destination
                pc <= jump_dest_em_out;
