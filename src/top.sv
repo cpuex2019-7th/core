@@ -314,7 +314,21 @@ module core
    /////////
    // TODO: this is conservative!
    wire                 branch_prediction_succeeded = (instr_em_out.jalr
-                                                       || instr_em_out.jal);   
+                                                       || instr_em_out.jal);
+   wire                 is_branch_prediction_available = (is_decode_available &&
+                                                          (instr_de_out.jal | instr_de_out.jalr));
+   
+
+   wire [31:0]          predicted_pc = (instr_de_out.jal ? instr_de_out.pc + $signed(instr_de_out.imm):
+                                        instr_de_out.jalr? ((reg_onestep_forwarding_required 
+                                                             && is_exec_available 
+                                                             && instr_em_out.rd == instr_de_out.rs1)? result_em_out:
+                                                            (reg_twostep_forwarding_required 
+                                                             && is_mem_available 
+                                                             && instr_mw_out.rd == instr_de_out.rs1)? result_mw_out:
+                                                            register_de_out.rs1) + $signed(instr_de_out.imm):
+                                        32'b0);   
+
    
    /////////////////////
    // tasks
@@ -412,19 +426,34 @@ module core
 
             if (stalling_for_mem_forwarding) begin               
                stalling_for_mem_forwarding <= 0;
-               
-               pc <= pc + 4;               
-               
-               fetch_enabled <= 1;
-               fetch_reset <= 0;
-               
-               decode_enabled <= 1;
-               decode_reset <= 0;
-               set_fd();
-               
-               exec_enabled <= 1;            
-               exec_reset <= 0;
-               set_de();            
+
+               if (instr_de_out.jalr) begin
+                  pc <= predicted_pc;                  
+                  
+                  fetch_enabled <= 1;
+                  fetch_reset <= 0;
+                  
+                  decode_enabled <= 0;               
+                  decode_reset <= 1;               
+                  // no set_fd(); fetch result will not used.
+                  
+                  exec_enabled <= 1;               
+                  exec_reset <= 0;               
+                  set_de();
+               end else begin
+                  pc <= pc + 4;               
+                  
+                  fetch_enabled <= 1;
+                  fetch_reset <= 0;
+                  
+                  decode_enabled <= 1;
+                  decode_reset <= 0;
+                  set_fd();
+                  
+                  exec_enabled <= 1;            
+                  exec_reset <= 0;
+                  set_de();     
+               end
             end else if (instr_em_out.is_load && onestep_forwarding_required && is_exec_available) begin
                // case 00
                stalling_for_mem_forwarding <= 1;
@@ -439,23 +468,8 @@ module core
                exec_enabled <= 0;               
                exec_reset <= 1; // this result won't be used in the future anymore.
                // no set_de(); because decode stage should be done once more before set_de
-            end else if (is_decode_available &&
-                         (instr_de_out.jal | instr_de_out.jalr)) begin
-               pc <= instr_de_out.jal ? instr_de_out.pc + $signed(instr_de_out.imm):
-                     register_de_out.rs1 + $signed(instr_de_out.imm);
-
-               fetch_enabled <= 1;
-               fetch_reset <= 0;
-               
-               decode_enabled <= 0;               
-               decode_reset <= 1;               
-               // no set_fd(); fetch result will not used.
-               
-               exec_enabled <= 1;               
-               exec_reset <= 0;               
-               set_de();
             end else if (is_jump_chosen_em_out 
-                         && is_exec_available
+                         && is_exec_available1
                          && !branch_prediction_succeeded) begin
                // TODO: change here to handle only if it fails to predict jump destination
                pc <= jump_dest_em_out;
@@ -470,6 +484,19 @@ module core
                exec_enabled <= 0;               
                exec_reset <= 1;
                // no set_de(); because there's no need to move
+            end else if (is_branch_prediction_available) begin
+               pc <= predicted_pc;               
+
+               fetch_enabled <= 1;
+               fetch_reset <= 0;
+               
+               decode_enabled <= 0;               
+               decode_reset <= 1;               
+               // no set_fd(); fetch result will not used.
+               
+               exec_enabled <= 1;               
+               exec_reset <= 0;               
+               set_de();
             end else begin
                pc <= pc + 4;
                
