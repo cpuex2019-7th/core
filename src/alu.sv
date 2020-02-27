@@ -32,13 +32,9 @@ module alu
                     instr.bltu? register.rs1 < register.rs2:
                     instr.bgeu? register.rs1 >= register.rs2:
                     // memory control
-                    instr.lb? $signed({1'b0, register.rs1}) + $signed(instr.imm):
-                    instr.lh? $signed({1'b0, register.rs1}) + $signed(instr.imm):
                     instr.lw? $signed({1'b0, register.rs1}) + $signed(instr.imm):
                     instr.lbu? $signed({1'b0, register.rs1}) + $signed(instr.imm):
-                    instr.lhu? $signed({1'b0, register.rs1}) + $signed(instr.imm):
                     instr.sb? $signed({1'b0, register.rs1}) + $signed(instr.imm):
-                    instr.sh? $signed({1'b0, register.rs1}) + $signed(instr.imm):
                     instr.sw? $signed({1'b0, register.rs1}) + $signed(instr.imm):
                     // arith instr.immediate
                     instr.addi? $signed(register.rs1) + $signed(instr.imm):

@@ -4,7 +4,6 @@
 module regf
   (input wire         clk,
    input wire        rstn,
-   input wire [31:0] pc,
    input wire        r_enabled,
   
    input wire [4:0]  rs1,
@@ -16,7 +15,7 @@ module regf
    input wire [4:0]  w_addr,
    input wire [31:0] w_data);
    
-   (* mark_debug = "true" *) reg [31:0]        regs[32];
+   reg [31:0]        regs[32];
    
    // initialize
    integer           i;

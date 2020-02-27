@@ -3,26 +3,26 @@
 
 module execute
   (input wire clk,
-   input wire        rstn,
+   input wire         rstn,
      
-   input wire        enabled,
-   input             instructions instr,
-   input             regvpair register,
-   input             regvpair fregister,
+   input wire         enabled,
+   input              instructions instr,
+   input              regvpair register,
+   input              regvpair fregister,
   
-   output wire       completed,
-   output            instructions instr_n,
-   output            regvpair register_n,
-   output            regvpair fregister_n,
+   output wire        completed,
+   output             instructions instr_n,
+   output             regvpair register_n,
+   output             regvpair fregister_n,
 
-   output reg [31:0] result,
-   output reg        is_jump_chosen,
-   output reg [31:0] jump_dest);
-
+   output wire [31:0] result,
+   output wire        is_jump_chosen,
+   output wire [31:0] jump_dest);
+   
    // connection with ALU
    //////////////////////
-   wire [31:0]       alu_result;
-   wire              alu_completed;   
+   wire [31:0]        alu_result;
+   wire               alu_completed;   
    alu _alu(.clk(clk),
             .rstn(rstn),
             .enabled(enabled),
@@ -33,8 +33,8 @@ module execute
             .completed(alu_completed),      
             .result(alu_result));
    
-   wire [31:0]       fpu_result;   
-   wire              fpu_completed;   
+   wire [31:0]        fpu_result;   
+   wire               fpu_completed;   
    fpu _fpu(.clk(clk),
             .rstn(rstn),
             .enabled(enabled),
@@ -45,8 +45,23 @@ module execute
 
             .completed(fpu_completed),
             .result(fpu_result));
-   reg               _completed;
+   
+   wire               _completed = ((instr_n.rv32f && fpu_completed) 
+                                    || (!instr_n.rv32f && alu_completed));
    assign completed = _completed & !enabled;
+
+   assign result = (instr_n.rv32f)? fpu_result:
+                   alu_result;
+   
+   assign is_jump_chosen = ((instr_n.jal 
+                             || instr_n.jalr) 
+                            || (instr_n.is_conditional_jump && alu_result == 32'd1)); 
+   
+   assign jump_dest = instr_n.jal? instr_n.pc + $signed(instr_n.imm):
+                      instr.jalr? (register_n.rs1 + $signed(instr_n.imm)):// & ~(32b'0):
+                      (instr_n.is_conditional_jump && alu_result == 32'd1)? instr_n.pc + $signed(instr_n.imm):
+                      instr_n.pc + 4;
+   
    
    // set flags
    //////////////////////
@@ -56,26 +71,7 @@ module execute
             instr_n <= instr;
             register_n <= register;            
             fregister_n <= fregister;
-            _completed <= 0;
-         end else if ((instr.rv32f && fpu_completed) 
-                      || (!instr.rv32f && alu_completed)) begin            
-            result <= (instr.rv32f)? fpu_result:
-                      alu_result;
-            _completed <= 1;            
-            
-            is_jump_chosen <= (instr.jal 
-                               || instr.jalr) 
-              || (instr.is_conditional_jump && alu_result == 32'd1);
-            
-            jump_dest <= instr.jal? instr.pc + $signed(instr.imm):
-                         instr.jalr? (register.rs1 + $signed(instr.imm)):// & ~(32b'0):
-                         (instr.is_conditional_jump && alu_result == 32'd1)? instr.pc + $signed(instr.imm):
-                         0;                        
-         end else begin
-            _completed <= 0;            
          end
-      end else begin
-         _completed <= 0;
       end
    end  
 endmodule // execute

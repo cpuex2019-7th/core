@@ -33,13 +33,9 @@ typedef struct {
    reg         bltu;   
    reg         bgeu;
    // memory control
-   reg         lb;
-   reg         lh;
    reg         lw;
    reg         lbu;
-   reg         lhu;
    reg         sb;
-   reg         sh;
    reg         sw;
    // arith immediate
    reg         addi;
