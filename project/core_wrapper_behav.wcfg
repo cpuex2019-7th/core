@@ -14,20 +14,19 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="155614539999fs"></ZoomStartTime>
-      <ZoomEndTime time="155619780000fs"></ZoomEndTime>
-      <Cursor1Time time="155617344363fs"></Cursor1Time>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="1312000000001fs"></ZoomEndTime>
+      <Cursor1Time time="284500048908fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="206"></NameColumnWidth>
-      <ValueColumnWidth column_width="125"></ValueColumnWidth>
+      <ValueColumnWidth column_width="121"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="120" />
    <wave_markers>
       <marker time="22169650000000" label="" />
       <marker time="22327150000000" label="" />
       <marker time="22315804953000" label="" />
-      <marker time="155624139817" label="" />
    </wave_markers>
    <wvobject fp_name="/onboard_design_wrapper/rs232_uart_txd" type="logic">
       <obj_property name="ElementShortName">rs232_uart_txd</obj_property>
